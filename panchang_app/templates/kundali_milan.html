@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load panchang_tags %}
+
+{% block title %}{{ trans.kundali_milan }} | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="mb-4">
+        <h2 class="vedic-title m-0"><i class="fa-solid fa-heart-pulse me-2 text-warning"></i>{{ trans.kundali_milan }}</h2>
+        <p class="text-muted m-0">{{ trans.milan_desc }}</p>
+    </div>
+
+    <!-- Milan Form -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-top: 4px solid var(--primary-gold) !important; background: white;">
+        <div class="card-header bg-white p-3 border-0">
+            <h5 class="vedic-title m-0 text-danger" style="font-size: 18px;"><i class="fa-solid fa-people-arrows me-2"></i>{{ trans.groom_info }} &amp; {{ trans.bride_info }}</h5>
+        </div>
+        
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="card-body p-4 pt-0">
+                <div class="row g-4">
+                    <!-- Groom Details (Left Column) -->
+                    <div class="col-md-6 border-end-md">
+                        <div class="p-3 bg-light rounded-4 border-start border-primary border-4 mb-4">
+                            <h5 class="vedic-title text-primary m-0"><i class="fa-solid fa-mars me-2"></i>{{ trans.groom_info }}</h5>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_groom_name" class="form-label fw-bold">{{ trans.groom_name }} *</label>
+                            {{ form.groom_name }}
+                            <div class="invalid-feedback">Please enter groom name.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_groom_dob" class="form-label fw-bold">{{ trans.dob }} *</label>
+                            {{ form.groom_dob }}
+                            <div class="invalid-feedback">Please select groom date of birth.</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6 mb-3">
+                                <label for="id_groom_tob" class="form-label fw-bold">{{ trans.tob }} *</label>
+                                {{ form.groom_tob }}
+                                <div class="invalid-feedback">Please specify groom time of birth.</div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label for="id_groom_pob" class="form-label fw-bold">{{ trans.pob }} *</label>
+                                {{ form.groom_pob }}
+                                <div class="invalid-feedback">Please specify groom place of birth.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bride Details (Right Column) -->
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-4 border-start border-danger border-4 mb-4">
+                            <h5 class="vedic-title text-danger m-0"><i class="fa-solid fa-venus me-2"></i>{{ trans.bride_info }}</h5>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_bride_name" class="form-label fw-bold">{{ trans.bride_name }} *</label>
+                            {{ form.bride_name }}
+                            <div class="invalid-feedback">Please enter bride name.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_bride_dob" class="form-label fw-bold">{{ trans.dob }} *</label>
+                            {{ form.bride_dob }}
+                            <div class="invalid-feedback">Please select bride date of birth.</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6 mb-3">
+                                <label for="id_bride_tob" class="form-label fw-bold">{{ trans.tob }} *</label>
+                                {{ form.bride_tob }}
+                                <div class="invalid-feedback">Please specify bride time of birth.</div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label for="id_bride_pob" class="form-label fw-bold">{{ trans.pob }} *</label>
+                                {{ form.bride_pob }}
+                                <div class="invalid-feedback">Please specify bride place of birth.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-warning px-5 py-3 text-dark fw-bold" style="background: var(--gold-gradient); border: none; border-radius: 50px; font-size: 18px; box-shadow: 0 4px 15px rgba(212, 160, 23, 0.4);">
+                        <i class="fa-solid fa-heart me-2 text-danger animate-pulse"></i>{{ trans.perform_milan }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Bootstrap form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

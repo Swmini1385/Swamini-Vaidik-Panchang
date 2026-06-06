@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load panchang_tags %}
+
+{% block title %}{{ trans.kundali }} | Swamini Vaidik Panchang{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="mb-4">
+        <h2 class="vedic-title m-0"><i class="fa-solid fa-dharmachakra me-2 text-warning"></i>{{ trans.kundali }}</h2>
+        <p class="text-muted m-0">{{ trans.kundali_desc }}</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Kundali Input Form -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-top: 4px solid var(--primary-gold) !important; background: white;">
+                <div class="card-header bg-white p-3 border-0">
+                    <h5 class="vedic-title m-0 text-danger" style="font-size: 18px;"><i class="fa-solid fa-file-invoice me-2"></i>{{ trans.birth_details }}</h5>
+                </div>
+                
+                <div class="card-body p-4 pt-0">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label fw-bold">{{ trans.full_name }}</label>
+                            {{ form.name }}
+                            <div class="invalid-feedback">Please enter name.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_gender" class="form-label fw-bold">{{ trans.gender }}</label>
+                            {{ form.gender }}
+                            <div class="invalid-feedback">Please select gender.</div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-sm-6">
+                                <label for="id_date_of_birth" class="form-label fw-bold">{{ trans.dob }}</label>
+                                {{ form.date_of_birth }}
+                                <div class="invalid-feedback">Please choose date of birth.</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="id_time_of_birth" class="form-label fw-bold">{{ trans.tob }}</label>
+                                {{ form.time_of_birth }}
+                                <div class="invalid-feedback">Please choose time of birth.</div>
+                            </div>
+                        </div>
+
+                        <!-- Birth Place Search with Autocomplete suggestions -->
+                        <div class="mb-4 position-relative">
+                            <label for="place_search_input" class="form-label fw-bold">{{ trans.pob }} (Search)</label>
+                            {{ form.place_of_birth }}
+                            <div id="autocomplete-suggestions" class="list-group position-absolute w-100 shadow-lg z-3" style="display: none; max-height: 250px; overflow-y: auto; background: white; border-radius: 8px;"></div>
+                            <small class="text-muted">Type place name to search or click to see recently used locations.</small>
+                        </div>
+
+                        <!-- Expanded Location Details Grid (WOW factors) -->
+                        <div class="p-3 bg-light rounded-4 border border-warning-subtle mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-location-dot text-danger me-1"></i>भैगोलिक माहिती (Location Details)</h6>
+                                <button type="button" class="btn btn-xs btn-outline-warning text-dark fw-bold py-1 px-2" style="font-size: 11px;" onclick="openAddLocationModal()">
+                                    <i class="fa-solid fa-circle-plus me-1"></i>+ Add Location
+                                </button>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label for="id_city_village" class="form-label fw-bold" style="font-size: 13px;">{{ trans.city_village }}</label>
+                                    {{ form.city_village }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="id_district" class="form-label fw-bold" style="font-size: 13px;">{{ trans.district }}</label>
+                                    {{ form.district }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="id_state" class="form-label fw-bold" style="font-size: 13px;">{{ trans.state }}</label>
+                                    {{ form.state }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="id_country" class="form-label fw-bold" style="font-size: 13px;">{{ trans.country }}</label>
+                                    {{ form.country }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="id_latitude" class="form-label fw-bold" style="font-size: 13px;">{{ trans.latitude }}</label>
+                                    {{ form.latitude }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="id_longitude" class="form-label fw-bold" style="font-size: 13px;">{{ trans.longitude }}</label>
+                                    {{ form.longitude }}
+                                </div>
+                                <div class="col-12">
+                                    <label for="id_timezone" class="form-label fw-bold" style="font-size: 13px;">{{ trans.timezone }}</label>
+                                    {{ form.timezone }}
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="button" id="save-location-master-btn" class="btn btn-sm btn-outline-success fw-bold px-3">
+                                        <i class="fa-solid fa-floppy-disk me-1"></i>Save Location
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 py-3 text-dark fw-bold" style="background: var(--gold-gradient); border: none; border-radius: 8px;">
+                            <i class="fa-solid fa-compass me-2"></i>{{ trans.generate_chart }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Kundalis list -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-top: 4px solid var(--primary-gold) !important; background: white;">
+                <div class="card-header bg-white p-3 border-0">
+                    <h5 class="vedic-title m-0 text-dark" style="font-size: 18px;"><i class="fa-solid fa-list-check me-2 text-warning"></i>{{ trans.saved_profiles }}</h5>
+                </div>
+                
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="background: white;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">{{ trans.full_name }}</th>
+                                    <th>{{ trans.gender }}</th>
+                                    <th>{{ trans.dob }} &amp; {{ trans.tob }}</th>
+                                    <th>{{ trans.pob }}</th>
+                                    <th class="text-end pe-4">{{ trans.action }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for kundali in saved_kundalis %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">
+                                        <i class="fa-solid fa-user text-warning me-2"></i>{{ kundali.name }}
+                                    </td>
+                                    <td>{{ kundali.gender|translate_val:current_lang }}</td>
+                                    <td>
+                                        <small class="d-block fw-semibold text-danger">{{ kundali.date_of_birth|date:"d M Y" }}</small>
+                                        <small class="text-muted">{{ kundali.time_of_birth|time:"g:i A" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="d-block text-dark fw-semibold" style="font-size:13.5px;">{{ kundali.place_of_birth }}</span>
+                                        <span class="text-muted d-block" style="font-size:11px;">Lat: {{ kundali.latitude|floatformat:4 }}, Lon: {{ kundali.longitude|floatformat:4 }}</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'kundali_detail' kundali.pk %}" class="btn btn-sm btn-outline-warning fw-semibold px-3">
+                                            <i class="fa-solid fa-eye me-1"></i>{{ trans.view }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="fa-regular fa-folder-open fs-2 mb-2 d-block"></i>
+                                        {{ trans.no_saved_kundali }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Reusable Location Modal -->
+{% include 'location_modal.html' %}
+
+<!-- Scripts for Autocomplete Search & Validation -->
+<script>
+// Open Modal Function
+function openAddLocationModal() {
+    document.getElementById("modal_location_id").value = "";
+    document.getElementById("modal_city_village").value = "";
+    document.getElementById("modal_district").value = "";
+    document.getElementById("modal_state").value = "";
+    document.getElementById("modal_country").value = "India";
+    document.getElementById("modal_latitude").value = "";
+    document.getElementById("modal_longitude").value = "";
+    document.getElementById("modal_timezone").value = "";
+    
+    const q = document.getElementById("place_search_input").value.trim();
+    if (q) {
+        document.getElementById("modal_city_village").value = q;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById("locationDetailsModal"));
+    modal.show();
+}
+
+// Success callback for Modal
+window.onLocationModalSaveSuccess = function(data, fields) {
+    document.getElementById("place_search_input").value = fields.city_village;
+    document.getElementById("id_city_village").value = fields.city_village;
+    document.getElementById("id_district").value = fields.district;
+    document.getElementById("id_state").value = fields.state;
+    document.getElementById("id_country").value = fields.country;
+    document.getElementById("id_latitude").value = fields.latitude;
+    document.getElementById("id_longitude").value = fields.longitude;
+    document.getElementById("id_timezone").value = fields.timezone;
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("place_search_input");
+    const suggestionsBox = document.getElementById("autocomplete-suggestions");
+    
+    // Function to show recent/saved suggestions on focus
+    function showDefaultSuggestions() {
+        suggestionsBox.innerHTML = "";
+        
+        // Fetch recent locations
+        fetch('/api/locations/recent/')
+            .then(res => res.json())
+            .then(recentData => {
+                if (recentData.length > 0) {
+                    const headerRecent = document.createElement("div");
+                    headerRecent.className = "dropdown-header fw-bold text-danger py-1 px-3 bg-light border-bottom";
+                    headerRecent.innerHTML = "<i class='fa-solid fa-clock-rotate-left me-1'></i>नुकतेच वापरलेले (Recently Used)";
+                    suggestionsBox.appendChild(headerRecent);
+                    
+                    recentData.forEach(item => {
+                        suggestionsBox.appendChild(createSuggestionItem(item));
+                    });
+                }
+                
+                // Show sticky + Add Location
+                const addBtn = document.createElement("button");
+                addBtn.type = "button";
+                addBtn.className = "list-group-item list-group-item-action text-center text-primary py-2 px-3 fw-bold bg-light border-top";
+                addBtn.innerHTML = "<i class='fa-solid fa-plus-circle me-1'></i>+ Add Location (ठिकाण जोडा)";
+                addBtn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    suggestionsBox.style.display = "none";
+                    openAddLocationModal();
+                });
+                suggestionsBox.appendChild(addBtn);
+                suggestionsBox.style.display = "block";
+            })
+            .catch(err => console.error("Error loading recent locations:", err));
+    }
+    
+    function createSuggestionItem(item) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "list-group-item list-group-item-action text-start py-2 px-3 border-0";
+        btn.innerHTML = `<strong>${item.location_name}</strong>, <span class="text-muted" style="font-size:12px;">${item.district || ''} ${item.state}, ${item.country}</span>`;
+        
+        btn.addEventListener("click", function () {
+            searchInput.value = item.location_name;
+            document.getElementById("id_city_village").value = item.city_village || item.location_name;
+            document.getElementById("id_district").value = item.district || '';
+            document.getElementById("id_state").value = item.state || '';
+            document.getElementById("id_country").value = item.country || '';
+            document.getElementById("id_latitude").value = item.latitude;
+            document.getElementById("id_longitude").value = item.longitude;
+            document.getElementById("id_timezone").value = item.timezone;
+            
+            // Set active location in session
+            const formData = new FormData();
+            formData.append("place_name", item.location_name);
+            formData.append("latitude", item.latitude);
+            formData.append("longitude", item.longitude);
+            formData.append("timezone", item.timezone);
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch('/set-location/', {
+                method: 'POST',
+                body: formData,
+                headers: { "X-CSRFToken": csrfToken }
+            }).catch(err => console.error("Error updating active location:", err));
+            
+            suggestionsBox.style.display = "none";
+        });
+        return btn;
+    }
+    
+    searchInput.addEventListener("focus", function () {
+        if (searchInput.value.trim().length === 0) {
+            showDefaultSuggestions();
+        }
+    });
+
+    searchInput.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (searchInput.value.trim().length === 0) {
+            showDefaultSuggestions();
+        }
+    });
+    
+    searchInput.addEventListener("input", function () {
+        const query = searchInput.value.trim();
+        if (query.length < 1) {
+            showDefaultSuggestions();
+            return;
+        }
+        
+        fetch(`/api/locations/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                suggestionsBox.innerHTML = "";
+                if (data.length === 0) {
+                    const noRes = document.createElement("div");
+                    noRes.className = "dropdown-header text-muted py-2 px-3";
+                    noRes.textContent = "No saved locations found.";
+                    suggestionsBox.appendChild(noRes);
+                    
+                    const addBtn = document.createElement("button");
+                    addBtn.type = "button";
+                    addBtn.className = "list-group-item list-group-item-action text-center text-primary py-2 px-3 fw-bold bg-light";
+                    addBtn.innerHTML = "<i class='fa-solid fa-plus-circle me-1'></i>+ Add Location (ठिकाण जोडा)";
+                    addBtn.addEventListener("click", function (e) {
+                        e.stopPropagation();
+                        suggestionsBox.style.display = "none";
+                        openAddLocationModal();
+                    });
+                    suggestionsBox.appendChild(addBtn);
+                    suggestionsBox.style.display = "block";
+                    return;
+                }
+                
+                data.forEach(item => {
+                    suggestionsBox.appendChild(createSuggestionItem(item));
+                });
+                
+                // Add Add Location option
+                const addBtn = document.createElement("button");
+                addBtn.type = "button";
+                addBtn.className = "list-group-item list-group-item-action text-center text-primary py-2 px-3 fw-bold bg-light border-top";
+                addBtn.innerHTML = "<i class='fa-solid fa-plus-circle me-1'></i>+ Add Location (ठिकाण जोडा)";
+                addBtn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    suggestionsBox.style.display = "none";
+                    openAddLocationModal();
+                });
+                suggestionsBox.appendChild(addBtn);
+                suggestionsBox.style.display = "block";
+            })
+            .catch(err => {
+                console.error("Error fetching locations: ", err);
+            });
+    });
+    
+    // Hide suggestions dropdown on outside click
+    document.addEventListener("click", function (e) {
+        if (e.target !== searchInput && e.target !== suggestionsBox) {
+            suggestionsBox.style.display = "none";
+        }
+    });
+
+    // Save Location Master AJAX
+    const saveLocationMasterBtn = document.getElementById("save-location-master-btn");
+    saveLocationMasterBtn.addEventListener("click", function () {
+        const city_village = document.getElementById("id_city_village").value.trim();
+        const district = document.getElementById("id_district").value.trim();
+        const state = document.getElementById("id_state").value.trim();
+        const country = document.getElementById("id_country").value.trim();
+        const lat = document.getElementById("id_latitude").value.trim();
+        const lon = document.getElementById("id_longitude").value.trim();
+        const timezone = document.getElementById("id_timezone").value.trim();
+        
+        if (!city_village || !lat || !lon || !timezone) {
+            alert("Please fill all location fields (City/Village, Latitude, Longitude, Timezone) before saving.");
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append("city_village", city_village);
+        formData.append("location_name", city_village);
+        formData.append("district", district);
+        formData.append("state", state);
+        formData.append("country", country);
+        formData.append("latitude", lat);
+        formData.append("longitude", lon);
+        formData.append("timezone", timezone);
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch("/api/locations/save/", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": csrfToken
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+        })
+        .catch(err => {
+            console.error("Error saving location:", err);
+            alert("Something went wrong while saving location.");
+        });
+    });
+});
+
+// Bootstrap form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

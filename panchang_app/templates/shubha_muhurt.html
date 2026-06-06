@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load panchang_tags %}
+
+{% block title %}{{ trans.shubha_muhurt }} | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+        <div>
+            <h2 class="vedic-title m-0"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i>{{ trans.shubha_muhurt }}</h2>
+            <p class="text-muted m-0">{{ trans.muhurt_desc }}</p>
+        </div>
+        
+        <!-- Add Muhurt Trigger -->
+        <button type="button" class="btn btn-warning mt-3 mt-md-0 fw-semibold px-4" data-bs-toggle="modal" data-bs-target="#addMuhurtModal" style="background: var(--gold-gradient); border: none;">
+            <i class="fa-solid fa-plus-circle me-1"></i>{{ trans.add_muhurt }}
+        </button>
+    </div>
+
+    <!-- Category Filter Bar -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-2 d-flex flex-wrap gap-2">
+            <a href="{% url 'shubha_muhurt' %}?category=All" class="btn btn-sm {% if current_filter == 'All' %}btn-warning fw-semibold{% else %}btn-light text-muted{% endif %}">
+                {{ trans.all_muhurts }}
+            </a>
+            {% for key, val in categories %}
+            <a href="{% url 'shubha_muhurt' %}?category={{ key }}" class="btn btn-sm {% if current_filter == key %}btn-warning fw-semibold{% else %}btn-light text-muted{% endif %}">
+                {{ key|translate_val:current_lang }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Muhurt Timelines / Lists -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="background: white;">
+                            <thead class="table-dark text-warning" style="background: var(--maroon-gradient) !important; border-bottom: 3px solid var(--primary-gold);">
+                                <tr>
+                                    <th class="ps-4 py-3">{{ trans.muhurt_name }}</th>
+                                    <th class="py-3">{{ trans.category }}</th>
+                                    <th class="py-3">{{ trans.start_time }}</th>
+                                    <th class="py-3">{{ trans.end_time }}</th>
+                                    <th class="py-3">{{ trans.description }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for muhurt in muhurts %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">
+                                        <i class="fa-solid fa-dharmachakra text-warning me-2"></i>{{ muhurt.name|translate_val:current_lang }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark fw-semibold" style="font-size: 11px;">
+                                            {{ muhurt.category|translate_val:current_lang }}
+                                        </span>
+                                    </td>
+                                    <td class="text-success fw-semibold">
+                                        <i class="fa-regular fa-clock me-1 text-success"></i>{{ muhurt.start_time|date:"d M Y, h:i A" }}
+                                    </td>
+                                    <td class="text-danger fw-semibold">
+                                        <i class="fa-regular fa-clock me-1 text-danger"></i>{{ muhurt.end_time|date:"d M Y, h:i A" }}
+                                    </td>
+                                    <td class="text-muted" style="max-width: 300px; font-size: 13.5px;">
+                                        {{ muhurt.description|translate_val:current_lang }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-hourglass-empty fs-2 mb-2 d-block"></i>
+                                        {{ trans.no_muhurts }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Muhurt Modal -->
+<div class="modal fade" id="addMuhurtModal" tabindex="-1" aria-labelledby="addMuhurtModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-warning border-3">
+            <div class="modal-header" style="background: var(--maroon-gradient); color: var(--text-light); border-bottom: 3px solid var(--primary-gold);">
+                <h5 class="modal-title devanagari-title text-warning" id="addMuhurtModalLabel">{{ trans.add_muhurt }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-bold">{{ trans.muhurt_name }} *</label>
+                        <input type="text" name="name" id="name" class="form-control" placeholder="{{ trans.muhurt_name }}" required>
+                        <div class="invalid-feedback">Please enter the muhurt name.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label fw-bold">{{ trans.category }}</label>
+                        <select name="category" id="category" class="form-select">
+                            {% for key, val in categories %}
+                            <option value="{{ key }}">{{ key|translate_val:current_lang }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="start_time" class="form-label fw-bold">{{ trans.start_time }} *</label>
+                        <input type="datetime-local" name="start_time" id="start_time" class="form-control" required>
+                        <div class="invalid-feedback">Please choose a start time.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="end_time" class="form-label fw-bold">{{ trans.end_time }} *</label>
+                        <input type="datetime-local" name="end_time" id="end_time" class="form-control" required>
+                        <div class="invalid-feedback">Please choose an end time.</div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label for="description" class="form-label fw-bold">{{ trans.muhurt_desc_label }}</label>
+                        <textarea name="description" id="description" class="form-control" rows="3" placeholder="{{ trans.muhurt_desc_label }}"></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ trans.cancel }}</button>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4" style="background: var(--gold-gradient); border: none;">
+                        <i class="fa-solid fa-save me-1"></i>{{ trans.save }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Bootstrap form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

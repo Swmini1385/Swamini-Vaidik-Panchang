@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ trans.app_name }}{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Sticky Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand navbar-brand-custom" href="{% url 'home' %}">
+                <span class="me-2">ॐ</span>{{ trans.app_name }}
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <div class="navbar-nav ms-auto align-items-center">
+                    
+                    <!-- Language Switcher buttons (as requested) -->
+                    <div class="d-flex align-items-center me-3 border border-warning rounded-2 overflow-hidden bg-dark">
+                        <a href="{% url 'select_language' %}?lang=en" class="btn btn-sm {% if current_lang == 'en' %}btn-warning text-dark fw-bold{% else %}btn-dark text-white-50{% endif %} py-1 px-2 rounded-0 border-0">English</a>
+                        <a href="{% url 'select_language' %}?lang=mr" class="btn btn-sm {% if current_lang == 'mr' %}btn-warning text-dark fw-bold{% else %}btn-dark text-white-50{% endif %} py-1 px-2 rounded-0 border-0">मराठी</a>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                        <span class="text-light me-3" style="font-size: 14px;">
+                            <i class="fa-solid fa-user-circle me-1" style="color: var(--primary-gold);"></i>
+                            {{ trans.namaste }}, <strong>{{ user.name|default:user.email }}</strong>
+                        </span>
+                        <a href="{% url 'logout' %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fa-solid fa-sign-out-alt me-1"></i>{{ trans.logout }}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-warning btn-sm me-2 text-dark fw-bold">
+                            <i class="fa-solid fa-sign-in-alt me-1"></i>{{ trans.login }}
+                        </a>
+                        <a href="{% url 'signup' %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fa-solid fa-user-plus me-1"></i>{{ trans.signup }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Swamini Banner Header -->
+    <div class="header-banner">
+        <img src="{% static 'images/Swamini Banner.jpg' %}" alt="Swamini Vaidik Panchang Banner">
+    </div>
+
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper">
+        
+        <!-- Sidebar Navigation (Only visible for authenticated users) -->
+        {% if user.is_authenticated %}
+        <aside class="sidebar py-4 d-flex flex-column justify-content-between">
+            <div class="nav flex-column">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i>{{ trans.dashboard }}
+                </a>
+                <a href="{% url 'masik' %}" class="nav-link {% if request.resolver_match.url_name == 'masik' %}active{% endif %}">
+                    <i class="fa-solid fa-calendar-days"></i>{{ trans.masik }}
+                </a>
+                <a href="{% url 'panchang' %}" class="nav-link {% if request.resolver_match.url_name == 'panchang' %}active{% endif %}">
+                    <i class="fa-solid fa-calendar-day"></i>{{ trans.panchang }}
+                </a>
+                <a href="{% url 'sanwar' %}" class="nav-link {% if request.resolver_match.url_name == 'sanwar' %}active{% endif %}">
+                    <i class="fa-solid fa-bell"></i>{{ trans.sanwar }}
+                </a>
+                <a href="{% url 'shubha_muhurt' %}" class="nav-link {% if request.resolver_match.url_name == 'shubha_muhurt' %}active{% endif %}">
+                    <i class="fa-solid fa-clock-rotate-left"></i>{{ trans.shubha_muhurt }}
+                </a>
+                <a href="{% url 'kundali' %}" class="nav-link {% if request.resolver_match.url_name == 'kundali' or request.resolver_match.url_name == 'kundali_detail' %}active{% endif %}">
+                    <i class="fa-solid fa-dharmachakra"></i>{{ trans.kundali }}
+                </a>
+                <a href="{% url 'kundali_milan' %}" class="nav-link {% if request.resolver_match.url_name == 'kundali_milan' %}active{% endif %}">
+                    <i class="fa-solid fa-heart-pulse"></i>{{ trans.kundali_milan }}
+                </a>
+                <a href="{% url 'choughadiya' %}" class="nav-link {% if request.resolver_match.url_name == 'choughadiya' %}active{% endif %}">
+                    <i class="fa-regular fa-clock"></i>{{ trans.choughadiya }}
+                </a>
+                <a href="{% url 'settings' %}" class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+                    <i class="fa-solid fa-gear"></i>{{ trans.settings }}
+                </a>
+            </div>
+            
+            <div class="px-3">
+                <hr style="border-color: rgba(255,255,255,0.15)">
+                <a href="{% url 'logout' %}" class="btn btn-warning w-100 text-dark font-weight-bold">
+                    <i class="fa-solid fa-sign-out-alt me-1"></i>{{ trans.logout }}
+                </a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Messages / Toast alerts -->
+            {% if messages %}
+                <div class="container-fluid mt-3 px-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-2" role="alert">
+                            <strong>
+                                {% if message.tags == 'success' %}
+                                    <i class="fa-solid fa-circle-check me-2 text-success"></i>
+                                {% elif message.tags == 'danger' or message.tags == 'error' %}
+                                    <i class="fa-solid fa-circle-exclamation me-2 text-danger"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-circle-info me-2 text-info"></i>
+                                {% endif %}
+                            </strong> {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+
+            <!-- Vedic Footer -->
+            <footer class="vedic-footer mt-auto">
+                <div class="container-fluid px-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <h5><span class="me-2">ॐ</span>{{ trans.app_name }}</h5>
+                            <p class="mb-0 text-muted">A complete digital gateway to Vedic astrology, daily Panchang calculations, auspicious Muhurats, and marriage compatibility analyses according to the traditional scriptures.</p>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <h5>Quick Contacts</h5>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fa-solid fa-envelope me-2"></i>info@swaminipanchang.com</li>
+                                <li><i class="fa-solid fa-phone me-2"></i>+91 98765 43210</li>
+                                <li><i class="fa-solid fa-location-dot me-2"></i>Pune, Maharashtra, India</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <h5>{{ trans.system }}</h5>
+                            <ul class="list-unstyled text-muted">
+                                <li>{{ trans.version }}: <strong>1.0.0 Stable</strong></li>
+                                <li>Copyright &copy; {% now "Y" %} Swamini Vaidik</li>
+                                <li>{{ trans.copyright }}.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center text-muted py-2" style="font-size: 12px;">
+                        श्री स्वामी समर्थ महाराज की जय | श्री गुरुदेव दत्त
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

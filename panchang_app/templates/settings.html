@@ -1,0 +1,592 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ trans.settings }} | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="mb-4">
+        <h2 class="vedic-title m-0"><i class="fa-solid fa-gear me-2 text-warning"></i>{{ trans.app_settings }}</h2>
+        <p class="text-muted m-0">{{ trans.app_settings_subtitle }}</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Navigation Tabs inside Settings page -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="list-group list-group-flush p-2" id="settings-list" role="tablist">
+                    <button class="list-group-item list-group-item-action active border-0 rounded-3 py-3 px-3 fw-semibold d-flex align-items-center gap-2" id="profile-tab" data-bs-toggle="list" data-bs-target="#tab-profile" type="button" role="tab">
+                        <i class="fa-solid fa-user-gear text-warning"></i>{{ trans.update_profile }}
+                    </button>
+                    <button class="list-group-item list-group-item-action border-0 rounded-3 py-3 px-3 fw-semibold d-flex align-items-center gap-2" id="security-tab" data-bs-toggle="list" data-bs-target="#tab-security" type="button" role="tab">
+                        <i class="fa-solid fa-shield-halved text-warning"></i>{{ trans.change_password }}
+                    </button>
+                    <button class="list-group-item list-group-item-action border-0 rounded-3 py-3 px-3 fw-semibold d-flex align-items-center gap-2" id="theme-tab" data-bs-toggle="list" data-bs-target="#tab-theme" type="button" role="tab">
+                        <i class="fa-solid fa-palette text-warning"></i>{{ trans.theme_settings }}
+                    </button>
+                    <button class="list-group-item list-group-item-action border-0 rounded-3 py-3 px-3 fw-semibold d-flex align-items-center gap-2" id="location-tab" data-bs-toggle="list" data-bs-target="#tab-location" type="button" role="tab">
+                        <i class="fa-solid fa-map-location-dot text-warning"></i>Location Settings
+                    </button>
+                    <button class="list-group-item list-group-item-action border-0 rounded-3 py-3 px-3 fw-semibold d-flex align-items-center gap-2" id="backup-tab" data-bs-toggle="list" data-bs-target="#tab-backup" type="button" role="tab">
+                        <i class="fa-solid fa-database text-warning"></i>{{ trans.backup_settings }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="col-md-9">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-top: 4px solid var(--primary-gold) !important; background: white;">
+                <div class="card-body p-4">
+                    <div class="tab-content" id="nav-tabContent">
+                        
+                        <!-- Profile Update Tab -->
+                        <div class="tab-pane fade show active" id="tab-profile" role="tabpanel" aria-labelledby="profile-tab">
+                            <h4 class="vedic-title text-dark mb-4 border-bottom pb-2">{{ trans.update_profile }}</h4>
+                            <form method="post" class="needs-validation" novalidate>
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="profile">
+                                
+                                <div class="mb-3">
+                                    <label for="id_name" class="form-label fw-semibold">{{ trans.full_name }}</label>
+                                    {{ profile_form.name }}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="id_email" class="form-label fw-semibold">{{ trans.email_readonly }}</label>
+                                    {{ profile_form.email }}
+                                </div>
+                                <div class="mb-4">
+                                    <label for="id_phone_number" class="form-label fw-semibold">{{ trans.phone_number }}</label>
+                                    {{ profile_form.phone_number }}
+                                </div>
+                                
+                                <button type="submit" class="btn btn-warning px-4 py-2 text-dark fw-bold" style="background: var(--gold-gradient); border: none;">
+                                    {{ trans.save_changes }}
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Security / Change Password Tab -->
+                        <div class="tab-pane fade" id="tab-security" role="tabpanel" aria-labelledby="security-tab">
+                            <h4 class="vedic-title text-dark mb-4 border-bottom pb-2">{{ trans.change_password }}</h4>
+                            <form method="post" class="needs-validation" novalidate>
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="password">
+                                
+                                {% for field in password_form %}
+                                <div class="mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+                                    <input type="{{ field.field.widget.input_type }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-control" required>
+                                    {% if field.help_text %}
+                                        <small class="text-muted d-block mt-1">{{ field.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                
+                                <button type="submit" class="btn btn-warning px-4 py-2 text-dark fw-bold mt-2" style="background: var(--gold-gradient); border: none;">
+                                    {{ trans.update_password }}
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Theme Settings Tab -->
+                        <div class="tab-pane fade" id="tab-theme" role="tabpanel" aria-labelledby="theme-tab">
+                            <h4 class="vedic-title text-dark mb-4 border-bottom pb-2">{{ trans.theme_settings }}</h4>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="theme">
+                                
+                                <p class="text-muted mb-4">{{ trans.theme_hint }}</p>
+                                
+                                <div class="row g-3 mb-4">
+                                    <div class="col-sm-6">
+                                        <div class="p-3 border rounded-3 text-center bg-light">
+                                            <input type="radio" name="theme_choice" id="theme1" value="golden_maroon" {% if current_theme == 'golden_maroon' %}checked{% endif %} class="form-check-input mb-2">
+                                            <label class="form-check-label d-block fw-bold text-dark" for="theme1">
+                                                {{ trans.theme_gold }}
+                                            </label>
+                                            <small class="text-muted">{{ trans.theme_gold_desc }}</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                        <div class="p-3 border rounded-3 text-center bg-light">
+                                            <input type="radio" name="theme_choice" id="theme2" value="saffron_orange" {% if current_theme == 'saffron_orange' %}checked{% endif %} class="form-check-input mb-2">
+                                            <label class="form-check-label d-block fw-bold text-dark" for="theme2">
+                                                {{ trans.theme_saffron }}
+                                            </label>
+                                            <small class="text-muted">{{ trans.theme_saffron_desc }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-warning px-4 py-2 text-dark fw-bold" style="background: var(--gold-gradient); border: none;">
+                                    {{ trans.apply_theme }}
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Backup Settings Tab -->
+                        <div class="tab-pane fade" id="tab-backup" role="tabpanel" aria-labelledby="backup-tab">
+                            <h4 class="vedic-title text-dark mb-4 border-bottom pb-2">{{ trans.backup_settings }}</h4>
+                            
+                            <p class="text-muted mb-4">
+                                {{ trans.backup_desc }}
+                            </p>
+                            
+                            <!-- Backup Status Box -->
+                            <div class="alert alert-secondary border-1 py-3 px-4 mb-4" style="background-color: var(--cream-bg); border-color: var(--primary-gold) !important;">
+                                <small class="text-muted d-block">{{ trans.last_backup }}:</small>
+                                <span class="fw-bold text-dark"><i class="fa-solid fa-circle-check text-success me-1"></i>{{ backup_status }}</span>
+                            </div>
+
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="backup">
+                                <button type="submit" class="btn btn-warning px-4 py-3 text-dark fw-bold" style="background: var(--gold-gradient); border: none;">
+                                    <i class="fa-solid fa-download-database me-2"></i>{{ trans.trigger_backup }}
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Location Settings Tab -->
+                        <div class="tab-pane fade" id="tab-location" role="tabpanel" aria-labelledby="location-tab">
+                            <h4 class="vedic-title text-dark mb-4 border-bottom pb-2">Location Settings</h4>
+                            
+                            <!-- Options Row -->
+                            <div class="row g-3 mb-4">
+                                <!-- Option 1: Auto Location -->
+                                <div class="col-md-6">
+                                    <div class="card p-3 border rounded-3 h-100 bg-light shadow-sm">
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" id="autoLocationSwitch" style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                                            <label class="form-check-label fw-bold text-dark fs-6 ms-2" for="autoLocationSwitch">
+                                                ○ Auto Location
+                                            </label>
+                                        </div>
+                                        <p class="text-muted small mb-0">Detect current location automatically using your browser geolocation and save it as your default location.</p>
+                                        <div id="auto-loc-status" class="mt-2 small fw-bold text-success" style="display: none;">
+                                            <i class="fa-solid fa-circle-notch fa-spin me-1"></i>Detecting...
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Option 2: Change Location -->
+                                <div class="col-md-6">
+                                    <div class="card p-3 border rounded-3 h-100 bg-light shadow-sm">
+                                        <div class="fw-bold text-dark mb-2">
+                                            ○ Change Location
+                                        </div>
+                                        <div class="position-relative mb-1">
+                                            <input type="text" class="form-control form-control-sm" id="changeLocationSearch" placeholder="Search saved locations..." autocomplete="off">
+                                            <div id="change-loc-suggestions" class="list-group position-absolute w-100 shadow-lg z-3" style="display: none; max-height: 200px; overflow-y: auto; background: white; border-radius: 8px;"></div>
+                                        </div>
+                                        <p class="text-muted small mb-0">Search and select a default location used for all Panchang, Muhurt, Choughadiya, and Kundali calculations.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Saved Locations Table -->
+                            <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+                                <h5 class="fw-bold text-dark m-0"><i class="fa-solid fa-list-check text-warning me-1"></i>Saved Locations</h5>
+                                <button type="button" class="btn btn-sm btn-outline-warning text-dark fw-bold" onclick="openAddLocationModalSettings()">
+                                    <i class="fa-solid fa-plus-circle me-1"></i>+ Add Location
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover align-middle mb-0" id="savedLocationsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Location Name</th>
+                                            <th>Latitude</th>
+                                            <th>Longitude</th>
+                                            <th>Timezone</th>
+                                            <th>Created Date</th>
+                                            <th class="text-end pe-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for loc in saved_locations %}
+                                        <tr data-id="{{ loc.id }}">
+                                            <td class="ps-3 fw-bold text-dark">
+                                                {{ loc.location_name }}
+                                                {% if request.session.location.id == loc.id %}
+                                                <span class="badge bg-success ms-2 small">Default</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ loc.latitude|floatformat:4 }}</td>
+                                            <td>{{ loc.longitude|floatformat:4 }}</td>
+                                            <td><small class="text-muted">{{ loc.timezone }}</small></td>
+                                            <td><small>{{ loc.created_date|date:"d-m-Y" }}</small></td>
+                                            <td class="text-end pe-3">
+                                                <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2 me-1" onclick="editLocation({{ loc.id }}, '{{ loc.location_name }}', '{{ loc.country }}', '{{ loc.state }}', '{{ loc.district }}', '{{ loc.city_village }}', '{{ loc.latitude }}', '{{ loc.longitude }}', '{{ loc.timezone }}')">
+                                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                                </button>
+                                                <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" onclick="deleteLocation({{ loc.id }}, '{{ loc.location_name }}')">
+                                                    <i class="fa-solid fa-trash"></i> Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                <i class="fa-regular fa-face-frown fs-3 mb-2 d-block"></i>
+                                                No saved locations available.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reusable Location Modal -->
+{% include 'location_modal.html' %}
+
+<!-- Custom Deletion Confirmation Modal -->
+<div class="modal fade" id="deleteLocationConfirmModal" tabindex="-1" aria-labelledby="deleteLocationConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="border-top: 5px solid var(--bs-danger) !important;">
+            <div class="modal-header bg-white pb-0 border-0">
+                <h5 class="modal-title fw-bold text-danger" id="deleteLocationConfirmModalLabel">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <p id="deleteConfirmMessage" class="fw-semibold text-dark"></p>
+                <div id="deleteOptionsContainer" style="display: none;">
+                    <hr>
+                    <label class="form-label fw-bold text-danger">Choose Deletion Option:</label>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="deleteOption" id="opt_delete_only" value="delete_only" checked>
+                        <label class="form-check-label" for="opt_delete_only">
+                            <strong>Delete Location Only</strong><br>
+                            <small class="text-muted">(Existing Kundali records remain unchanged)</small>
+                        </label>
+                    </div>
+                    <div class="form-check" id="adminDeleteOptionContainer">
+                        <input class="form-check-input" type="radio" name="deleteOption" id="opt_remove_refs" value="remove_references">
+                        <label class="form-check-label" for="opt_remove_refs">
+                            <strong>Delete Location and Remove References (Admin only)</strong><br>
+                            <small class="text-muted">(Clear coordinates from matching Kundali records)</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 py-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-danger fw-bold px-3" id="confirmDeleteBtn">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Open Modal for Add in Settings
+function openAddLocationModalSettings() {
+    document.getElementById("modal_location_id").value = "";
+    document.getElementById("modal_city_village").value = "";
+    document.getElementById("modal_district").value = "";
+    document.getElementById("modal_state").value = "";
+    document.getElementById("modal_country").value = "India";
+    document.getElementById("modal_latitude").value = "";
+    document.getElementById("modal_longitude").value = "";
+    document.getElementById("modal_timezone").value = "";
+    
+    const modal = new bootstrap.Modal(document.getElementById("locationDetailsModal"));
+    modal.show();
+}
+
+// Success callback for Modal inside settings
+window.onLocationModalSaveSuccess = function(data, fields) {
+    // Reload page to reflect changes in the table
+    location.reload();
+};
+
+// Edit Location function
+function editLocation(id, name, country, state, district, city_village, lat, lon, tz) {
+    document.getElementById("modal_location_id").value = id;
+    document.getElementById("modal_city_village").value = city_village || name;
+    document.getElementById("modal_district").value = district || "";
+    document.getElementById("modal_state").value = state || "";
+    document.getElementById("modal_country").value = country || "India";
+    document.getElementById("modal_latitude").value = lat;
+    document.getElementById("modal_longitude").value = lon;
+    document.getElementById("modal_timezone").value = tz;
+    
+    const modal = new bootstrap.Modal(document.getElementById("locationDetailsModal"));
+    modal.show();
+}
+
+// Delete Location variables and function
+let locationIdToDelete = null;
+let deleteConfirmModal = null;
+
+function deleteLocation(id, name) {
+    locationIdToDelete = id;
+    document.getElementById("deleteConfirmMessage").textContent = `Are you sure you want to delete "${name}"?`;
+    document.getElementById("deleteOptionsContainer").style.display = "none";
+    
+    // Check if used first
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(`/api/locations/${id}/delete/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken }
+    })
+    .then(res => res.json())
+    .then(data => {
+        deleteConfirmModal = new bootstrap.Modal(document.getElementById("deleteLocationConfirmModal"));
+        
+        if (data.status === "confirm_required") {
+            document.getElementById("deleteConfirmMessage").textContent = data.message;
+            document.getElementById("deleteOptionsContainer").style.display = "block";
+            
+            // Toggle admin option visibility
+            const adminContainer = document.getElementById("adminDeleteOptionContainer");
+            if (data.is_admin) {
+                adminContainer.style.display = "block";
+            } else {
+                adminContainer.style.display = "none";
+            }
+            deleteConfirmModal.show();
+        } else if (data.status === "error") {
+            alert(data.message);
+        } else {
+            // No usage, confirm directly
+            deleteConfirmModal.show();
+        }
+    })
+    .catch(err => {
+        console.error("Error checking location usage:", err);
+        alert("Unable to delete location at this time.");
+    });
+}
+
+// Hook up confirm delete button click
+document.getElementById("confirmDeleteBtn").addEventListener("click", function () {
+    if (!locationIdToDelete) return;
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const selectedOption = document.querySelector('input[name="deleteOption"]:checked').value;
+    
+    const formData = new FormData();
+    formData.append("option", selectedOption);
+    
+    fetch(`/api/locations/${locationIdToDelete}/delete/`, {
+        method: "POST",
+        body: formData,
+        headers: { "X-CSRFToken": csrfToken }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            deleteConfirmModal.hide();
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error("Error deleting location:", err);
+        alert("Failed to delete location.");
+    });
+});
+
+// Geolocation Auto Location switch logic
+document.getElementById("autoLocationSwitch").addEventListener("change", function () {
+    const statusDiv = document.getElementById("auto-loc-status");
+    
+    if (this.checked) {
+        statusDiv.style.display = "block";
+        statusDiv.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-1"></i>Detecting Geolocation...';
+        
+        navigator.geolocation.getCurrentPosition(function (position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            statusDiv.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-1"></i>Resolving location details...';
+            
+            // 1. OSM Nominatim Reverse Geocoding
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`, {
+                headers: { "User-Agent": "SwaminiVaidikPanchang/1.0" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const addr = data.address || {};
+                const city_village = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || "Detected Location";
+                const state = addr.state || "";
+                const country = addr.country || "India";
+                const district = addr.county || addr.district || "";
+                
+                // 2. Resolve timezone from timeapi.io
+                fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lon}`)
+                .then(tzRes => tzRes.json())
+                .then(tzData => {
+                    const tz = tzData.timeZone || "Asia/Kolkata";
+                    
+                    // 3. Post to save
+                    const formData = new FormData();
+                    formData.append("city_village", city_village);
+                    formData.append("location_name", city_village);
+                    formData.append("district", district);
+                    formData.append("state", state);
+                    formData.append("country", country);
+                    formData.append("latitude", lat);
+                    formData.append("longitude", lon);
+                    formData.append("timezone", tz);
+                    
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    
+                    fetch("/api/locations/save/", {
+                        method: "POST",
+                        body: formData,
+                        headers: { "X-CSRFToken": csrfToken }
+                    })
+                    .then(saveRes => saveRes.json())
+                    .then(saveData => {
+                        // 4. Set as active
+                        const setLocFormData = new FormData();
+                        setLocFormData.append("place_name", city_village);
+                        setLocFormData.append("latitude", lat);
+                        setLocFormData.append("longitude", lon);
+                        setLocFormData.append("timezone", tz);
+                        
+                        fetch("/set-location/", {
+                            method: "POST",
+                            body: setLocFormData,
+                            headers: { "X-CSRFToken": csrfToken }
+                        })
+                        .then(() => {
+                            statusDiv.innerHTML = '<span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>Successfully saved and set as default!</span>';
+                            setTimeout(() => { location.reload(); }, 1500);
+                        });
+                    });
+                });
+            })
+            .catch(err => {
+                console.error("Error geocoding:", err);
+                statusDiv.innerHTML = '<span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Failed to resolve details.</span>';
+            });
+            
+        }, function (error) {
+            console.error("Geolocation error:", error);
+            statusDiv.innerHTML = '<span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Permission denied / Unavailable.</span>';
+            alert("Geolocation permission denied. Please search and select location manually.");
+            document.getElementById("autoLocationSwitch").checked = false;
+        });
+    } else {
+        statusDiv.style.display = "none";
+    }
+});
+
+// Change Location Autocomplete logic inside settings
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("changeLocationSearch");
+    const suggestionsBox = document.getElementById("change-loc-suggestions");
+    
+    searchInput.addEventListener("focus", function () {
+        showSuggestions();
+    });
+
+    searchInput.addEventListener("click", function (e) {
+        e.stopPropagation();
+        showSuggestions();
+    });
+    
+    function showSuggestions() {
+        suggestionsBox.innerHTML = "";
+        const query = searchInput.value.trim();
+        
+        let url = `/api/locations/?q=${encodeURIComponent(query)}`;
+        if (query.length === 0) {
+            // Load recent instead
+            url = '/api/locations/recent/';
+        }
+        
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.length === 0) {
+                    suggestionsBox.style.display = "none";
+                    return;
+                }
+                
+                data.forEach(item => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "list-group-item list-group-item-action text-start py-2 px-3 border-0";
+                    btn.innerHTML = `<strong>${item.location_name}</strong>, <span class="text-muted" style="font-size:12px;">${item.district || ''} ${item.state}, ${item.country}</span>`;
+                    
+                    btn.addEventListener("click", function () {
+                        // Change active location in session
+                        const formData = new FormData();
+                        formData.append("place_name", item.location_name);
+                        formData.append("latitude", item.latitude);
+                        formData.append("longitude", item.longitude);
+                        formData.append("timezone", item.timezone);
+                        
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        fetch('/set-location/', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { "X-CSRFToken": csrfToken }
+                        })
+                        .then(() => {
+                            location.reload();
+                        });
+                    });
+                    suggestionsBox.appendChild(btn);
+                });
+                suggestionsBox.style.display = "block";
+            });
+    }
+    
+    searchInput.addEventListener("input", function () {
+        showSuggestions();
+    });
+    
+    document.addEventListener("click", function (e) {
+        if (e.target !== searchInput && e.target !== suggestionsBox) {
+            suggestionsBox.style.display = "none";
+        }
+    });
+
+    // Set auto-location switch state initially based on default location matched
+    const currentDefaultId = "{{ request.session.location.id }}";
+    // If default location is set and matches browser geolocation, or just default behavior
+});
+
+// Dynamic placeholders based on translations
+document.addEventListener("DOMContentLoaded", function() {
+    const phoneInput = document.getElementById("id_phone_number");
+    if (phoneInput) {
+        phoneInput.placeholder = "{{ trans.phone_number }}";
+    }
+});
+
+// Bootstrap form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

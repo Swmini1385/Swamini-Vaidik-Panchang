@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load panchang_tags %}
+
+{% block title %}{{ trans.dashboard }} | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Welcome Header & Daily Quote -->
+    <div class="row align-items-center mb-4">
+        <div class="col-lg-8">
+            <h2 class="vedic-title devanagari-title text-warning m-0 mb-1" style="color: var(--dark-maroon) !important; font-size: 32px;">
+                {{ trans.daily_quote_title }}
+            </h2>
+            <p class="text-muted m-0" style="font-size: 15px;">
+                {{ trans.dashboard_desc }}
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <div class="p-3 bg-white border border-warning rounded-3 shadow-sm d-inline-block text-start" style="border-left: 5px solid var(--primary-gold) !important; max-width: 100%;">
+                <div class="text-muted" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">{{ trans.daily_quote }}</div>
+                <div class="fw-semibold text-danger" style="font-size: 14px; font-family: 'Poppins', sans-serif;">
+                    "{{ quote }}"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Panchang Fast Widget -->
+    <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, var(--cream-bg) 0%, #fffbf2 100%); border-left: 6px solid var(--saffron-orange) !important;">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center mb-3 mb-md-0">
+                    <div class="text-warning" style="font-size: 56px; line-height: 1;">ॐ</div>
+                    <div class="badge bg-danger text-wrap mt-2" style="font-size: 11px;">{{ trans.today_panchang }}</div>
+                </div>
+                <div class="col-md-10">
+                    <h4 class="vedic-title text-dark mb-3">{{ trans.today_info }} : {{ today|date:"d F Y" }} ({{ panchang.vaar|translate_val:current_lang }})</h4>
+                    <div class="row g-3">
+                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
+                            <small class="text-muted d-block">{{ trans.tithi }}</small>
+                            <span class="fw-bold text-danger">{{ panchang.tithi|translate_val:current_lang }}</span>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
+                            <small class="text-muted d-block">{{ trans.nakshatra }}</small>
+                            <span class="fw-bold text-dark">{{ panchang.nakshatra|translate_val:current_lang }}</span>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
+                            <small class="text-muted d-block">{{ trans.yoga }}</small>
+                            <span class="fw-bold text-dark">{{ panchang.yoga|translate_val:current_lang }}</span>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
+                            <small class="text-muted d-block">{{ trans.karan }}</small>
+                            <span class="fw-bold text-dark">{{ panchang.karan|translate_val:current_lang }}</span>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
+                            <small class="text-muted d-block">{{ trans.sunrise }}</small>
+                            <span class="fw-bold text-success"><i class="fa-solid fa-sun me-1"></i>{{ panchang.sunrise|time:"g:i A" }}</span>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
+                            <small class="text-muted d-block">{{ trans.sunset }}</small>
+                            <span class="fw-bold text-warning"><i class="fa-solid fa-moon me-1"></i>{{ panchang.sunset|time:"g:i A" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Cards Grid (8 Cards) -->
+    <div class="row g-4">
+        <!-- 1. MASIK -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="panchang-card h-100">
+                <div>
+                    <div class="panchang-card-icon">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+                    <h3 class="panchang-card-title">{{ trans.masik }}</h3>
+                    <p class="panchang-card-description">{{ trans.masik_desc }}</p>
+                </div>
+                <a href="{% url 'masik' %}" class="panchang-card-btn">{{ trans.view_calendar }}</a>
+            </div>
+        </div>
+
+        <!-- 2. PANCHANG -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="panchang-card h-100">
+                <div>
+                    <div class="panchang-card-icon">
+                        <i class="fa-solid fa-dharmachakra"></i>
+                    </div>
+                    <h3 class="panchang-card-title">{{ trans.panchang }}</h3>
+                    <p class="panchang-card-description">{{ trans.panchang_desc }}</p>
+                </div>
+                <a href="{% url 'panchang' %}" class="panchang-card-btn">{{ trans.view_daily }}</a>
+            </div>
+        </div>
+
+        <!-- 3. SANWAR -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="panchang-card h-100">
+                <div>
+                    <div class="panchang-card-icon">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <h3 class="panchang-card-title">{{ trans.sanwar }}</h3>
+                    <p class="panchang-card-description">{{ trans.sanwar_desc }}</p>
+                </div>
+                <a href="{% url 'sanwar' %}" class="panchang-card-btn">{{ trans.view_festivals }}</a>
+            </div>
+        </div>
+
+        <!-- 4. SHUBHA MUHURT -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="panchang-card h-100">
+                <div>
+                    <div class="panchang-card-icon">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <h3 class="panchang-card-title">{{ trans.shubha_muhurt }}</h3>
+                    <p class="panchang-card-description">{{ trans.muhurt_desc }}</p>
+                </div>
+                <a href="{% url 'shubha_muhurt' %}" class="panchang-card-btn">{{ trans.view_muhurt }}</a>
+            </div>
+        </div>
+
+        <!-- 5. KUNDALI -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="panchang-card h-100">
+                <div>
+                    <div class="panchang-card-icon">
+                        <i class="fa-solid fa-compass"></i>
+                    </div>
+                    <h3 class="panchang-card-title">{{ trans.kundali }}</h3>
+                    <p class="panchang-card-description">{{ trans.kundali_desc }}</p>
+                </div>
+                <a href="{% url 'kundali' %}" class="panchang-card-btn">{{ trans.generate_kundali }}</a>
+            </div>
+        </div>
+
+        <!-- 6. KUNDALI MILAN -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="panchang-card h-100">
+                <div>
+                    <div class="panchang-card-icon">
+                        <i class="fa-solid fa-people-arrows"></i>
+                    </div>
+                    <h3 class="panchang-card-title">{{ trans.kundali_milan }}</h3>
+                    <p class="panchang-card-description">{{ trans.milan_desc }}</p>
+                </div>
+                <a href="{% url 'kundali_milan' %}" class="panchang-card-btn">{{ trans.match_kundali }}</a>
+            </div>
+        </div>
+
+        <!-- 7. CHOUGHADIYA -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="panchang-card h-100">
+                <div>
+                    <div class="panchang-card-icon">
+                        <i class="fa-regular fa-clock"></i>
+                    </div>
+                    <h3 class="panchang-card-title">{{ trans.choughadiya }}</h3>
+                    <p class="panchang-card-description">{{ trans.choughadiya_desc }}</p>
+                </div>
+                <a href="{% url 'choughadiya' %}" class="panchang-card-btn">{{ trans.view_choughadiya }}</a>
+            </div>
+        </div>
+
+        <!-- 8. SETTING -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="panchang-card h-100">
+                <div>
+                    <div class="panchang-card-icon">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <h3 class="panchang-card-title">{{ trans.settings }}</h3>
+                    <p class="panchang-card-description">{{ trans.settings_desc }}</p>
+                </div>
+                <a href="{% url 'settings' %}" class="panchang-card-btn">{{ trans.open_settings }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

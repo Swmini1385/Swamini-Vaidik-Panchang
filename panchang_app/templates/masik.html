@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load panchang_tags %}
+
+{% block title %}{{ trans.masik }} | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Monthly Calendar header & nav -->
+    <div class="calendar-wrapper">
+        <div class="calendar-header">
+            <a href="{% url 'masik' %}?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-outline-warning text-light btn-sm px-3 border-1 border-warning">
+                <i class="fa-solid fa-chevron-left me-1"></i>{{ trans.prev }}
+            </a>
+            
+            <h2 class="vedic-title text-warning m-0 text-center" style="font-size: 26px;">
+                {{ month_name|translate_val:current_lang }} {{ year }}
+            </h2>
+            
+            <a href="{% url 'masik' %}?year={{ next_year }}&month={{ next_month }}" class="btn btn-outline-warning text-light btn-sm px-3 border-1 border-warning">
+                {{ trans.next }}<i class="fa-solid fa-chevron-right ms-1"></i>
+            </a>
+        </div>
+        
+        <!-- Grid Weekday Header (Sunday to Saturday) -->
+        <div class="calendar-grid-header">
+            <div>{{ 'Sun'|translate_val:current_lang }}</div>
+            <div>{{ 'Mon'|translate_val:current_lang }}</div>
+            <div>{{ 'Tue'|translate_val:current_lang }}</div>
+            <div>{{ 'Wed'|translate_val:current_lang }}</div>
+            <div>{{ 'Thu'|translate_val:current_lang }}</div>
+            <div>{{ 'Fri'|translate_val:current_lang }}</div>
+            <div>{{ 'Sat'|translate_val:current_lang }}</div>
+        </div>
+        
+        <!-- Grid Calendar Days -->
+        <div class="calendar-grid">
+            {% for week in weeks %}
+                {% for cell in week %}
+                    {% if cell.dummy %}
+                        <div class="calendar-day-cell dummy-cell"></div>
+                    {% else %}
+                        <!-- Normal day cell -->
+                        <div class="calendar-day-cell {% if cell.is_today %}is_today{% endif %}" onclick="location.href='{% url 'panchang' %}?date={{ cell.date|date:'Y-m-d' }}'">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="calendar-day-number">{{ cell.day }}</span>
+                                
+                                <!-- Special icons for lunar phases or Ekadashi -->
+                                <div class="d-flex gap-1" style="font-size: 11px;">
+                                    {% if cell.panchang.is_pournima %}
+                                        <i class="fa-solid fa-circle text-warning" title="{{ trans.pournima }}"></i>
+                                    {% elif cell.panchang.is_amavasya %}
+                                        <i class="fa-solid fa-circle text-dark" title="{{ trans.amavasya }}"></i>
+                                    {% endif %}
+                                    {% if cell.panchang.is_ekadashi %}
+                                        <i class="fa-solid fa-star text-danger" title="{{ trans.ekadashi }}"></i>
+                                    {% endif %}
+                                    {% if cell.panchang.is_sankashti %}
+                                        <i class="fa-solid fa-bell text-danger" title="{{ trans.sankashti }}"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="calendar-tithi text-truncate" title="{{ cell.panchang.tithi|translate_val:current_lang }}">
+                                {{ cell.panchang.tithi|translate_val:current_lang }}
+                            </div>
+                            
+                            <!-- Festival lists (if any) -->
+                            <div class="calendar-festival-tags">
+                                {% for festival in cell.festivals|slice:":2" %}
+                                    {% if festival.category == 'Vrat' %}
+                                        <span class="calendar-vrat-tag text-truncate" title="{{ festival.name|translate_val:current_lang }}">
+                                            <i class="fa-solid fa-om me-1"></i>{{ festival.name|translate_val:current_lang }}
+                                        </span>
+                                    {% else %}
+                                        <span class="calendar-festival-tag text-truncate" title="{{ festival.name|translate_val:current_lang }}">
+                                            {{ festival.name|translate_val:current_lang }}
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if cell.festivals|length > 2 %}
+                                    <span class="text-muted text-end" style="font-size: 8px; font-weight: bold;">
+                                        +{{ cell.festivals|length|add:"-2" }} {{ trans.more }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Legend / Tips box -->
+    <div class="card border-0 shadow-sm mx-4 bg-light">
+        <div class="card-body p-3">
+            <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-circle-info me-2 text-warning"></i>{{ trans.legend }}:</h6>
+            <div class="d-flex flex-wrap gap-4 text-muted" style="font-size: 13px;">
+                <span><i class="fa-solid fa-circle text-warning me-1"></i>{{ trans.pournima }}</span>
+                <span><i class="fa-solid fa-circle text-dark me-1"></i>{{ trans.amavasya }}</span>
+                <span><i class="fa-solid fa-star text-danger me-1"></i>{{ trans.ekadashi }}</span>
+                <span><i class="fa-solid fa-bell text-danger me-1"></i>{{ trans.sankashti }}</span>
+                <span><span class="badge bg-warning text-dark me-1" style="font-size: 9px; padding: 2px 4px;">{{ trans.festival }}</span>{{ trans.other_festivals }}</span>
+            </div>
+            <div class="mt-2 text-muted" style="font-size: 12px; font-style: italic;">
+                {{ trans.calendar_hint }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

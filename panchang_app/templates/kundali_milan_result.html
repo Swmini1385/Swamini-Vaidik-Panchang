@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load panchang_tags %}
+
+{% block title %}{{ trans.milan_result }} | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Back to form link -->
+    <div class="mb-4">
+        <a href="{% url 'kundali_milan' %}" class="btn btn-sm btn-outline-dark">
+            <i class="fa-solid fa-arrow-left me-1"></i>{{ trans.back }}
+        </a>
+    </div>
+
+    <!-- Matchmaking Score Box -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden text-center h-100" style="border-top: 4px solid var(--primary-gold) !important; background: white;">
+                <div class="card-body p-4 d-flex flex-column justify-content-center align-items-center">
+                    <span class="text-danger" style="font-size: 52px; line-height: 1;">ॐ</span>
+                    <h4 class="vedic-title text-dark mt-2 mb-3">{{ trans.total_score }}</h4>
+                    
+                    <!-- Circular styled progress score -->
+                    <div class="d-flex align-items-center justify-content-center rounded-circle border border-warning" style="width: 130px; height: 130px; background: var(--cream-bg); border-width: 5px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                        <div class="text-center">
+                            <span class="display-6 fw-bold text-danger">{{ result.total_score }}</span>
+                            <span class="text-muted d-block" style="font-size: 11px;">/ 36 {{ trans.obtained_points }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <span class="badge bg-{{ result.status_color }} fs-6 px-3 py-2">
+                            {{ result.verdict|translate_val:current_lang }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100" style="border-top: 4px solid var(--primary-gold) !important; background: white;">
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <h4 class="vedic-title text-dark mb-3"><i class="fa-solid fa-comment-dots text-warning me-2"></i>{{ trans.verdict_details }}</h4>
+                    <p class="fs-5 text-{{ result.status_color }} fw-bold mb-2">{{ result.verdict|translate_val:current_lang }}</p>
+                    <p class="text-muted fs-6 mb-4" style="line-height: 1.7;">
+                        {{ result.description|translate_val:current_lang }}
+                    </p>
+                    
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 bg-light rounded-3 border-start border-primary border-3">
+                                <small class="text-muted d-block">{{ trans.groom_info }}: <strong>{{ groom.name }}</strong></small>
+                                <span class="fw-bold text-dark" style="font-size: 14px;">{{ trans.nakshatra }}: {{ groom.nakshatra|translate_val:current_lang }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 bg-light rounded-3 border-start border-danger border-3">
+                                <small class="text-muted d-block">{{ trans.bride_info }}: <strong>{{ bride.name }}</strong></small>
+                                <span class="fw-bold text-dark" style="font-size: 14px;">{{ trans.nakshatra }}: {{ bride.nakshatra|translate_val:current_lang }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Ashtakoot Point Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" style="border-top: 4px solid var(--primary-gold) !important; background: white;">
+        <div class="card-header bg-white p-3 border-0">
+            <h5 class="vedic-title m-0 text-dark" style="font-size: 18px;"><i class="fa-solid fa-table me-2 text-warning"></i>{{ trans.guna_details }}</h5>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">{{ trans.guna_details }}</th>
+                            <th>{{ trans.groom_info }}</th>
+                            <th>{{ trans.bride_info }}</th>
+                            <th>{{ trans.max_points }}</th>
+                            <th class="pe-4 text-end">{{ trans.obtained_points }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for koota in result.kootas %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">
+                                <i class="fa-solid fa-circle-notch text-warning me-2" style="font-size: 12px;"></i>{{ koota.name|translate_val:current_lang }}
+                            </td>
+                            <td><span class="badge bg-light text-dark">{{ koota.groom|translate_val:current_lang }}</span></td>
+                            <td><span class="badge bg-light text-dark">{{ koota.bride|translate_val:current_lang }}</span></td>
+                            <td class="fw-semibold text-muted">{{ koota.max }}</td>
+                            <td class="pe-4 text-end fw-bold text-danger">{{ koota.score }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="table-warning fw-bold text-dark">
+                            <td colspan="3" class="ps-4 text-end">{{ trans.total_score }}:</td>
+                            <td>36</td>
+                            <td class="pe-4 text-end text-danger fs-5">{{ result.total_score }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

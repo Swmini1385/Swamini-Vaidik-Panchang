@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}नोंदणी (Register) | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">ॐ</div>
+            <h3 class="m-0 devanagari-title text-warning">{{ trans.signup_title }}</h3>
+            <p class="m-0 text-white-50" style="font-size: 13px;">{{ trans.signup_subtitle }}</p>
+        </div>
+        
+        <div class="auth-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_name" class="form-label" style="color: var(--dark-maroon); font-weight: 500;">
+                        <i class="fa-solid fa-user me-2 text-warning"></i>{{ trans.full_name }} *
+                    </label>
+                    {{ form.name }}
+                    <div class="invalid-feedback">{{ trans.please_enter_name }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_email" class="form-label" style="color: var(--dark-maroon); font-weight: 500;">
+                        <i class="fa-solid fa-envelope me-2 text-warning"></i>{{ trans.email_id }} *
+                    </label>
+                    {{ form.email }}
+                    <div class="invalid-feedback">{{ trans.please_enter_email }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_password" class="form-label" style="color: var(--dark-maroon); font-weight: 500;">
+                        <i class="fa-solid fa-lock me-2 text-warning"></i>{{ trans.password }} *
+                    </label>
+                    {{ form.password }}
+                    <div class="invalid-feedback">{{ trans.please_enter_password }}</div>
+                </div>
+
+                <button type="submit" class="auth-btn btn w-100 py-3 mb-3 text-dark font-weight-bold">
+                    <i class="fa-solid fa-user-plus me-2"></i>{{ trans.signup }}
+                </button>
+            </form>
+            
+            <div class="text-center mt-3">
+                <span class="text-muted" style="font-size: 14px;">{{ trans.already_account }} </span>
+                <a href="{% url 'login' %}" class="text-decoration-none font-weight-bold" style="color: var(--dark-maroon); font-weight: 600;">
+                    {{ trans.login }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Dynamic placeholders based on translations
+    document.getElementById("id_name").placeholder = "{{ trans.full_name }}";
+    document.getElementById("id_email").placeholder = "{{ trans.email_id }}";
+    document.getElementById("id_password").placeholder = "{{ trans.password }}";
+});
+
+// Bootstrap form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

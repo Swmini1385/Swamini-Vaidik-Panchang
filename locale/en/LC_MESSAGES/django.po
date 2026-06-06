@@ -1,0 +1,72 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Horoscope Charts"
+msgstr "Horoscope Charts"
+
+msgid "D1 Rashi Chart"
+msgstr "D1 Rashi Chart"
+
+msgid "D9 Navamsha Chart"
+msgstr "D9 Navamsha Chart"
+
+msgid "Lagna (Asc)"
+msgstr "Lagna (Asc)"
+
+msgid "Asc"
+msgstr "Asc"
+
+msgid "Sun"
+msgstr "Sun"
+
+msgid "Moon"
+msgstr "Moon"
+
+msgid "Mars"
+msgstr "Mars"
+
+msgid "Mercury"
+msgstr "Mercury"
+
+msgid "Jupiter"
+msgstr "Jupiter"
+
+msgid "Venus"
+msgstr "Venus"
+
+msgid "Saturn"
+msgstr "Saturn"
+
+msgid "Rahu"
+msgstr "Rahu"
+
+msgid "Ketu"
+msgstr "Ketu"
+
+msgid "Vimshottari Dasha Timeline"
+msgstr "Vimshottari Dasha Timeline"
+
+msgid "Current Mahadasha"
+msgstr "Current Mahadashas"
+
+msgid "Antardasha"
+msgstr "Antardashas"
+
+msgid "Planetary Positions"
+msgstr "Planetary Positions"
+
+msgid "Birth Details"
+msgstr "Birth Details"
+
+msgid "Mahadasha"
+msgstr "Mahadasha"
