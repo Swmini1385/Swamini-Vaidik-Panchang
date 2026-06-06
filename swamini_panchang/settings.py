@@ -84,17 +84,18 @@ WSGI_APPLICATION = 'swamini_panchang.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=True,
+    )
 }
 
-if os.environ.get('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(
-        conn_max_age=600,
-        ssl_require=True
-    )
+# Remove sslmode from sqlite configuration as it is not supported
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    DATABASES['default'].pop('sslmode', None)
+    if 'OPTIONS' in DATABASES['default']:
+        DATABASES['default']['OPTIONS'].pop('sslmode', None)
 
 
 # Password validation
