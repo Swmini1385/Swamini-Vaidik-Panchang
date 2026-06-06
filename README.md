@@ -60,6 +60,29 @@ python manage.py test panchang_app
 
 ---
 
+## Render Deployment
+
+To deploy this project to Render:
+
+1. **Build Command**: Configure Render to use the following build command:
+   ```bash
+   ./build.sh
+   ```
+   Or set the Build Command directly in the Render dashboard:
+   ```bash
+   pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
+   ```
+
+2. **Start Command**:
+   ```bash
+   gunicorn swamini_panchang.wsgi:application
+   ```
+
+3. **Environment Variables**:
+   Ensure you set any required environment variables (like `DATABASE_URL` or custom settings if any) in the Render environment settings.
+
+---
+
 ## Key Features
 
 1. **Dashboard**: Beautiful responsive grid of 8 spiritual card features with micro-animations.
