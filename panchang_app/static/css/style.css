@@ -639,3 +639,58 @@ body.sidebar-open {
     }
 }
 
+/* Responsive Helper Classes */
+.mobile-only {
+    display: none !important;
+}
+
+.desktop-only {
+    display: block;
+}
+
+.mobile-profile-dropdown {
+    display: none !important;
+}
+
+.no-caret::after {
+    display: none !important;
+}
+
+/* Premium Dropdown Menu Styling */
+.dropdown-menu {
+    border: 2px solid var(--primary-gold) !important;
+    background-color: var(--cream-card) !important;
+    border-radius: 12px !important;
+    padding: 8px 0 !important;
+}
+
+.dropdown-menu .dropdown-item {
+    color: var(--text-dark) !important;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background: var(--gold-gradient) !important;
+    color: var(--dark-maroon-dark) !important;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .mobile-profile-dropdown {
+        display: block !important;
+    }
+    
+    .authenticated-toggler {
+        display: none !important;
+    }
+}
+
+

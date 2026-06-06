@@ -571,6 +571,21 @@ document.addEventListener("DOMContentLoaded", function() {
     if (phoneInput) {
         phoneInput.placeholder = "{{ trans.phone_number }}";
     }
+
+    // Switch to tab if hash is present in URL
+    function activateTabFromHash() {
+        const hash = window.location.hash;
+        if (hash) {
+            const tabTriggerEl = document.querySelector(`button[data-bs-target="${hash}"]`);
+            if (tabTriggerEl) {
+                const tab = new bootstrap.Tab(tabTriggerEl);
+                tab.show();
+            }
+        }
+    }
+    
+    activateTabFromHash();
+    window.addEventListener("hashchange", activateTabFromHash);
 });
 
 // Bootstrap form validation

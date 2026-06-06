@@ -17,36 +17,74 @@
 
     <!-- Sticky Top Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-navbar">
-        <div class="container-fluid">
-            <a class="navbar-brand navbar-brand-custom" href="{% url 'home' %}">
-                <span class="me-2">ॐ</span>{{ trans.app_name }}
-            </a>
+        <div class="container-fluid flex-nowrap">
             
-            {% if user.is_authenticated %}
-            <button class="btn btn-link text-warning sidebar-toggle-btn p-0 border-0 ms-auto me-3" id="sidebarToggle" type="button" aria-label="Open menu" style="font-size: 24px; text-decoration: none; line-height: 1; z-index: 1010;">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            {% endif %}
+            <!-- Left Side controls for mobile -->
+            <div class="d-flex align-items-center">
+                {% if user.is_authenticated %}
+                <!-- Hamburger on the LEFT for mobile -->
+                <button class="btn btn-link text-warning sidebar-toggle-btn p-0 border-0 me-3" id="sidebarToggle" type="button" aria-label="Open menu" style="font-size: 24px; text-decoration: none; line-height: 1; z-index: 1010;">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                {% endif %}
+                
+                <a class="navbar-brand navbar-brand-custom m-0" href="{% url 'home' %}">
+                    <span class="me-2">ॐ</span>{{ trans.app_name }}
+                </a>
+            </div>
             
-            <button class="navbar-toggler {% if not user.is_authenticated %}ms-auto{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <!-- Right Side controls for mobile -->
+            <div class="d-flex align-items-center ms-auto">
+                {% if user.is_authenticated %}
+                <!-- Profile Dropdown on the RIGHT for mobile -->
+                <div class="dropdown mobile-profile-dropdown">
+                    <button class="btn btn-link text-warning p-0 border-0 dropdown-toggle no-caret" type="button" id="mobileProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 24px; text-decoration: none; line-height: 1;">
+                        <i class="fa-solid fa-circle-user"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-premium mt-2" aria-labelledby="mobileProfileDropdown">
+                        <li class="dropdown-header text-dark fw-bold border-bottom pb-2 mb-1" style="font-size: 14px;">
+                            {{ trans.namaste }}, {{ user.name|default:user.email }}
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'settings' %}#tab-profile">
+                                <i class="fa-solid fa-user-gear me-2 text-warning"></i>{{ trans.update_profile }}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'settings' %}#tab-security">
+                                <i class="fa-solid fa-shield-halved me-2 text-warning"></i>{{ trans.change_password }}
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item py-2 text-danger fw-semibold" href="{% url 'logout' %}">
+                                <i class="fa-solid fa-sign-out-alt me-2"></i>{{ trans.logout }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <button class="navbar-toggler {% if user.is_authenticated %}authenticated-toggler{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
             
             <div class="collapse navbar-collapse" id="navbarContent">
                 <div class="navbar-nav ms-auto align-items-center">
                     
-                    <!-- Language Switcher buttons (as requested) -->
+                    <!-- Language Switcher buttons -->
                     <div class="d-flex align-items-center me-3 border border-warning rounded-2 overflow-hidden bg-dark">
                         <a href="{% url 'select_language' %}?lang=en" class="btn btn-sm {% if current_lang == 'en' %}btn-warning text-dark fw-bold{% else %}btn-dark text-white-50{% endif %} py-1 px-2 rounded-0 border-0">English</a>
                         <a href="{% url 'select_language' %}?lang=mr" class="btn btn-sm {% if current_lang == 'mr' %}btn-warning text-dark fw-bold{% else %}btn-dark text-white-50{% endif %} py-1 px-2 rounded-0 border-0">मराठी</a>
                     </div>
 
                     {% if user.is_authenticated %}
-                        <span class="text-light me-3" style="font-size: 14px;">
+                        <span class="text-light me-3 desktop-only" style="font-size: 14px;">
                             <i class="fa-solid fa-user-circle me-1" style="color: var(--primary-gold);"></i>
                             {{ trans.namaste }}, <strong>{{ user.name|default:user.email }}</strong>
                         </span>
-                        <a href="{% url 'logout' %}" class="btn btn-outline-warning btn-sm">
+                        <a href="{% url 'logout' %}" class="btn btn-outline-warning btn-sm desktop-only">
                             <i class="fa-solid fa-sign-out-alt me-1"></i>{{ trans.logout }}
                         </a>
                     {% else %}
@@ -78,7 +116,15 @@
         <aside class="sidebar py-4 d-flex flex-column justify-content-between" id="sidebarMenu">
             <!-- Close Button for Mobile -->
             <button class="btn-close btn-close-white sidebar-close-btn position-absolute" id="sidebarClose" type="button" aria-label="Close menu" style="top: 15px; right: 15px; z-index: 1060;"></button>
+            
             <div class="nav flex-column">
+                <!-- Mobile Language Switcher -->
+                <div class="mobile-only px-3 mb-3">
+                    <div class="d-flex align-items-center justify-content-between border border-warning rounded-2 overflow-hidden bg-dark">
+                        <a href="{% url 'select_language' %}?lang=en" class="btn btn-sm {% if current_lang == 'en' %}btn-warning text-dark fw-bold{% else %}btn-dark text-white-50{% endif %} py-2 w-50 rounded-0 border-0">English</a>
+                        <a href="{% url 'select_language' %}?lang=mr" class="btn btn-sm {% if current_lang == 'mr' %}btn-warning text-dark fw-bold{% else %}btn-dark text-white-50{% endif %} py-2 w-50 rounded-0 border-0">मराठी</a>
+                    </div>
+                </div>
                 <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fa-solid fa-chart-line"></i>{{ trans.dashboard }}
                 </a>
