@@ -1,4 +1,4 @@
-const CACHE_NAME = 'swamini-panchang-v1';
+const CACHE_NAME = 'swamini-panchang-v4';
 const ASSETS_TO_CACHE = [
   '/dashboard/',
   '/static/css/style.css',
@@ -21,7 +21,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate Event - clean up old caches
+// Activate Event - clean up old caches instantly
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keyList => {
@@ -35,50 +35,61 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch Event - Cache First with Network Fallback
+// Fetch Event - Network-First for dynamic pages, Stale-While-Revalidate for static assets
 self.addEventListener('fetch', event => {
-  // Only handle GET requests and local/safe HTTP resources
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  
-  // Skip non-HTTP protocols (e.g. chrome-extension://, developer tools)
   if (!url.protocol.startsWith('http')) return;
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(cachedResponse => {
-        if (cachedResponse) {
-          // Serve from cache, but fetch fresh in the background to update
-          fetch(event.request)
-            .then(networkResponse => {
-              if (networkResponse.status === 200) {
-                caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse));
-              }
-            })
-            .catch(err => console.log('[Service Worker] Background fetch failed: ', err));
-            
-          return cachedResponse;
-        }
+  // Identify static assets
+  const isStaticAsset = url.pathname.startsWith('/static/') || 
+                       url.hostname.includes('cdn') || 
+                       url.hostname.includes('cdnjs') ||
+                       url.pathname === '/manifest.json';
 
-        return fetch(event.request)
-          .then(networkResponse => {
-            // Cache new successful GET requests
+  if (isStaticAsset) {
+    // Stale-While-Revalidate for static files
+    event.respondWith(
+      caches.match(event.request)
+        .then(cachedResponse => {
+          const fetchPromise = fetch(event.request).then(networkResponse => {
             if (networkResponse && networkResponse.status === 200) {
-              const responseToCache = networkResponse.clone();
-              caches.open(CACHE_NAME)
-                .then(cache => {
-                  cache.put(event.request, responseToCache);
-                });
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, networkResponse.clone());
+              });
             }
             return networkResponse;
-          })
-          .catch(() => {
-            // Offline fallback for navigation requests
+          }).catch(err => console.log('[Service Worker] Static background fetch failed: ', err));
+
+          return cachedResponse || fetchPromise;
+        })
+    );
+  } else {
+    // Network-First for dynamic HTML/routes
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // If offline, retrieve from cache
+          return caches.match(event.request).then(cachedResponse => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // If offline and navigate request, fallback to dashboard
             if (event.request.mode === 'navigate') {
               return caches.match('/dashboard/');
             }
           });
-      })
-  );
+        })
+    );
+  }
 });
