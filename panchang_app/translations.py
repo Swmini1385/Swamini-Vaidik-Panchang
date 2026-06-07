@@ -304,11 +304,12 @@ TRANSLATIONS = {
         '4': '४',
 
         # Yogas Marathi
-        'Vishkumbha': 'विष्कंभ',
+        'Vishkambha': 'विष्कंभ',
         'Priti': 'प्रीती',
         'Ayushman': 'आयुष्यमान',
         'Saubhagya': 'सौभाग्य',
         'Sobhana': 'शोभन',
+        'Shobhana': 'शोभन',
         'Atiganda': 'अतिगंड',
         'Sukarma': 'सुकर्मा',
         'Dhriti': 'धृती',
@@ -338,11 +339,15 @@ TRANSLATIONS = {
         'Taitila': 'तैतिल',
         'Gara': 'गर',
         'Vanija': 'वणिज',
-        'Vishti': 'विष्टी',
-        'Shakuni': 'शकुनी',
+        'Vishti': 'विष्टी (भद्रा)',
+        'Shakuni': 'शकुनि',
         'Chatushpada': 'चतुष्पाद',
         'Naga': 'नाग',
         'Kintughna': 'किंस्तुघ्न',
+        'Kimstughna': 'किंस्तुघ्न',
+        
+        # Directions
+        'East': 'पूर्व',
 
         # Category choices Marathi
         'Marriage': 'विवाह',
@@ -403,7 +408,7 @@ TRANSLATIONS = {
         'Good Match (Madhyam Milan)': 'चांगला मिलाप (मध्यम मिलन)',
         'Auspicious match. Standard compatibility with minor differences. Normal married life is indicated. Can proceed.': 'शुभ विवाह मिलाप. किरकोळ फरकांसह सामान्य सुसंगतता. सामान्य वैवाहिक जीवन दर्शवते. पुढे जाण्यास हरकत नाही.',
         'Incompatible Match (Ashubh Milan)': 'अयोग्य मिलाप (अशुभ मिलन)',
-        'Low compatibility score. Nadi or Bhakoot Dosha may be present. Remedial prayers are recommended before proceeding.': 'कमी सुसंगतता गुण. नाडी किंवा भकूट दोष असू शकतो. पुढे जाण्यापूर्वी योग्य तोडगा/शांती करणे शिफारसीय आहे.',
+        'Low compatibility score. Nadi or Bhakoot Dosha may be present. Remedial measures recommended before proceeding.': 'कमी सुसंगतता गुण. नाडी किंवा भकूट दोष असू शकतो. पुढे जाण्यापूर्वी योग्य तोडगा/शांती करणे शिफारसीय आहे.',
         
         'Varna (Work & Egos)': 'वर्ण (कार्य आणि स्वभाव)',
         'Vashya (Dominance & Control)': 'वश्य (वर्चस्व आणि नियंत्रण)',
@@ -743,11 +748,12 @@ TRANSLATIONS = {
         'Revati': 'Revati',
 
         # Yogas English
-        'Vishkumbha': 'Vishkumbha',
+        'Vishkambha': 'Vishkambha',
         'Priti': 'Priti',
         'Ayushman': 'Ayushman',
         'Saubhagya': 'Saubhagya',
         'Sobhana': 'Sobhana',
+        'Shobhana': 'Shobhana',
         'Atiganda': 'Atiganda',
         'Sukarma': 'Sukarma',
         'Dhriti': 'Dhriti',
@@ -770,18 +776,22 @@ TRANSLATIONS = {
         'Indra': 'Indra',
         'Vaidhriti': 'Vaidhriti',
 
-        # Karans English
+        # Karanas English
         'Bava': 'Bava',
         'Balava': 'Balava',
         'Kaulava': 'Kaulava',
         'Taitila': 'Taitila',
         'Gara': 'Gara',
         'Vanija': 'Vanija',
-        'Vishti': 'Vishti',
+        'Vishti': 'Vishti (Bhadra)',
         'Shakuni': 'Shakuni',
         'Chatushpada': 'Chatushpada',
         'Naga': 'Naga',
         'Kintughna': 'Kintughna',
+        'Kimstughna': 'Kimstughna',
+        
+        # Directions
+        'East': 'East',
 
         # Category choices English
         'Marriage': 'Marriage',

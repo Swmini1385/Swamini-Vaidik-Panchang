@@ -252,10 +252,10 @@
                 <!-- Sub Tabs Navigation -->
                 <div class="d-flex justify-content-center gap-2 mb-3">
                     <button id="btn-chart-d1" type="button" class="btn btn-sm btn-warning px-3 rounded-pill" onclick="switchKundaliChart('d1')">
-                        {% if current_lang == 'mr' %}लग्न कुंडली (D1){% else %}Lagna Chart (D1){% endif %}
+                        {% if current_lang == 'mr' %}लग्न कुंडली{% else %}Lagna Chart{% endif %}
                     </button>
                     <button id="btn-chart-d9" type="button" class="btn btn-sm btn-outline-warning text-dark px-3 rounded-pill" onclick="switchKundaliChart('d9')">
-                        {% if current_lang == 'mr' %}नवमांश कुंडली (D9){% else %}Navamsha Chart (D9){% endif %}
+                        {% if current_lang == 'mr' %}नवमांश कुंडली{% else %}Navamsha Chart{% endif %}
                     </button>
                 </div>
                 
@@ -264,14 +264,14 @@
                     <div style="max-width: 320px; margin: 0 auto;">
                         {{ svg_chart|safe }}
                     </div>
-                    <small class="text-muted mt-2 d-block">{% if current_lang == 'mr' %}मुख्य लग्न कुंडली चक्र (D1 Rashi Chart){% else %}Main Lagna Chart (D1 Rashi Chart){% endif %}</small>
+                    <small class="text-muted mt-2 d-block">{% if current_lang == 'mr' %}मुख्य लग्न कुंडली चक्र{% else %}Main Lagna Chart{% endif %}</small>
                 </div>
                 
                 <div id="chart-d9-container" class="chart-display-container text-center py-2" style="display: none;">
                     <div style="max-width: 320px; margin: 0 auto;">
                         {{ svg_chart_d9|safe }}
                     </div>
-                    <small class="text-muted mt-2 d-block">{% if current_lang == 'mr' %}नवमांश कुंडली चक्र (D9 Navamsha Chart){% else %}Navamsha Chart (D9 Divisional Chart){% endif %}</small>
+                    <small class="text-muted mt-2 d-block">{% if current_lang == 'mr' %}नवमांश कुंडली चक्र{% else %}Navamsha Chart{% endif %}</small>
                 </div>
             </div>
         </div>

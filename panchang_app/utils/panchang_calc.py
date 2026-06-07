@@ -4,6 +4,7 @@ from skyfield import almanac
 import jyotishganit
 from jyotishganit.core.astronomical import get_sunrise_sunset
 from zoneinfo import ZoneInfo
+from functools import lru_cache
 
 # List of planets in Vedic Astrology
 PLANETS = ['Lagna (Asc)', 'Sun (Surya)', 'Moon (Chandra)', 'Mars (Mangal)', 'Mercury (Budh)', 
@@ -133,6 +134,33 @@ ZODIAC_MAP_MR = {
     'Pisces': 'मीन'
 }
 
+# Module-level ephemeris loading for performance
+_eph = None
+_ts = None
+
+def get_eph_and_ts():
+    global _eph, _ts
+    if _eph is None:
+        import skyfield.api as api
+        _ts = api.load.timescale()
+        _eph = api.load("de421.bsp")
+    return _eph, _ts
+
+def calculate_ishtakaal(birth_time, sunrise_time):
+    import datetime
+    birth_delta = datetime.timedelta(hours=birth_time.hour, minutes=birth_time.minute, seconds=birth_time.second)
+    sunrise_delta = datetime.timedelta(hours=sunrise_time.hour, minutes=sunrise_time.minute, seconds=sunrise_time.second)
+    
+    if birth_delta < sunrise_delta:
+        diff_seconds = (datetime.timedelta(days=1) + birth_delta - sunrise_delta).total_seconds()
+    else:
+        diff_seconds = (birth_delta - sunrise_delta).total_seconds()
+        
+    ghati_total = diff_seconds * 2.5 / 3600
+    ghati = int(ghati_total)
+    pala = int((ghati_total - ghati) * 60)
+    return f"{ghati} घटी {pala} पळे"
+
 YAMAGANDA_INDEX = {
     0: 3, # Monday: 4th part
     1: 2, # Tuesday: 3rd part
@@ -159,6 +187,44 @@ def normalize_nakshatra_name(name):
     s = s.replace("shth", "sht").replace("sth", "st").replace("sh", "s").replace("th", "t").replace("oo", "u")
     return s
 
+def get_hindu_month(sun_deg, tithi_str):
+    tithi_names = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Pournima', 'Purnima', 'Amavasya']
+    
+    t_num = 1
+    for i, name in enumerate(tithi_names[:14]):
+        if name in tithi_str:
+            t_num = i + 1
+            break
+    if 'Pournima' in tithi_str or 'Purnima' in tithi_str:
+        t_num = 15
+    elif 'Amavasya' in tithi_str:
+        t_num = 30
+        
+    if 'Krishna' in tithi_str and t_num < 15:
+        t_num += 15
+        
+    # Sun movement approximation (~0.9856 degrees per tithi)
+    approx_sun_prev_amavasya = (sun_deg - (t_num * 0.9856)) % 360
+    approx_sun_next_amavasya = (sun_deg + ((30 - t_num) * 0.9856)) % 360
+    
+    prev_idx = int(approx_sun_prev_amavasya / 30)
+    next_idx = int(approx_sun_next_amavasya / 30)
+    
+    is_adhik = (prev_idx == next_idx)
+    
+    names_en = ['Chaitra', 'Vaishakha', 'Jyeshtha', 'Ashadha', 'Shravana', 'Bhadrapada', 'Ashwina', 'Kartika', 'Margashirsha', 'Pausha', 'Magha', 'Phalguna']
+    names_mr = ['चैत्र', 'वैशाख', 'ज्येष्ठ', 'आषाढ', 'श्रावण', 'भाद्रपद', 'अश्विन', 'कार्तिक', 'मार्गशीर्ष', 'पौष', 'माघ', 'फाल्गुन']
+    
+    en_name = names_en[next_idx]
+    mr_name = names_mr[next_idx]
+    
+    if is_adhik:
+        en_name = 'Adhik ' + en_name
+        mr_name = 'अधिक ' + mr_name
+        
+    return en_name, mr_name
+
+@lru_cache(maxsize=128)
 def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur", current_dt=None):
     """
     Calculates Daily Panchang using jyotishganit and skyfield for given location coordinates.
@@ -183,8 +249,7 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
         sunset_time = decimal_hours_to_time(sunset_dec)
         
         # 2. Moonrise & Moonset times using Skyfield
-        ts = api.load.timescale()
-        eph = api.load('de421.bsp')
+        eph, ts = get_eph_and_ts()
         earth = eph['earth']
         moon = eph['moon']
         location = api.wgs84.latlon(float(lat), float(lon))
@@ -259,6 +324,7 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
             lagna_sign = houses_list[0].get('sign', '')
             
         sun_sign = ""
+        sun_deg_total = 0
         moon_sign = ""
         moon_nak = ""
         moon_pada = 1
@@ -269,15 +335,15 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
                 body = occ.get('celestialBody', '')
                 if body == 'Sun':
                     sun_sign = h_sign
+                    sign_deg = float(occ.get('signDegrees', 0))
+                    sun_deg_total = (SIGN_MAP.get(h_sign, 1) - 1) * 30 + sign_deg
                 elif body == 'Moon':
                     moon_sign = h_sign
                     moon_nak = occ.get('nakshatra', '')
                     moon_pada = occ.get('pada', 1)
                     
-        # Get active month
-        month_info = MONTH_MAP.get(sun_sign, {'mr': 'ज्येष्ठ', 'en': 'Jyeshtha'})
-        mahina_en = month_info['en']
-        mahina_mr = month_info['mr']
+        # Get active month using rigorous Tithi-based Amanta tracking
+        mahina_en, mahina_mr = get_hindu_month(sun_deg_total, tithi_str)
         
         # Get Namakshar
         namakshar_mr = ""
@@ -433,6 +499,7 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
             'nakshatra': nakshatra_str,
             'yoga': yoga_str,
             'karan': karan_str,
+            'ishtakal': calculate_ishtakaal(current_dt.time(), sunrise_time),
             'sunrise': sunrise_time,
             'sunset': sunset_time,
             'moonrise': moonrise_time,
@@ -471,6 +538,7 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
             'nakshatra': 'Rohini',
             'yoga': 'Siddha',
             'karan': 'Bava',
+            'ishtakal': '10 घटी 15 पळे',
             'sunrise': fallback_sunrise,
             'sunset': fallback_sunset,
             'moonrise': datetime.time(7, 30),
@@ -673,37 +741,34 @@ def generate_kundali_svg(date_val, time_val, lat=21.1458, lon=79.0882, tz_offset
         
         planets_in_house = house_planets[house]
         if planets_in_house:
-            # Group into stacked vertical lines to prevent horizontal overflow in narrow triangular houses
-            lines = []
             n = len(planets_in_house)
-            if n <= 3:
-                lines = [p for p in planets_in_house]
-            elif n == 4:
-                lines = [p for p in planets_in_house]
+            
+            if n == 1:
+                font_size = 11
+                line_height = 0
+            elif n == 2:
+                font_size = 10
+                line_height = 11
+            elif n <= 4:
+                font_size = 9
+                line_height = 10
+            elif n <= 6:
+                font_size = 7.5
+                line_height = 8
             else:
-                # Pair them up if there are more than 4 planets to save vertical space
-                for idx in range(0, n, 2):
-                    if idx + 1 < n:
-                        lines.append(f"{planets_in_house[idx]},{planets_in_house[idx+1]}")
-                    else:
-                        lines.append(planets_in_house[idx])
-                        
-            num_lines = len(lines)
-            if num_lines == 1:
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]}" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[0]}</text>')
-            elif num_lines == 2:
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]}-4.5" font-family="Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[0]}</text>')
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]+5.5}" font-family="Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[1]}</text>')
-            elif num_lines == 3:
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]}-9" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[0]}</text>')
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]+0.5}" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[1]}</text>')
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]+10}" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[2]}</text>')
-            else:
-                # 4 or more vertical lines
-                start_y = coord["y"] - (num_lines - 1) * 4.5
-                for idx, line_text in enumerate(lines):
-                    curr_y = start_y + idx * 9
-                    svg.append(f'  <text x="{coord["x"]}" y="{curr_y}" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{line_text}</text>')
+                font_size = 6.5
+                line_height = 7
+                
+            total_height = (n - 1) * line_height
+            start_y = coord["y"] - (total_height / 2)
+            
+            svg.append(f'  <text font-family="Arial, sans-serif" font-size="{font_size}" font-weight="bold" fill="#FFF8E7" text-anchor="middle">')
+            for idx, p in enumerate(planets_in_house):
+                curr_y = start_y + (idx * line_height)
+                # Shift slightly down to align with vertical center better
+                adjusted_y = curr_y + (font_size * 0.35)
+                svg.append(f'    <tspan x="{coord["x"]}" y="{adjusted_y}">{p}</tspan>')
+            svg.append('  </text>')
                     
     svg.append('</svg>')
     return "".join(svg)
