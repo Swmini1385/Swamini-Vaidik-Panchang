@@ -412,7 +412,6 @@ def shubha_muhurt_view(request):
     }
     return render(request, 'shubha_muhurt.html', context)
 
-@login_required
 def get_tropical_position_helper(sidereal_sign, sidereal_degree_val, ayanamsha_val):
     SIGN_KEYS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
     try:
@@ -911,8 +910,8 @@ def kundali_detail_view(request, pk):
     else:
         time_val = kundali.time_of_birth
         
-    latitude = float(lat_str) if lat_str else float(kundali.latitude)
-    longitude = float(lon_str) if lon_str else float(kundali.longitude)
+    latitude = float(lat_str) if lat_str else (float(kundali.latitude) if kundali.latitude is not None else 21.1458)
+    longitude = float(lon_str) if lon_str else (float(kundali.longitude) if kundali.longitude is not None else 79.0882)
     timezone_name = timezone_str if timezone_str else kundali.timezone
     place_name = place_str if place_str else kundali.place_of_birth
     

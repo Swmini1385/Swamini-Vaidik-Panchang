@@ -188,4 +188,26 @@ class VaidikEnhancementsTests(TestCase):
         self.assertEqual(float(kundali.longitude), 79.088200)
         self.assertEqual(kundali.timezone, 'Asia/Kolkata')
 
+        # Follow/GET the detail page to verify the view executes successfully
+        detail_url = f'/kundali/{kundali.pk}/'
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, 200)
+
+        # Test loading a KundaliRecord that has null latitude and longitude
+        null_kundali = KundaliRecord.objects.create(
+            user=self.user,
+            name='Test Null Coords',
+            gender='Female',
+            date_of_birth='2026-06-05',
+            time_of_birth='12:00:00',
+            place_of_birth='Nagpur',
+            country='India',
+            state='Maharashtra',
+            latitude=None,
+            longitude=None,
+            timezone='Asia/Kolkata'
+        )
+        response = self.client.get(f'/kundali/{null_kundali.pk}/')
+        self.assertEqual(response.status_code, 200)
+
 
