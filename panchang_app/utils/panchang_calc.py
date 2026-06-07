@@ -666,3 +666,111 @@ def generate_planetary_positions(date_val, time_val):
     positions['Lagna (Asc)'] = 1
     house_signs = {h: ((lagna_sign + h - 2) % 12) + 1 for h in range(1, 13)}
     return positions, house_signs
+
+def calculate_extra_planets(date_val, time_val, latitude, longitude, timezone_offset, ayanamsa_val):
+    import datetime
+    from skyfield.api import load
+    import numpy as np
+    from jyotishganit.core.constants import NAKSHATRAS
+    
+    # 1. Calculate UTC time
+    dt = datetime.datetime.combine(date_val, time_val)
+    dt_utc = dt - datetime.timedelta(hours=float(timezone_offset))
+    
+    ts = load.timescale()
+    t = ts.from_datetime(dt_utc.replace(tzinfo=datetime.timezone.utc))
+    
+    # Load ephemeris
+    eph = load('de421.bsp')
+    earth = eph['earth']
+    
+    extra_bodies = {
+        'Uranus': 'uranus barycenter',
+        'Neptune': 'neptune barycenter',
+        'Pluto': 'pluto barycenter'
+    }
+    
+    extra_planets_data = []
+    SIGN_KEYS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
+    
+    for body_name, eph_key in extra_bodies.items():
+        try:
+            # Geocentric position
+            target = eph[eph_key]
+            apparent = earth.at(t).observe(target).apparent()
+            _, lon, _ = apparent.ecliptic_latlon()
+            
+            # Tropical longitude in degrees (0 to 360)
+            tropical_long = lon.degrees % 360
+            
+            # Sidereal longitude
+            sidereal_long = (tropical_long - float(ayanamsa_val)) % 360
+            
+            # Calculate signs
+            t_sign_idx = int(tropical_long / 30)
+            t_sign_name = SIGN_KEYS[t_sign_idx]
+            t_sign_deg = tropical_long % 30
+            
+            s_sign_idx = int(sidereal_long / 30)
+            s_sign_name = SIGN_KEYS[s_sign_idx]
+            s_sign_deg = sidereal_long % 30
+            
+            # Calculate Nakshatra
+            nak_idx = int(sidereal_long / (360 / 27))
+            nakshatra_name = NAKSHATRAS[nak_idx]
+            
+            # Calculate Pada
+            pada = int((sidereal_long % (360 / 27)) / (360 / 108)) + 1
+            
+            # Get Namakshar
+            namakshar = ""
+            matched_key = None
+            norm_nak = normalize_nakshatra_name(nakshatra_name)
+            for k in NAMAKSHAR_MAP.keys():
+                if normalize_nakshatra_name(k) == norm_nak:
+                    matched_key = k
+                    break
+            if matched_key:
+                padas = NAMAKSHAR_MAP[matched_key]
+                try:
+                    namakshar = padas[(pada - 1) % 4]
+                except Exception:
+                    pass
+            
+            # Sign degree formats
+            t_deg_str = f"{int(t_sign_deg)}° {int((t_sign_deg - int(t_sign_deg)) * 60)}'"
+            s_deg_str = f"{int(s_sign_deg)}° {int((s_sign_deg - int(s_sign_deg)) * 60)}'"
+            
+            extra_planets_data.append({
+                'name': body_name,
+                'name_mr': 'अरुण' if body_name == 'Uranus' else ('वरुण' if body_name == 'Neptune' else 'यम'),
+                'sidereal_sign': s_sign_name,
+                'sidereal_degree': s_deg_str,
+                'tropical_sign': t_sign_name,
+                'tropical_degree': t_deg_str,
+                'nakshatra': nakshatra_name,
+                'pada': pada,
+                'namakshar': namakshar
+            })
+        except Exception as ex:
+            print(f"[ERROR calculate_extra_planets for {body_name}] {ex}")
+            
+    return extra_planets_data
+
+def get_tropical_position(sidereal_sign, sidereal_degree_val, ayanamsha_val):
+    SIGN_KEYS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
+    try:
+        sign_idx = SIGN_KEYS.index(sidereal_sign)
+    except ValueError:
+        # Default conversion
+        return sidereal_sign, f"{int(sidereal_degree_val)}° {int((sidereal_degree_val - int(sidereal_degree_val)) * 60)}'"
+        
+    sidereal_long = (sign_idx * 30) + float(sidereal_degree_val)
+    tropical_long = (sidereal_long + float(ayanamsha_val)) % 360
+    
+    t_sign_idx = int(tropical_long / 30)
+    t_sign_name = SIGN_KEYS[t_sign_idx]
+    t_sign_deg = tropical_long % 30
+    t_deg_str = f"{int(t_sign_deg)}° {int((t_sign_deg - int(t_sign_deg)) * 60)}'"
+    
+    return t_sign_name, t_deg_str

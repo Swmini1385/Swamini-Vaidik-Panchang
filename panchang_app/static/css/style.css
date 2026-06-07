@@ -779,5 +779,13 @@ body {
     border-color: var(--primary-gold);
 }
 
+/* North Indian Square Kundali SVG styling */
+.kundali-svg-icon {
+    transition: var(--transition-smooth);
+}
+.panchang-card:hover .kundali-svg-icon {
+    stroke: url(#svg-gold-gradient) !important;
+}
+
 
 

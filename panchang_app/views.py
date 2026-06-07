@@ -20,6 +20,7 @@ from .utils.panchang_calc import (
     generate_kundali_svg, calculate_real_panchang, 
     get_real_birth_chart, decimal_hours_to_time, PLANET_MAPPING
 )
+from panchang_app.translations import TRANSLATIONS
 import jyotishganit
 from jyotishganit.core.astronomical import get_sunrise_sunset
 from zoneinfo import ZoneInfo
@@ -412,49 +413,58 @@ def shubha_muhurt_view(request):
     return render(request, 'shubha_muhurt.html', context)
 
 @login_required
-def kundali_view(request):
-    if request.method == 'POST':
-        form = KundaliForm(request.POST)
-        if form.is_valid():
-            kundali = form.save(commit=False)
-            kundali.user = request.user
-            kundali.save()
-            messages.success(request, f"Janma Kundali for '{kundali.name}' generated and saved successfully!")
-            return redirect('kundali_detail', pk=kundali.pk)
-    else:
-        form = KundaliForm()
+def get_tropical_position_helper(sidereal_sign, sidereal_degree_val, ayanamsha_val):
+    SIGN_KEYS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
+    try:
+        sign_idx = SIGN_KEYS.index(sidereal_sign)
+    except ValueError:
+        return sidereal_sign, f"{int(sidereal_degree_val)}° {int((sidereal_degree_val - int(sidereal_degree_val)) * 60)}'"
         
-    saved_kundalis = KundaliRecord.objects.filter(user=request.user)
-    return render(request, 'kundali.html', {'form': form, 'saved_kundalis': saved_kundalis})
+    sidereal_long = (sign_idx * 30) + float(sidereal_degree_val)
+    tropical_long = (sidereal_long + float(ayanamsha_val)) % 360
+    
+    t_sign_idx = int(tropical_long / 30)
+    t_sign_name = SIGN_KEYS[t_sign_idx]
+    t_sign_deg = tropical_long % 30
+    t_deg_str = f"{int(t_sign_deg)}° {int((t_sign_deg - int(t_sign_deg)) * 60)}'"
+    
+    return t_sign_name, t_deg_str
 
-@login_required
-def kundali_detail_view(request, pk):
-    kundali = get_object_or_404(KundaliRecord, pk=pk, user=request.user)
+def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_name, place_name, name=None, gender=None, current_lang='mr'):
+    import datetime
+    from zoneinfo import ZoneInfo
+    from panchang_app.utils.panchang_calc import (
+        get_real_birth_chart,
+        generate_kundali_svg,
+        calculate_extra_planets,
+        get_tropical_position,
+        NAMAKSHAR_MAP,
+        normalize_nakshatra_name,
+        calculate_real_panchang,
+        PLANETS,
+        PLANET_SHORTS,
+        PLANET_SHORTS_MR
+    )
+    from panchang_app.utils.milan import NAKSHATRAS
     
-    lang = request.session.get('lang', 'mr')
-    dt = datetime.datetime.combine(kundali.date_of_birth, kundali.time_of_birth)
-    tz_offset = get_tz_offset(kundali.timezone, dt)
-    
-    # Generate D1 SVG Kundali chart
+    dt = datetime.datetime.combine(date_val, time_val)
+    try:
+        tz = ZoneInfo(timezone_name)
+        tz_offset = dt.replace(tzinfo=tz).utcoffset().total_seconds() / 3600.0
+    except Exception:
+        tz_offset = 5.5
+        
     svg_chart = generate_kundali_svg(
-        kundali.date_of_birth, kundali.time_of_birth,
-        kundali.latitude, kundali.longitude, tz_offset, chart_type='d1',
-        lang=lang
+        date_val, time_val, latitude, longitude, tz_offset, chart_type='d1', lang=current_lang
     )
-    
-    # Generate D9 (Navamsha) SVG Kundali chart
     svg_chart_d9 = generate_kundali_svg(
-        kundali.date_of_birth, kundali.time_of_birth,
-        kundali.latitude, kundali.longitude, tz_offset, chart_type='d9',
-        lang=lang
+        date_val, time_val, latitude, longitude, tz_offset, chart_type='d9', lang=current_lang
     )
     
-    # Calculate detailed planetary positions and houses
-    chart = get_real_birth_chart(
-        kundali.date_of_birth, kundali.time_of_birth,
-        kundali.latitude, kundali.longitude, tz_offset, kundali.place_of_birth
-    )
+    chart = get_real_birth_chart(date_val, time_val, latitude, longitude, tz_offset, place_name)
     chart_dict = chart.to_dict()
+    
+    ayanamsa_val = chart.ayanamsa.value
     
     first_house = chart_dict['d1Chart']['houses'][0]
     lagna_sign = first_house['sign']
@@ -462,11 +472,29 @@ def kundali_detail_view(request, pk):
     lagna_nak = first_house['nakshatra']
     lagna_pada = first_house['pada']
     
+    lagna_namakshar = ""
+    matched_key = None
+    norm_nak = normalize_nakshatra_name(lagna_nak)
+    for k in NAMAKSHAR_MAP.keys():
+        if normalize_nakshatra_name(k) == norm_nak:
+            matched_key = k
+            break
+    if matched_key:
+        padas = NAMAKSHAR_MAP[matched_key]
+        try:
+            lagna_namakshar = padas[(int(lagna_pada) - 1) % 4]
+        except Exception:
+            pass
+            
+    lagna_t_sign, lagna_t_deg_str = get_tropical_position_helper(lagna_sign, lagna_deg, ayanamsa_val)
+    
     moon_sign = ""
     moon_nak = ""
     moon_pada = ""
+    moon_namakshar = ""
     
     planets_data = []
+    
     PLANET_NAME_MR = {
         'Sun': 'सूर्य', 'Moon': 'चंद्र', 'Mars': 'मंगळ',
         'Mercury': 'बुध', 'Jupiter': 'गुरू', 'Venus': 'शुक्र',
@@ -474,18 +502,18 @@ def kundali_detail_view(request, pk):
     }
     
     SIGN_NAMES_MR = {
-        'Aries': 'मेष (Aries)', 'Taurus': 'वृषभ (Taurus)', 'Gemini': 'मिथुन (Gemini)',
-        'Cancer': 'कर्क (Cancer)', 'Leo': 'सिंह (Leo)', 'Virgo': 'कन्या (Virgo)',
-        'Libra': 'तूळ (Libra)', 'Scorpio': 'वृश्चिक (Scorpio)', 'Sagittarius': 'धनु (Sagittarius)',
-        'Capricorn': 'मकर (Capricorn)', 'Aquarius': 'कुंभ (Aquarius)', 'Pisces': 'मीन (Pisces)'
+        'Aries': 'मेष', 'Taurus': 'वृषभ', 'Gemini': 'मिथुन',
+        'Cancer': 'कर्क', 'Leo': 'सिंह', 'Virgo': 'कन्या',
+        'Libra': 'तूळ', 'Scorpio': 'वृश्चिक', 'Sagittarius': 'धनु',
+        'Capricorn': 'मकर', 'Aquarius': 'कुंभ', 'Pisces': 'मीन'
     }
     SIGN_NAMES_EN = {
-        'Aries': 'Mesha (Aries)', 'Taurus': 'Vrishabha (Taurus)', 'Gemini': 'Mithuna (Gemini)',
-        'Cancer': 'Karka (Cancer)', 'Leo': 'Simha (Leo)', 'Virgo': 'Kanya (Virgo)',
-        'Libra': 'Tula (Libra)', 'Scorpio': 'Vrishchika (Scorpio)', 'Sagittarius': 'Dhanu (Sagittarius)',
-        'Capricorn': 'Makara (Capricorn)', 'Aquarius': 'Kumbha (Aquarius)', 'Pisces': 'Meena (Pisces)'
+        'Aries': 'Aries', 'Taurus': 'Taurus', 'Gemini': 'Gemini',
+        'Cancer': 'Cancer', 'Leo': 'Leo', 'Virgo': 'Virgo',
+        'Libra': 'Libra', 'Scorpio': 'Scorpio', 'Sagittarius': 'Sagittarius',
+        'Capricorn': 'Capricorn', 'Aquarius': 'Aquarius', 'Pisces': 'Pisces'
     }
-    sign_names = SIGN_NAMES_MR if lang == 'mr' else SIGN_NAMES_EN
+    sign_names = SIGN_NAMES_MR if current_lang == 'mr' else SIGN_NAMES_EN
     
     for h in chart_dict['d1Chart']['houses']:
         h_num = h['number']
@@ -498,46 +526,90 @@ def kundali_detail_view(request, pk):
                 sign = h['sign']
                 motion = occ.get('motion_type', 'direct')
                 
+                planet_namakshar = ""
+                matched_k = None
+                norm_n = normalize_nakshatra_name(nak)
+                for k in NAMAKSHAR_MAP.keys():
+                    if normalize_nakshatra_name(k) == norm_n:
+                        matched_k = k
+                        break
+                if matched_k:
+                    padas = NAMAKSHAR_MAP[matched_k]
+                    try:
+                        planet_namakshar = padas[(int(pada) - 1) % 4]
+                    except Exception:
+                        pass
+                
+                t_sign, t_deg_str = get_tropical_position_helper(sign, deg, ayanamsa_val)
+                
                 if body == 'Moon':
                     moon_sign = sign_names.get(sign, sign)
                     moon_nak = nak
                     moon_pada = pada
+                    moon_namakshar = planet_namakshar
                     
                 planets_data.append({
                     'name': body,
-                    'name_mr': PLANET_NAME_MR.get(body, body) if lang == 'mr' else body,
+                    'name_mr': PLANET_NAME_MR.get(body, body),
                     'house': h_num,
-                    'sign': sign_names.get(sign, sign),
-                    'degree': f"{int(deg)}° {int((deg - int(deg)) * 60)}'",
+                    'sidereal_sign': sign,
+                    'sidereal_degree': f"{int(deg)}° {int((deg - int(deg)) * 60)}'",
+                    'tropical_sign': t_sign,
+                    'tropical_degree': t_deg_str,
                     'nakshatra': nak,
                     'pada': pada,
+                    'namakshar': planet_namakshar,
                     'motion': motion
                 })
                 
     order = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']
     planets_data.sort(key=lambda x: order.index(x['name']) if x['name'] in order else 99)
     
-    # Get Namakshar for birth Moon Nakshatra
-    namakshar = ""
-    if moon_nak:
-        from panchang_app.utils.panchang_calc import NAMAKSHAR_MAP, normalize_nakshatra_name
-        matched_key = None
-        norm_moon_nak = normalize_nakshatra_name(moon_nak)
-        for k in NAMAKSHAR_MAP.keys():
-            if normalize_nakshatra_name(k) == norm_moon_nak:
-                matched_key = k
-                break
-        if matched_key:
-            padas = NAMAKSHAR_MAP[matched_key]
-            try:
-                namakshar = padas[(int(moon_pada) - 1) % 4]
-            except Exception:
-                pass
-
-    # Dasha details (Vimshottari Dasha)
-    dashas_dict = chart_dict.get('dashas', {})
+    extra_planets = calculate_extra_planets(date_val, time_val, latitude, longitude, tz_offset, ayanamsa_val)
     
-    # Build complete Vimshottari Dasha hierarchy
+    full_planet_rows = []
+    
+    full_planet_rows.append({
+        'name': 'Lagna',
+        'name_mr': 'लग्न',
+        'sidereal_sign': sign_names.get(lagna_sign, lagna_sign),
+        'sidereal_degree': f"{int(lagna_deg)}° {int((lagna_deg - int(lagna_deg)) * 60)}'",
+        'tropical_sign': sign_names.get(lagna_t_sign, lagna_t_sign),
+        'tropical_degree': lagna_t_deg_str,
+        'nakshatra': lagna_nak,
+        'pada': lagna_pada,
+        'namakshar': lagna_namakshar
+    })
+    
+    for p in planets_data:
+        full_planet_rows.append({
+            'name': p['name'],
+            'name_mr': p['name_mr'],
+            'sidereal_sign': sign_names.get(p['sidereal_sign'], p['sidereal_sign']),
+            'sidereal_degree': p['sidereal_degree'],
+            'tropical_sign': sign_names.get(p['tropical_sign'], p['tropical_sign']),
+            'tropical_degree': p['tropical_degree'],
+            'nakshatra': p['nakshatra'],
+            'pada': p['pada'],
+            'namakshar': p['namakshar']
+        })
+        
+    for ep in extra_planets:
+        full_planet_rows.append({
+            'name': ep['name'],
+            'name_mr': ep['name_mr'],
+            'sidereal_sign': sign_names.get(ep['sidereal_sign'], ep['sidereal_sign']),
+            'sidereal_degree': ep['sidereal_degree'],
+            'tropical_sign': sign_names.get(ep['tropical_sign'], ep['tropical_sign']),
+            'tropical_degree': ep['tropical_degree'],
+            'nakshatra': ep['nakshatra'],
+            'pada': ep['pada'],
+            'namakshar': ep['namakshar']
+        })
+        
+    dashas_dict = chart_dict.get('dashas', {})
+    mahadashas = dashas_dict.get('all', {}).get('mahadashas', {})
+    
     all_dashas = []
     today = datetime.date.today()
     
@@ -550,7 +622,6 @@ def kundali_detail_view(request, pk):
         except Exception:
             return d_str
             
-    mahadashas = dashas_dict.get('all', {}).get('mahadashas', {})
     for m_lord, m_val in mahadashas.items():
         m_start_str = m_val.get('start')
         m_end_str = m_val.get('end')
@@ -567,12 +638,6 @@ def kundali_detail_view(request, pk):
             else:
                 m_status = 'upcoming'
                 
-        # Calculate duration in years
-        m_duration = ""
-        if m_start and m_end:
-            years = (m_end - m_start).days / 365.25
-            m_duration = f"{round(years)} Yrs"
-            
         m_antardashas = []
         antardashas = m_val.get('antardashas', {})
         for a_lord, a_val in antardashas.items():
@@ -590,14 +655,6 @@ def kundali_detail_view(request, pk):
                     a_status = 'running'
                 else:
                     a_status = 'upcoming'
-                    
-            a_duration = ""
-            if a_start and a_end:
-                days = (a_end - a_start).days
-                if days >= 30:
-                    a_duration = f"{round(days/30.44, 1)} Mths"
-                else:
-                    a_duration = f"{days} Days"
                     
             a_pratyantardashas = []
             pratyantardashas = a_val.get('pratyantardashas', {})
@@ -619,6 +676,7 @@ def kundali_detail_view(request, pk):
                         
                 a_pratyantardashas.append({
                     'lord': p_lord,
+                    'lord_mr': PLANET_NAME_MR.get(p_lord, p_lord) if current_lang == 'mr' else p_lord,
                     'start_formatted': format_date_str(p_start_str),
                     'end_formatted': format_date_str(p_end_str),
                     'status': p_status
@@ -626,35 +684,279 @@ def kundali_detail_view(request, pk):
                 
             m_antardashas.append({
                 'lord': a_lord,
+                'lord_mr': PLANET_NAME_MR.get(a_lord, a_lord) if current_lang == 'mr' else a_lord,
                 'start_formatted': format_date_str(a_start_str),
                 'end_formatted': format_date_str(a_end_str),
-                'duration': a_duration,
                 'status': a_status,
                 'pratyantardashas': a_pratyantardashas
             })
             
         all_dashas.append({
             'lord': m_lord,
+            'lord_mr': PLANET_NAME_MR.get(m_lord, m_lord) if current_lang == 'mr' else m_lord,
             'start_formatted': format_date_str(m_start_str),
             'end_formatted': format_date_str(m_end_str),
-            'duration': m_duration,
             'status': m_status,
             'antardashas': m_antardashas
         })
         
-    context = {
-        'kundali': kundali,
+    panchang_data = calculate_real_panchang(date_val, latitude, longitude, tz_offset, place_name, dt)
+    
+    lagna_deg_str = f"{int(lagna_deg)}° {int((lagna_deg - int(lagna_deg)) * 60)}'"
+    
+    mars_house = 0
+    for h in chart_dict['d1Chart']['houses']:
+        for occ in h.get('occupants', []):
+            if occ['celestialBody'] == 'Mars':
+                mars_house = h['number']
+                break
+    has_mangal_dosha = mars_house in [1, 4, 7, 8, 12]
+    
+    dasha_bhogya = "नाही" if current_lang == 'mr' else "None"
+    current_mahadasha = next((d for d in all_dashas if d['status'] == 'running'), None)
+    if current_mahadasha:
+        current_antardasha = next((a for a in current_mahadasha['antardashas'] if a['status'] == 'running'), None)
+        if current_antardasha:
+            dasha_bhogya = f"{current_mahadasha['lord_mr'] if current_lang == 'mr' else current_mahadasha['lord']} - {current_antardasha['lord_mr'] if current_lang == 'mr' else current_antardasha['lord']}"
+        else:
+            dasha_bhogya = f"{current_mahadasha['lord_mr'] if current_lang == 'mr' else current_mahadasha['lord']}"
+
+    rashi_swami = sign_names.get(moon_sign, moon_sign)
+    
+    nak_key = None
+    for k in NAKSHATRAS.keys():
+        if k.lower() == moon_nak.strip().lower():
+            nak_key = k
+            break
+            
+    yoni_val = "--"
+    gana_val = "--"
+    nadi_val = "--"
+    varna_val = "--"
+    nak_lord = "--"
+    nak_paya = "चांदी" if current_lang == 'mr' else "Silver"
+    
+    if nak_key:
+        props = NAKSHATRAS[nak_key]
+        YONI_MR = {'Horse': 'अश्व (Horse)', 'Elephant': 'गज (Elephant)', 'Sheep': 'मेष (Sheep)', 'Serpent': 'सर्प (Serpent)', 'Dog': 'श्वान (Dog)', 'Cat': 'मार्जार (Cat)', 'Rat': 'मूषक (Rat)', 'Cow': 'गौ (Cow)', 'Buffalo': 'महिष (Buffalo)', 'Tiger': 'व्याघ्र (Tiger)', 'Hare': 'शशक (Hare)', 'Monkey': 'वानर (Monkey)', 'Lion': 'सिंह (Lion)', 'Mongoose': 'नकुल (Mongoose)'}
+        GANA_MR = {'Deva': 'देव (Deva)', 'Manushya': 'मनुष्य (Manushya)', 'Rakshasa': 'राक्षस (Rakshasa)'}
+        NADI_MR = {'Adi': 'आद्य (Adi)', 'Madhya': 'मध्य (Madhya)', 'Antya': 'अंत्य (Antya)'}
+        VARNA_MR = {'Brahmin': 'ब्राह्मण (Brahmin)', 'Kshatriya': 'क्षत्रिय (Kshatriya)', 'Vaishya': 'वैश्य (Vaishya)', 'Shudra': 'शूद्र (Shudra)'}
+        
+        if current_lang == 'mr':
+            yoni_val = YONI_MR.get(props['yoni'], props['yoni'])
+            gana_val = GANA_MR.get(props['gana'], props['gana'])
+            nadi_val = NADI_MR.get(props['nadi'], props['nadi'])
+            varna_val = VARNA_MR.get(props['varna'], props['varna'])
+            nak_lord = PLANET_NAME_MR.get(props['lord'], props['lord'])
+        else:
+            yoni_val = props['yoni']
+            gana_val = props['gana']
+            nadi_val = props['nadi']
+            varna_val = props['varna']
+            nak_lord = props['lord']
+            
+        from panchang_app.utils.panchang_calc import SIGN_MAP
+        m_idx = SIGN_MAP.get(moon_sign, 1)
+        s_idx = SIGN_MAP.get(panchang_data.get('surya', 'Taurus'), 1)
+        diff = (m_idx - s_idx) % 12 + 1
+        if diff in [1, 6, 11]:
+            nak_paya = "सोने (Gold)" if current_lang == 'mr' else "Gold"
+        elif diff in [2, 5, 9]:
+            nak_paya = "चांदी (Silver)" if current_lang == 'mr' else "Silver"
+        elif diff in [3, 7, 10]:
+            nak_paya = "तांबे (Copper)" if current_lang == 'mr' else "Copper"
+        else:
+            nak_paya = "लोखंड (Iron)" if current_lang == 'mr' else "Iron"
+
+    trans = TRANSLATIONS.get(current_lang, TRANSLATIONS['mr'])
+    
+    return {
+        'name': name or (trans.get('current_chart', 'सध्याची कुंडली')),
+        'gender': gender or 'Male',
+        'date_of_birth': date_val,
+        'time_of_birth': time_val,
+        'place_of_birth': place_name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'timezone': timezone_name,
         'svg_chart': svg_chart,
         'svg_chart_d9': svg_chart_d9,
-        'planets': planets_data,
+        'planets': full_planet_rows,
         'nakshatra': moon_nak,
-        'lagna': sign_names.get(lagna_sign, lagna_sign),
-        'rashi': moon_sign,
         'pada': moon_pada,
-        'namakshar': namakshar,
+        'namakshar': moon_namakshar,
+        'lagna': sign_names.get(lagna_sign, lagna_sign),
+        'lagna_deg': lagna_deg_str,
+        'rashi': moon_sign,
         'all_dashas': all_dashas,
+        'panchang': panchang_data,
+        'mangal_dosha': has_mangal_dosha,
+        'dasha_bhogya': dasha_bhogya,
+        'rashi_swami': rashi_swami,
+        'nak_swami': nak_lord,
+        'nak_paya': nak_paya,
+        'yoni': yoni_val,
+        'gana': gana_val,
+        'nadi': nadi_val,
+        'varna': varna_val,
     }
-    return render(request, 'kundali_detail.html', context)
+
+@login_required
+def kundali_view(request):
+    current_lang = request.session.get('lang', 'mr')
+    trans = TRANSLATIONS.get(current_lang, TRANSLATIONS['mr'])
+    
+    if request.method == 'POST':
+        form = KundaliForm(request.POST)
+        if form.is_valid():
+            kundali = form.save(commit=False)
+            kundali.user = request.user
+            kundali.save()
+            messages.success(request, f"Janma Kundali for '{kundali.name}' generated and saved successfully!")
+            return redirect('kundali_detail', pk=kundali.pk)
+        else:
+            messages.error(request, "Failed to save Kundali. Please check the inputs.")
+            return redirect('kundali')
+
+    # GET parameters parsing
+    date_str = request.GET.get('date')
+    time_str = request.GET.get('time')
+    lat_str = request.GET.get('lat')
+    lon_str = request.GET.get('lon')
+    timezone_str = request.GET.get('timezone')
+    place_str = request.GET.get('place_name')
+    
+    # Defaults
+    loc = get_active_location(request)
+    
+    if date_str:
+        try:
+            date_val = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+        except Exception:
+            date_val = datetime.date.today()
+    else:
+        date_val = datetime.date.today()
+        
+    if time_str:
+        try:
+            if len(time_str) > 5:
+                time_val = datetime.datetime.strptime(time_str, '%H:%M:%S').time()
+            else:
+                time_val = datetime.datetime.strptime(time_str, '%H:%M').time()
+        except Exception:
+            time_val = datetime.datetime.now().time()
+    else:
+        time_val = datetime.datetime.now().time()
+        
+    latitude = float(lat_str) if lat_str else float(loc['latitude'])
+    longitude = float(lon_str) if lon_str else float(loc['longitude'])
+    timezone_name = timezone_str if timezone_str else loc['timezone']
+    place_name = place_str if place_str else loc['place_name']
+    
+    # Compute context data
+    chart_context = compute_kundali_details(
+        date_val, time_val, latitude, longitude, timezone_name, place_name, current_lang=current_lang
+    )
+    
+    form = KundaliForm(initial={
+        'date_of_birth': date_val,
+        'time_of_birth': time_val,
+        'place_of_birth': place_name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'timezone': timezone_name,
+        'country': 'India',
+        'state': 'Maharashtra'
+    })
+    
+    saved_kundalis = KundaliRecord.objects.filter(user=request.user)
+    
+    context = {
+        **chart_context,
+        'form': form,
+        'saved_kundalis': saved_kundalis,
+        'trans': trans,
+        'current_lang': current_lang,
+        'is_recalculated': True,
+        'selected_profile_id': None
+    }
+    
+    return render(request, 'kundali.html', context)
+
+@login_required
+def kundali_detail_view(request, pk):
+    current_lang = request.session.get('lang', 'mr')
+    trans = TRANSLATIONS.get(current_lang, TRANSLATIONS['mr'])
+    
+    kundali = get_object_or_404(KundaliRecord, pk=pk, user=request.user)
+    
+    # GET parameters parsing (allow temporary recalculations)
+    date_str = request.GET.get('date')
+    time_str = request.GET.get('time')
+    lat_str = request.GET.get('lat')
+    lon_str = request.GET.get('lon')
+    timezone_str = request.GET.get('timezone')
+    place_str = request.GET.get('place_name')
+    
+    date_val = datetime.datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else kundali.date_of_birth
+    if time_str:
+        try:
+            if len(time_str) > 5:
+                time_val = datetime.datetime.strptime(time_str, '%H:%M:%S').time()
+            else:
+                time_val = datetime.datetime.strptime(time_str, '%H:%M').time()
+        except Exception:
+            time_val = kundali.time_of_birth
+    else:
+        time_val = kundali.time_of_birth
+        
+    latitude = float(lat_str) if lat_str else float(kundali.latitude)
+    longitude = float(lon_str) if lon_str else float(kundali.longitude)
+    timezone_name = timezone_str if timezone_str else kundali.timezone
+    place_name = place_str if place_str else kundali.place_of_birth
+    
+    # Compute context data
+    chart_context = compute_kundali_details(
+        date_val, time_val, latitude, longitude, timezone_name, place_name,
+        name=kundali.name, gender=kundali.gender, current_lang=current_lang
+    )
+    
+    form = KundaliForm(initial={
+        'name': kundali.name,
+        'gender': kundali.gender,
+        'date_of_birth': date_val,
+        'time_of_birth': time_val,
+        'place_of_birth': place_name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'timezone': timezone_name,
+        'country': kundali.country,
+        'state': kundali.state
+    })
+    
+    saved_kundalis = KundaliRecord.objects.filter(user=request.user)
+    
+    context = {
+        **chart_context,
+        'form': form,
+        'saved_kundalis': saved_kundalis,
+        'trans': trans,
+        'current_lang': current_lang,
+        'is_recalculated': True,
+        'selected_profile_id': pk,
+        'profile_name': kundali.name
+    }
+    
+    return render(request, 'kundali.html', context)
+
+@login_required
+def delete_kundali_view(request, pk):
+    kundali = get_object_or_404(KundaliRecord, pk=pk, user=request.user)
+    name = kundali.name
+    kundali.delete()
+    messages.success(request, f"Kundali profile for '{name}' deleted successfully.")
+    return redirect('kundali')
 
 @login_required
 def kundali_milan_view(request):
