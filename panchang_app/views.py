@@ -517,6 +517,23 @@ def kundali_detail_view(request, pk):
     order = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']
     planets_data.sort(key=lambda x: order.index(x['name']) if x['name'] in order else 99)
     
+    # Get Namakshar for birth Moon Nakshatra
+    namakshar = ""
+    if moon_nak:
+        from panchang_app.utils.panchang_calc import NAMAKSHAR_MAP, normalize_nakshatra_name
+        matched_key = None
+        norm_moon_nak = normalize_nakshatra_name(moon_nak)
+        for k in NAMAKSHAR_MAP.keys():
+            if normalize_nakshatra_name(k) == norm_moon_nak:
+                matched_key = k
+                break
+        if matched_key:
+            padas = NAMAKSHAR_MAP[matched_key]
+            try:
+                namakshar = padas[(int(moon_pada) - 1) % 4]
+            except Exception:
+                pass
+
     # Dasha details (Vimshottari Dasha)
     dashas_dict = chart_dict.get('dashas', {})
     
@@ -634,6 +651,7 @@ def kundali_detail_view(request, pk):
         'lagna': sign_names.get(lagna_sign, lagna_sign),
         'rashi': moon_sign,
         'pada': moon_pada,
+        'namakshar': namakshar,
         'all_dashas': all_dashas,
     }
     return render(request, 'kundali_detail.html', context)

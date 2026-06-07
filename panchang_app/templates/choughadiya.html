@@ -46,10 +46,10 @@
                     <h5 class="m-0 text-dark fw-bold">{{ trans.date }}: {{ selected_date|date:"d F Y" }}</h5>
                 </div>
                 <div class="col-md-4 mb-2 mb-md-0">
-                    <span class="fw-semibold text-success"><i class="fa-solid fa-sun me-1"></i>{{ trans.sunrise }}: {{ sunrise|time:"g:i A" }}</span>
+                    <span class="fw-semibold text-success"><i class="fa-solid fa-sun me-1"></i>{{ trans.sunrise }}: {{ sunrise|format_time_ampm }}</span>
                 </div>
                 <div class="col-md-4">
-                    <span class="fw-semibold text-danger"><i class="fa-solid fa-cloud-sun me-1"></i>{{ trans.sunset }}: {{ sunset|time:"g:i A" }}</span>
+                    <span class="fw-semibold text-danger"><i class="fa-solid fa-cloud-sun me-1"></i>{{ trans.sunset }}: {{ sunset|format_time_ampm }}</span>
                 </div>
             </div>
         </div>

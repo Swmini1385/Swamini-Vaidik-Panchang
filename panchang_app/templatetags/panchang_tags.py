@@ -38,3 +38,15 @@ def translate_val(value, lang):
         translated_words.append(translated_word)
         
     return " ".join(translated_words)
+
+@register.filter
+def format_time_ampm(value):
+    if not value:
+        return ""
+    if isinstance(value, str):
+        return value
+    try:
+        # Enforce standard AM/PM formatting bypassing Django's local translation
+        return value.strftime('%I:%M %p')
+    except Exception:
+        return str(value)

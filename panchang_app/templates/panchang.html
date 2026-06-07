@@ -94,7 +94,9 @@
                             <i class="fa-solid fa-star text-warning"></i>
                             <div>
                                 <small class="text-muted d-block">{{ trans.nakshatra }}</small>
-                                <span class="fw-bold fs-5 text-dark">{{ panchang.nakshatra|translate_val:current_lang }}</span>
+                                <span class="fw-bold fs-5 text-dark">
+                                    {{ panchang.nakshatra|translate_val:current_lang }} - {{ trans.charan }} {{ panchang.charan|translate_val:current_lang }} ({% if panchang.namakshar %}{{ panchang.namakshar }}{% else %}--{% endif %})
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -131,19 +133,19 @@
                     <ul class="list-group list-group-flush bg-transparent">
                         <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-3 border-bottom">
                             <span><i class="fa-solid fa-sun text-warning me-2 fs-5"></i>{{ trans.sunrise }}</span>
-                            <span class="fw-bold text-success fs-5">{{ panchang.sunrise|time:"g:i A" }}</span>
+                            <span class="fw-bold text-success fs-5">{{ panchang.sunrise|format_time_ampm }}</span>
                         </li>
                         <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-3 border-bottom">
                             <span><i class="fa-solid fa-cloud-sun text-danger me-2 fs-5"></i>{{ trans.sunset }}</span>
-                            <span class="fw-bold text-danger fs-5">{{ panchang.sunset|time:"g:i A" }}</span>
+                            <span class="fw-bold text-danger fs-5">{{ panchang.sunset|format_time_ampm }}</span>
                         </li>
                         <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-3 border-bottom">
                             <span><i class="fa-solid fa-moon text-primary me-2 fs-5"></i>{{ trans.moonrise }}</span>
-                            <span class="fw-bold text-primary fs-5">{{ panchang.moonrise|time:"g:i A" }}</span>
+                            <span class="fw-bold text-primary fs-5">{{ panchang.moonrise|format_time_ampm }}</span>
                         </li>
                         <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-3 border-0">
                             <span><i class="fa-regular fa-moon text-secondary me-2 fs-5"></i>{{ trans.moonset }}</span>
-                            <span class="fw-bold text-secondary fs-5">{{ panchang.moonset|time:"g:i A" }}</span>
+                            <span class="fw-bold text-secondary fs-5">{{ panchang.moonset|format_time_ampm }}</span>
                         </li>
                     </ul>
                 </div>

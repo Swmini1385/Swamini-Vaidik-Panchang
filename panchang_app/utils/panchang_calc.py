@@ -152,6 +152,13 @@ def decimal_hours_to_time(dec_hours):
     seconds = int(((dec_hours - hours) * 60 - minutes) * 60)
     return datetime.time(hours, minutes, seconds)
 
+def normalize_nakshatra_name(name):
+    if not name:
+        return ""
+    s = name.lower().replace(" ", "").replace("-", "").strip()
+    s = s.replace("shth", "sht").replace("sth", "st").replace("sh", "s").replace("th", "t").replace("oo", "u")
+    return s
+
 def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur", current_dt=None):
     """
     Calculates Daily Panchang using jyotishganit and skyfield for given location coordinates.
@@ -276,8 +283,9 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
         namakshar_mr = ""
         if moon_nak:
             matched_key = None
+            norm_moon_nak = normalize_nakshatra_name(moon_nak)
             for k in NAMAKSHAR_MAP.keys():
-                if k.lower() == moon_nak.strip().lower():
+                if normalize_nakshatra_name(k) == norm_moon_nak:
                     matched_key = k
                     break
             if matched_key:

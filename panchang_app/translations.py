@@ -58,6 +58,8 @@ TRANSLATIONS = {
         'tithi': 'तिथी',
         'vaar': 'वार',
         'nakshatra': 'नक्षत्र',
+        'charan': 'चरण',
+        'namakshar': 'नामाक्षर',
         'yoga': 'योग',
         'karan': 'करण',
         'sunrise': 'सूर्योदय',
@@ -289,10 +291,17 @@ TRANSLATIONS = {
         'Uttara Ashadha': 'उत्तराषाढा',
         'Shravana': 'श्रवण',
         'Dhanishtha': 'धनिष्ठा',
+        'Dhanishta': 'धनिष्ठा',
         'Shatabhisha': 'शततारका',
         'Purva Bhadrapada': 'पूर्वाभाद्रपदा',
         'Uttara Bhadrapada': 'उत्तराभाद्रपदा',
         'Revati': 'रेवती',
+
+        # Numerals
+        '1': '१',
+        '2': '२',
+        '3': '३',
+        '4': '४',
 
         # Yogas Marathi
         'Vishkumbha': 'विष्कंभ',
@@ -494,6 +503,8 @@ TRANSLATIONS = {
         'tithi': 'Tithi',
         'vaar': 'Vaar',
         'nakshatra': 'Nakshatra',
+        'charan': 'Charan',
+        'namakshar': 'Namakshar',
         'yoga': 'Yoga',
         'karan': 'Karan',
         'sunrise': 'Sunrise',
@@ -725,6 +736,7 @@ TRANSLATIONS = {
         'Uttara Ashadha': 'Uttara Ashadha',
         'Shravana': 'Shravana',
         'Dhanishtha': 'Dhanishtha',
+        'Dhanishta': 'Dhanishtha',
         'Shatabhisha': 'Shatabhisha',
         'Purva Bhadrapada': 'Purva Bhadrapada',
         'Uttara Bhadrapada': 'Uttara Bhadrapada',

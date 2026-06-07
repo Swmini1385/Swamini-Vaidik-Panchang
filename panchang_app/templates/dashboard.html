@@ -69,7 +69,9 @@
                 <div class="col">
                     <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
                         <small class="text-muted d-block" style="font-size: 11px;">{{ trans.month|default:"महिना" }}</small>
-                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{% if current_lang == 'mr' %}{{ panchang.mahina_mr }}{% else %}{{ panchang.mahina }}{% endif %}</span>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">
+                            {% if current_lang == 'mr' %}{{ panchang.mahina_mr }}{% else %}{{ panchang.mahina }}{% endif %}
+                        </span>
                     </div>
                 </div>
                 <div class="col">
@@ -80,14 +82,20 @@
                 </div>
                 <div class="col">
                     <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
-                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.charan|default:"नक्षत्र चरण" }}</small>
-                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{% if current_lang == 'mr' %}{{ panchang.charan|translate_val:current_lang }} चरण{% else %}Pada {{ panchang.charan }}{% endif %}</span>
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.charan|default:"चरण" }}</small>
+                        <span class="fw-bold text-danger" style="font-size: 13.5px;">
+                            {% if current_lang == 'mr' %}
+                                {{ panchang.charan|translate_val:current_lang }} ({{ panchang.namakshar }})
+                            {% else %}
+                                {{ panchang.charan }} ({{ panchang.namakshar }})
+                            {% endif %}
+                        </span>
                     </div>
                 </div>
                 <div class="col">
                     <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
                         <small class="text-muted d-block" style="font-size: 11px;">{{ trans.namakshar|default:"नामाक्षर" }}</small>
-                        <span class="fw-bold text-danger" style="font-size: 13.5px;">{% if panchang.namakshar %}{{ panchang.namakshar }}{% else %}--{% endif %}</span>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{% if panchang.namakshar %}{{ panchang.namakshar }}{% else %}--{% endif %}</span>
                     </div>
                 </div>
                 <div class="col">
@@ -141,12 +149,12 @@
                 </div>
                 <div class="col col-sm-6 col-md-4 col-lg-3">
                     <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
-                        <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-circle-exclamation me-1 text-danger"></i>{{ trans.current_yamghanta|default:"यमघंट वेळ" }}</small>
+                        <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-circle-exclamation me-1 text-danger"></i>{{ trans.current_yamghanta|default:"यमघंन्ट वेळ" }}</small>
                         <span class="badge bg-danger text-light fw-bold" style="font-size: 11.5px; margin: 2px 0;">
                             {% if current_lang == 'mr' %}यमघंटा (अशुभ){% else %}Yamghanta (Inauspicious){% endif %}
                         </span>
                         <span class="text-muted d-block" style="font-size: 10px;">
-                            {{ panchang.yamghanta_start|time:"g:i A" }} - {{ panchang.yamghanta_end|time:"g:i A" }}
+                            {{ panchang.yamghanta_start|format_time_ampm }} - {{ panchang.yamghanta_end|format_time_ampm }}
                         </span>
                     </div>
                 </div>
@@ -166,10 +174,10 @@
                         <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-sun me-1 text-success"></i>{{ trans.sunrise }}/{{ trans.sunset }}</small>
                         <div class="d-flex justify-content-between mt-1">
                             <span class="fw-bold text-success" style="font-size: 11.5px;">
-                                <i class="fa-solid fa-circle-up me-1"></i>{{ panchang.sunrise|time:"g:i A" }}
+                                <i class="fa-solid fa-circle-up me-1"></i>{{ panchang.sunrise|format_time_ampm }}
                             </span>
                             <span class="fw-bold text-warning" style="font-size: 11.5px;">
-                                <i class="fa-solid fa-circle-down me-1"></i>{{ panchang.sunset|time:"g:i A" }}
+                                <i class="fa-solid fa-circle-down me-1"></i>{{ panchang.sunset|format_time_ampm }}
                             </span>
                         </div>
                     </div>

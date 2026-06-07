@@ -137,7 +137,7 @@
                                     <td>{{ kundali.gender|translate_val:current_lang }}</td>
                                     <td>
                                         <small class="d-block fw-semibold text-danger">{{ kundali.date_of_birth|date:"d M Y" }}</small>
-                                        <small class="text-muted">{{ kundali.time_of_birth|time:"g:i A" }}</small>
+                                        <small class="text-muted">{{ kundali.time_of_birth|format_time_ampm }}</small>
                                     </td>
                                     <td>
                                         <span class="d-block text-dark fw-semibold" style="font-size:13.5px;">{{ kundali.place_of_birth }}</span>

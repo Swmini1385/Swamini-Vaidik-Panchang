@@ -47,13 +47,15 @@
                 </div>
                 <div class="col-6 col-md-3">
                     <small class="text-muted d-block">{% trans "Pada" %}</small>
-                    <span class="fw-bold text-dark fs-5">{{ pada }}</span>
+                    <span class="fw-bold text-dark fs-5">
+                        {{ pada|translate_val:current_lang }} ({% if namakshar %}{{ namakshar }}{% else %}--{% endif %})
+                    </span>
                 </div>
                 <div class="col-6 col-md-3">
                     <small class="text-muted d-block">{% trans "Date & Time" %}</small>
                     <span class="fw-bold text-dark fs-6">
                         <i class="fa-solid fa-calendar-alt text-warning me-1"></i>{{ kundali.date_of_birth|date:"d F Y" }}<br>
-                        <i class="fa-regular fa-clock text-warning me-1"></i>{{ kundali.time_of_birth|time:"g:i A" }}
+                        <i class="fa-regular fa-clock text-warning me-1"></i>{{ kundali.time_of_birth|format_time_ampm }}
                     </span>
                 </div>
             </div>
