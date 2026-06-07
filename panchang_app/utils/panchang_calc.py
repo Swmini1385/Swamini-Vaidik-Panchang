@@ -574,17 +574,17 @@ def get_house_text_coords():
     """
     return {
         1:  {'x': 150, 'y': 105, 'sign_x': 150, 'sign_y': 70},   # House 1
-        2:  {'x': 90,  'y': 65,  'sign_x': 110, 'sign_y': 45},   # House 2
-        3:  {'x': 45,  'y': 95,  'sign_x': 45,  'sign_y': 75},   # House 3
+        2:  {'x': 80,  'y': 38,  'sign_x': 80,  'sign_y': 68},   # House 2
+        3:  {'x': 38,  'y': 80,  'sign_x': 68,  'sign_y': 80},   # House 3
         4:  {'x': 90,  'y': 150, 'sign_x': 65,  'sign_y': 150},  # House 4
-        5:  {'x': 45,  'y': 205, 'sign_x': 45,  'sign_y': 225},  # House 5
-        6:  {'x': 90,  'y': 235, 'sign_x': 110, 'sign_y': 255},  # House 6
+        5:  {'x': 38,  'y': 220, 'sign_x': 68,  'sign_y': 220},  # House 5
+        6:  {'x': 80,  'y': 262, 'sign_x': 80,  'sign_y': 232},  # House 6
         7:  {'x': 150, 'y': 195, 'sign_x': 150, 'sign_y': 230},  # House 7
-        8:  {'x': 210, 'y': 235, 'sign_x': 190, 'sign_y': 255},  # House 8
-        9:  {'x': 255, 'y': 205, 'sign_x': 255, 'sign_y': 225},  # House 9
+        8:  {'x': 220, 'y': 262, 'sign_x': 220, 'sign_y': 232},  # House 8
+        9:  {'x': 262, 'y': 220, 'sign_x': 232, 'sign_y': 220},  # House 9
         10: {'x': 210, 'y': 150, 'sign_x': 235, 'sign_y': 150},  # House 10
-        11: {'x': 255, 'y': 95,  'sign_x': 255, 'sign_y': 75},   # House 11
-        12: {'x': 210, 'y': 65,  'sign_x': 190, 'sign_y': 45},   # House 12
+        11: {'x': 262, 'y': 80,  'sign_x': 232, 'sign_y': 80},   # House 11
+        12: {'x': 220, 'y': 38,  'sign_x': 220, 'sign_y': 68},   # House 12
     }
 
 def generate_kundali_svg(date_val, time_val, lat=21.1458, lon=79.0882, tz_offset=5.5, chart_type='d1', lang='mr'):
@@ -619,6 +619,38 @@ def generate_kundali_svg(date_val, time_val, lat=21.1458, lon=79.0882, tz_offset
         short_name = shorts_map.get(planet, planet[:2])
         house_planets[house].append(short_name)
         
+    # Append outer planets (Uranus/Arun, Neptune/Varun, Pluto/Yama) to the correct house
+    extra_planets = []
+    try:
+        ayanamsa_val = chart.ayanamsa.value
+        extra_planets = calculate_extra_planets(date_val, time_val, lat, lon, tz_offset, ayanamsa_val)
+    except Exception:
+        pass
+        
+    for ep in extra_planets:
+        body_name = ep['name']
+        if lang == 'mr':
+            short_name = 'अरुण' if body_name == 'Uranus' else ('वरुण' if body_name == 'Neptune' else 'यम')
+        else:
+            short_name = 'Ur' if body_name == 'Uranus' else ('Ne' if body_name == 'Neptune' else 'Pl')
+            
+        if chart_type == 'd1':
+            target_sign = SIGN_MAP.get(ep['sidereal_sign'], 1)
+        elif chart_type == 'd9':
+            nav_idx = int(ep['sidereal_long'] / 3.333333333)
+            target_sign = (nav_idx % 12) + 1
+        else:
+            target_sign = SIGN_MAP.get(ep['sidereal_sign'], 1)
+            
+        target_house = None
+        for h, s in house_signs.items():
+            if s == target_sign:
+                target_house = h
+                break
+                
+        if target_house is not None:
+            house_planets[target_house].append(short_name)
+        
     coords = get_house_text_coords()
     
     svg = []
@@ -641,15 +673,38 @@ def generate_kundali_svg(date_val, time_val, lat=21.1458, lon=79.0882, tz_offset
         
         planets_in_house = house_planets[house]
         if planets_in_house:
-            planet_str = ", ".join(planets_in_house)
-            if len(planets_in_house) > 2:
-                p1 = ", ".join(planets_in_house[:2])
-                p2 = ", ".join(planets_in_house[2:])
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]-4}" font-family="Arial, sans-serif" font-size="9" fill="#FFF8E7" text-anchor="middle">{p1}</text>')
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]+6}" font-family="Arial, sans-serif" font-size="9" fill="#FFF8E7" text-anchor="middle">{p2}</text>')
+            # Group into stacked vertical lines to prevent horizontal overflow in narrow triangular houses
+            lines = []
+            n = len(planets_in_house)
+            if n <= 3:
+                lines = [p for p in planets_in_house]
+            elif n == 4:
+                lines = [p for p in planets_in_house]
             else:
-                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]}" font-family="Arial, sans-serif" font-size="10" fill="#FFF8E7" text-anchor="middle">{planet_str}</text>')
-                
+                # Pair them up if there are more than 4 planets to save vertical space
+                for idx in range(0, n, 2):
+                    if idx + 1 < n:
+                        lines.append(f"{planets_in_house[idx]},{planets_in_house[idx+1]}")
+                    else:
+                        lines.append(planets_in_house[idx])
+                        
+            num_lines = len(lines)
+            if num_lines == 1:
+                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]}" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[0]}</text>')
+            elif num_lines == 2:
+                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]}-4.5" font-family="Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[0]}</text>')
+                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]+5.5}" font-family="Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[1]}</text>')
+            elif num_lines == 3:
+                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]}-9" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[0]}</text>')
+                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]+0.5}" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[1]}</text>')
+                svg.append(f'  <text x="{coord["x"]}" y="{coord["y"]+10}" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{lines[2]}</text>')
+            else:
+                # 4 or more vertical lines
+                start_y = coord["y"] - (num_lines - 1) * 4.5
+                for idx, line_text in enumerate(lines):
+                    curr_y = start_y + idx * 9
+                    svg.append(f'  <text x="{coord["x"]}" y="{curr_y}" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#FFF8E7" text-anchor="middle">{line_text}</text>')
+                    
     svg.append('</svg>')
     return "".join(svg)
 
@@ -744,6 +799,7 @@ def calculate_extra_planets(date_val, time_val, latitude, longitude, timezone_of
             extra_planets_data.append({
                 'name': body_name,
                 'name_mr': 'अरुण' if body_name == 'Uranus' else ('वरुण' if body_name == 'Neptune' else 'यम'),
+                'sidereal_long': sidereal_long,
                 'sidereal_sign': s_sign_name,
                 'sidereal_degree': s_deg_str,
                 'tropical_sign': t_sign_name,

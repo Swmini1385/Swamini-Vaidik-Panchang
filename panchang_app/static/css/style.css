@@ -95,10 +95,12 @@ h1, h2, h3, h4, h5, h6, .vedic-title {
     transition: var(--transition-smooth);
 }
 
-.sidebar .nav-link i {
+.sidebar .nav-link i, .sidebar .nav-link svg.kundali-sidebar-icon {
     font-size: 18px;
     width: 24px;
+    height: 24px;
     color: var(--primary-gold-light);
+    stroke: var(--primary-gold-light);
     transition: var(--transition-smooth);
 }
 
@@ -110,8 +112,10 @@ h1, h2, h3, h4, h5, h6, .vedic-title {
     box-shadow: 0 4px 10px rgba(212, 160, 23, 0.3);
 }
 
-.sidebar .nav-link:hover i, .sidebar .nav-link.active i {
+.sidebar .nav-link:hover i, .sidebar .nav-link.active i,
+.sidebar .nav-link:hover svg.kundali-sidebar-icon, .sidebar .nav-link.active svg.kundali-sidebar-icon {
     color: var(--dark-maroon);
+    stroke: var(--dark-maroon);
     transform: scale(1.1);
 }
 

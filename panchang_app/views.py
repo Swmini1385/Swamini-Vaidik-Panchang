@@ -429,6 +429,152 @@ def get_tropical_position_helper(sidereal_sign, sidereal_degree_val, ayanamsha_v
     
     return t_sign_name, t_deg_str
 
+def calculate_custom_vimshottari(birth_date, balance_dict, current_lang='mr'):
+    PLANET_NAME_MR = {
+        'Sun': 'सूर्य', 'Moon': 'चंद्र', 'Mars': 'मंगळ',
+        'Mercury': 'बुध', 'Jupiter': 'गुरु', 'Venus': 'शुक्र',
+        'Saturn': 'शनि', 'Rahu': 'राहु', 'Ketu': 'केतु'
+    }
+    
+    if not balance_dict:
+        return []
+        
+    birth_lord = list(balance_dict.keys())[0]
+    balance_years = float(balance_dict[birth_lord])
+    
+    # Durations in years
+    VIMSHOTTARI_DURATIONS = {
+        'Sun': 6, 'Moon': 10, 'Mars': 7, 'Rahu': 18,
+        'Jupiter': 16, 'Saturn': 19, 'Mercury': 17, 'Ketu': 7, 'Venus': 20
+    }
+    VIMSHOTTARI_ORDER = ['Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus']
+    
+    lord_idx = VIMSHOTTARI_ORDER.index(birth_lord)
+    mahadasha_order = VIMSHOTTARI_ORDER[lord_idx:] + VIMSHOTTARI_ORDER[:lord_idx]
+    
+    today = datetime.date.today()
+    all_dashas = []
+    
+    for i, m_lord in enumerate(mahadasha_order):
+        m_duration = VIMSHOTTARI_DURATIONS[m_lord]
+        
+        # Calculate Mahadasha start and end dates
+        if i == 0:
+            m_start = birth_date
+            # The remaining period from birth
+            m_end = birth_date + datetime.timedelta(days=int(balance_years * 365.25))
+            # Theoretical start (to align Antardashas)
+            theoretical_start = birth_date - datetime.timedelta(days=int((m_duration - balance_years) * 365.25))
+        else:
+            m_start = all_dashas[-1]['end_date']
+            m_end = m_start + datetime.timedelta(days=int(m_duration * 365.25))
+            theoretical_start = m_start
+            
+        m_status = 'normal'
+        if m_end < today:
+            m_status = 'completed'
+        elif m_start <= today <= m_end:
+            m_status = 'running'
+        else:
+            m_status = 'upcoming'
+            
+        # Get Antardashas
+        m_lord_idx = VIMSHOTTARI_ORDER.index(m_lord)
+        antardasha_order = VIMSHOTTARI_ORDER[m_lord_idx:] + VIMSHOTTARI_ORDER[:m_lord_idx]
+        
+        m_antardashas = []
+        ad_current_start = theoretical_start
+        
+        for a_lord in antardasha_order:
+            a_duration = VIMSHOTTARI_DURATIONS[a_lord]
+            # Antardasha duration in decimal years
+            ad_years = (m_duration * a_duration) / 120.0
+            ad_days = int(ad_years * 365.25)
+            
+            ad_start = ad_current_start
+            ad_end = ad_start + datetime.timedelta(days=ad_days)
+            ad_current_start = ad_end
+            
+            # Filter for first Mahadasha balance
+            if i == 0:
+                if ad_end <= birth_date:
+                    continue
+                if ad_start < birth_date:
+                    ad_start = birth_date
+            
+            a_status = 'normal'
+            if ad_end < today:
+                a_status = 'completed'
+            elif ad_start <= today <= ad_end:
+                a_status = 'running'
+            else:
+                a_status = 'upcoming'
+                
+            # Get Pratyantardashas
+            a_lord_idx = VIMSHOTTARI_ORDER.index(a_lord)
+            pratyantardasha_order = VIMSHOTTARI_ORDER[a_lord_idx:] + VIMSHOTTARI_ORDER[:a_lord_idx]
+            
+            a_pratyantardashas = []
+            pd_current_start = ad_start
+            # Theoretical PD start for first Antardasha of first Mahadasha
+            if i == 0 and ad_start == birth_date:
+                # If this Antardasha started before birth, calculate theoretical PD start
+                pd_theoretical_start = ad_end - datetime.timedelta(days=ad_days)
+                pd_current_start = pd_theoretical_start
+            
+            for p_lord in pratyantardasha_order:
+                p_duration = VIMSHOTTARI_DURATIONS[p_lord]
+                # PD duration in decimal years
+                pd_years = (m_duration * a_duration * p_duration) / 14400.0
+                pd_days = int(pd_years * 365.25)
+                
+                pd_start = pd_current_start
+                pd_end = pd_start + datetime.timedelta(days=pd_days)
+                pd_current_start = pd_end
+                
+                if i == 0:
+                    if pd_end <= birth_date:
+                        continue
+                    if pd_start < birth_date:
+                        pd_start = birth_date
+                        
+                p_status = 'normal'
+                if pd_end < today:
+                    p_status = 'completed'
+                elif pd_start <= today <= pd_end:
+                    p_status = 'running'
+                else:
+                    p_status = 'upcoming'
+                    
+                a_pratyantardashas.append({
+                    'lord': p_lord,
+                    'lord_mr': PLANET_NAME_MR.get(p_lord, p_lord) if current_lang == 'mr' else p_lord,
+                    'start_formatted': pd_start.strftime('%d-%m-%Y'),
+                    'end_formatted': pd_end.strftime('%d-%m-%Y'),
+                    'status': p_status
+                })
+                
+            m_antardashas.append({
+                'lord': a_lord,
+                'lord_mr': PLANET_NAME_MR.get(a_lord, a_lord) if current_lang == 'mr' else a_lord,
+                'start_formatted': ad_start.strftime('%d-%m-%Y'),
+                'end_formatted': ad_end.strftime('%d-%m-%Y'),
+                'status': a_status,
+                'pratyantardashas': a_pratyantardashas
+            })
+            
+        all_dashas.append({
+            'lord': m_lord,
+            'lord_mr': PLANET_NAME_MR.get(m_lord, m_lord) if current_lang == 'mr' else m_lord,
+            'start_formatted': m_start.strftime('%d-%m-%Y'),
+            'end_formatted': m_end.strftime('%d-%m-%Y'),
+            'end_date': m_end, # helper for next iteration
+            'status': m_status,
+            'antardashas': m_antardashas
+        })
+        
+    return all_dashas
+
 def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_name, place_name, name=None, gender=None, current_lang='mr'):
     import datetime
     from zoneinfo import ZoneInfo
@@ -606,99 +752,11 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
             'namakshar': ep['namakshar']
         })
         
-    dashas_dict = chart_dict.get('dashas', {})
-    mahadashas = dashas_dict.get('all', {}).get('mahadashas', {})
+    balance_dict = chart_dict.get('dashas', {}).get('balance', {})
     
-    all_dashas = []
-    today = datetime.date.today()
+    # Custom Vimshottari calculations using Dasha Bhogya balance
+    all_dashas = calculate_custom_vimshottari(date_val, balance_dict, current_lang)
     
-    def format_date_str(d_str):
-        if not d_str:
-            return ""
-        try:
-            d_val = datetime.datetime.strptime(d_str, '%Y-%m-%d').date()
-            return d_val.strftime('%d-%m-%Y')
-        except Exception:
-            return d_str
-            
-    for m_lord, m_val in mahadashas.items():
-        m_start_str = m_val.get('start')
-        m_end_str = m_val.get('end')
-        
-        m_start = datetime.datetime.strptime(m_start_str, '%Y-%m-%d').date() if m_start_str else None
-        m_end = datetime.datetime.strptime(m_end_str, '%Y-%m-%d').date() if m_end_str else None
-        
-        m_status = 'normal'
-        if m_start and m_end:
-            if m_end < today:
-                m_status = 'completed'
-            elif m_start <= today <= m_end:
-                m_status = 'running'
-            else:
-                m_status = 'upcoming'
-                
-        m_antardashas = []
-        antardashas = m_val.get('antardashas', {})
-        for a_lord, a_val in antardashas.items():
-            a_start_str = a_val.get('start')
-            a_end_str = a_val.get('end')
-            
-            a_start = datetime.datetime.strptime(a_start_str, '%Y-%m-%d').date() if a_start_str else None
-            a_end = datetime.datetime.strptime(a_end_str, '%Y-%m-%d').date() if a_end_str else None
-            
-            a_status = 'normal'
-            if a_start and a_end:
-                if a_end < today:
-                    a_status = 'completed'
-                elif a_start <= today <= a_end:
-                    a_status = 'running'
-                else:
-                    a_status = 'upcoming'
-                    
-            a_pratyantardashas = []
-            pratyantardashas = a_val.get('pratyantardashas', {})
-            for p_lord, p_val in pratyantardashas.items():
-                p_start_str = p_val.get('start')
-                p_end_str = p_val.get('end')
-                
-                p_start = datetime.datetime.strptime(p_start_str, '%Y-%m-%d').date() if p_start_str else None
-                p_end = datetime.datetime.strptime(p_end_str, '%Y-%m-%d').date() if p_end_str else None
-                
-                p_status = 'normal'
-                if p_start and p_end:
-                    if p_end < today:
-                        p_status = 'completed'
-                    elif p_start <= today <= p_end:
-                        p_status = 'running'
-                    else:
-                        p_status = 'upcoming'
-                        
-                a_pratyantardashas.append({
-                    'lord': p_lord,
-                    'lord_mr': PLANET_NAME_MR.get(p_lord, p_lord) if current_lang == 'mr' else p_lord,
-                    'start_formatted': format_date_str(p_start_str),
-                    'end_formatted': format_date_str(p_end_str),
-                    'status': p_status
-                })
-                
-            m_antardashas.append({
-                'lord': a_lord,
-                'lord_mr': PLANET_NAME_MR.get(a_lord, a_lord) if current_lang == 'mr' else a_lord,
-                'start_formatted': format_date_str(a_start_str),
-                'end_formatted': format_date_str(a_end_str),
-                'status': a_status,
-                'pratyantardashas': a_pratyantardashas
-            })
-            
-        all_dashas.append({
-            'lord': m_lord,
-            'lord_mr': PLANET_NAME_MR.get(m_lord, m_lord) if current_lang == 'mr' else m_lord,
-            'start_formatted': format_date_str(m_start_str),
-            'end_formatted': format_date_str(m_end_str),
-            'status': m_status,
-            'antardashas': m_antardashas
-        })
-        
     panchang_data = calculate_real_panchang(date_val, latitude, longitude, tz_offset, place_name, dt)
     
     lagna_deg_str = f"{int(lagna_deg)}° {int((lagna_deg - int(lagna_deg)) * 60)}'"
@@ -711,14 +769,33 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
                 break
     has_mangal_dosha = mars_house in [1, 4, 7, 8, 12]
     
+    # Define custom planet names map for dasha bhogya to match user requested spelling
+    PLANET_NAME_BHOGYA_MR = {
+        'Sun': 'सूर्य', 'Moon': 'चंद्र', 'Mars': 'मंगळ',
+        'Mercury': 'बुध', 'Jupiter': 'गुरु', 'Venus': 'शुक्र',
+        'Saturn': 'शनि', 'Rahu': 'राहु', 'Ketu': 'केतु'
+    }
+    
     dasha_bhogya = "नाही" if current_lang == 'mr' else "None"
-    current_mahadasha = next((d for d in all_dashas if d['status'] == 'running'), None)
-    if current_mahadasha:
-        current_antardasha = next((a for a in current_mahadasha['antardashas'] if a['status'] == 'running'), None)
-        if current_antardasha:
-            dasha_bhogya = f"{current_mahadasha['lord_mr'] if current_lang == 'mr' else current_mahadasha['lord']} - {current_antardasha['lord_mr'] if current_lang == 'mr' else current_antardasha['lord']}"
-        else:
-            dasha_bhogya = f"{current_mahadasha['lord_mr'] if current_lang == 'mr' else current_mahadasha['lord']}"
+    if balance_dict:
+        b_lord = list(balance_dict.keys())[0]
+        b_years_dec = float(balance_dict[b_lord])
+        
+        # Convert decimal years to y, m, d
+        y = int(b_years_dec)
+        rem = b_years_dec - y
+        m = int(rem * 12)
+        rem_m = (rem * 12) - m
+        d = int(round(rem_m * 30.4375))
+        if d >= 30:
+            m += d // 30
+            d = d % 30
+        if m >= 12:
+            y += m // 12
+            m = m % 12
+            
+        lord_disp = PLANET_NAME_BHOGYA_MR.get(b_lord, b_lord) if current_lang == 'mr' else b_lord
+        dasha_bhogya = f"{lord_disp} {y}y {m}m {d}d"
 
     rashi_swami = sign_names.get(moon_sign, moon_sign)
     

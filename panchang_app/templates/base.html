@@ -149,7 +149,12 @@
                     <i class="fa-solid fa-clock-rotate-left"></i>{{ trans.shubha_muhurt }}
                 </a>
                 <a href="{% url 'kundali' %}" class="nav-link {% if request.resolver_match.url_name == 'kundali' or request.resolver_match.url_name == 'kundali_detail' %}active{% endif %}">
-                    <i class="fa-solid fa-dharmachakra"></i>{{ trans.kundali }}
+                    <svg viewBox="0 0 100 100" class="kundali-sidebar-icon" style="stroke-width: 6; fill: none; display: inline-block;">
+                        <rect x="4" y="4" width="92" height="92" rx="4" />
+                        <line x1="4" y1="4" x2="96" y2="96" />
+                        <line x1="96" y1="4" x2="4" y2="96" />
+                        <polygon points="50,4 4,50 50,96 96,50" />
+                    </svg>{{ trans.kundali }}
                 </a>
                 <a href="{% url 'kundali_milan' %}" class="nav-link {% if request.resolver_match.url_name == 'kundali_milan' %}active{% endif %}">
                     <i class="fa-solid fa-heart-pulse"></i>{{ trans.kundali_milan }}
