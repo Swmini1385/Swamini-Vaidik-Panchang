@@ -11,6 +11,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#5B0F0F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Swamini">
+    <link rel="apple-touch-icon" href="{% static 'images/Swamini App.jpg' %}">
+    <link rel="icon" type="image/jpeg" href="{% static 'images/Swamini App.jpg' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -270,6 +278,16 @@
                 });
             }
         });
+    </script>
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('[Service Worker] Registered successfully:', reg.scope))
+                    .catch(err => console.error('[Service Worker] Registration failed:', err));
+            });
+        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from . import views
 
 urlpatterns = [
@@ -24,4 +25,6 @@ urlpatterns = [
     path('api/locations/recent/', views.api_recent_locations, name='api_recent_locations'),
     path('api/locations/<int:pk>/delete/', views.api_delete_location, name='api_delete_location'),
     path('api/locations/<int:pk>/restore/', views.api_restore_location, name='api_restore_location'),
+    path('manifest.json', TemplateView.as_view(template_name='manifest.json', content_type='application/json'), name='manifest_json'),
+    path('service-worker.js', TemplateView.as_view(template_name='service-worker.js', content_type='application/javascript'), name='service_worker'),
 ]

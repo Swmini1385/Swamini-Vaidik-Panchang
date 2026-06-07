@@ -5,61 +5,172 @@
 {% block title %}{{ trans.dashboard }} | {{ trans.app_name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 py-4">
-    <!-- Welcome Header & Daily Quote -->
-    <div class="row align-items-center mb-4">
-        <div class="col-lg-8">
-            <h2 class="vedic-title devanagari-title text-warning m-0 mb-1" style="color: var(--dark-maroon) !important; font-size: 32px;">
-                {{ trans.daily_quote_title }}
-            </h2>
-            <p class="text-muted m-0" style="font-size: 15px;">
-                {{ trans.dashboard_desc }}
-            </p>
-        </div>
-        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-            <div class="p-3 bg-white border border-warning rounded-3 shadow-sm d-inline-block text-start" style="border-left: 5px solid var(--primary-gold) !important; max-width: 100%;">
-                <div class="text-muted" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">{{ trans.daily_quote }}</div>
-                <div class="fw-semibold text-danger" style="font-size: 14px; font-family: 'Poppins', sans-serif;">
-                    "{{ quote }}"
-                </div>
-            </div>
-        </div>
+<div class="container-fluid px-3 px-sm-4 py-4">
+    <!-- Center-aligned Stylized Vedic Header -->
+    <div class="text-center mb-4">
+        <h1 class="devanagari-title text-warning m-0 mb-1" style="color: var(--dark-maroon) !important; font-size: 36px; font-weight: 700; text-shadow: 1px 1px 3px rgba(0,0,0,0.15);">
+            स्वामिनी वैदिक पंचांग
+        </h1>
+        <p class="text-muted m-0" style="font-size: 14px; max-width: 700px; margin: 0 auto !important;">
+            {{ trans.dashboard_desc }}
+        </p>
     </div>
 
-    <!-- Daily Panchang Fast Widget -->
-    <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, var(--cream-bg) 0%, #fffbf2 100%); border-left: 6px solid var(--saffron-orange) !important;">
-        <div class="card-body p-4">
-            <div class="row align-items-center">
-                <div class="col-md-2 text-center mb-3 mb-md-0">
-                    <div class="text-warning" style="font-size: 56px; line-height: 1;">ॐ</div>
-                    <div class="badge bg-danger text-wrap mt-2" style="font-size: 11px;">{{ trans.today_panchang }}</div>
+    <!-- Daily Panchang Summary Widget (Single Data Source for all devices) -->
+    <div class="card border-0 rounded-4 shadow-sm mb-4 panchang-summary-card" style="background: linear-gradient(135deg, var(--cream-bg) 0%, #fffbf2 100%); border-left: 6px solid var(--saffron-orange) !important;">
+        <div class="card-body p-3 p-sm-4">
+            <!-- Header Clock and Location Status -->
+            <div class="row align-items-center mb-3 border-bottom pb-3">
+                <div class="col-md-6 mb-2 mb-md-0 text-center text-md-start">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start">
+                        <span class="text-warning me-2" style="font-size: 32px; line-height: 1;">ॐ</span>
+                        <div>
+                            <h5 class="m-0 devanagari-title" style="font-size: 18px; color: var(--dark-maroon);">{{ trans.today_info }}</h5>
+                            <small class="text-muted">
+                                {% with m_name=today|date:"F" %}
+                                    {{ today|date:"d" }} {{ m_name|translate_val:current_lang }} {{ today|date:"Y" }}
+                                {% endwith %}
+                                ({{ panchang.vaar|translate_val:current_lang }})
+                            </small>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-10">
-                    <h4 class="vedic-title text-dark mb-3">{{ trans.today_info }} : {{ today|date:"d F Y" }} ({{ panchang.vaar|translate_val:current_lang }})</h4>
-                    <div class="row g-3">
-                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
-                            <small class="text-muted d-block">{{ trans.tithi }}</small>
-                            <span class="fw-bold text-danger">{{ panchang.tithi|translate_val:current_lang }}</span>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="d-inline-block text-start p-2 px-3 rounded-3 bg-white border border-warning shadow-sm" style="border-left: 4px solid var(--primary-gold) !important; min-width: 260px;">
+                        <div class="row g-2">
+                            <div class="col">
+                                <small class="text-muted d-block" style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{{ trans.current_time|default:"सध्याची वेळ" }}</small>
+                                <span class="fw-bold text-danger" id="current-time-val" style="font-size: 14px; font-family: 'Poppins', sans-serif;">--:--:-- PM</span>
+                            </div>
+                            <div class="col border-start ps-3">
+                                <small class="text-muted d-block" style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{{ trans.hindu_time|default:"हिंदू वेळ (घटी/पळ)" }}</small>
+                                <span class="fw-bold text-dark" id="hindu-time-val" style="font-size: 13px;">-- घटी, -- पळ</span>
+                            </div>
                         </div>
-                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
-                            <small class="text-muted d-block">{{ trans.nakshatra }}</small>
-                            <span class="fw-bold text-dark">{{ panchang.nakshatra|translate_val:current_lang }}</span>
-                        </div>
-                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
-                            <small class="text-muted d-block">{{ trans.yoga }}</small>
-                            <span class="fw-bold text-dark">{{ panchang.yoga|translate_val:current_lang }}</span>
-                        </div>
-                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
-                            <small class="text-muted d-block">{{ trans.karan }}</small>
-                            <span class="fw-bold text-dark">{{ panchang.karan|translate_val:current_lang }}</span>
-                        </div>
-                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
-                            <small class="text-muted d-block">{{ trans.sunrise }}</small>
-                            <span class="fw-bold text-success"><i class="fa-solid fa-sun me-1"></i>{{ panchang.sunrise|time:"g:i A" }}</span>
-                        </div>
-                        <div class="col-6 col-sm-4 col-md-2.4 col-lg-2">
-                            <small class="text-muted d-block">{{ trans.sunset }}</small>
-                            <span class="fw-bold text-warning"><i class="fa-solid fa-moon me-1"></i>{{ panchang.sunset|time:"g:i A" }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 20-Parameter Responsive Grid -->
+            <!-- Desktop: 6 col, Tablet: 4 col, Mobile: 2 col -->
+            <div class="row g-2 g-sm-3 row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6">
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.tithi }}</small>
+                        <span class="fw-bold text-danger" style="font-size: 13.5px;">{{ panchang.tithi|translate_val:current_lang }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.paksha|default:"पक्ष" }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{{ panchang.paksha|translate_val:current_lang }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.month|default:"महिना" }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{% if current_lang == 'mr' %}{{ panchang.mahina_mr }}{% else %}{{ panchang.mahina }}{% endif %}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.nakshatra }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{{ panchang.nakshatra|translate_val:current_lang }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.charan|default:"नक्षत्र चरण" }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{% if current_lang == 'mr' %}{{ panchang.charan|translate_val:current_lang }} चरण{% else %}Pada {{ panchang.charan }}{% endif %}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.namakshar|default:"नामाक्षर" }}</small>
+                        <span class="fw-bold text-danger" style="font-size: 13.5px;">{% if panchang.namakshar %}{{ panchang.namakshar }}{% else %}--{% endif %}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.vikram_samvat|default:"विक्रम संवत" }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{{ panchang.vikram_samvat|translate_val:current_lang }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.lagn|default:"लग्न राशी" }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{% if current_lang == 'mr' %}{{ panchang.lagn_mr }}{% else %}{{ panchang.lagn }}{% endif %}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.surya|default:"सूर्य राशी" }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{% if current_lang == 'mr' %}{{ panchang.surya_mr }}{% else %}{{ panchang.surya }}{% endif %}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.chandra|default:"चंद्र राशी" }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{% if current_lang == 'mr' %}{{ panchang.chandra_mr }}{% else %}{{ panchang.chandra }}{% endif %}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.yoga }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{{ panchang.yoga|translate_val:current_lang }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;">{{ trans.karan }}</small>
+                        <span class="fw-bold text-dark" style="font-size: 13.5px;">{{ panchang.karan|translate_val:current_lang }}</span>
+                    </div>
+                </div>
+                
+                <!-- Time Slot based Widgets -->
+                <div class="col col-sm-6 col-md-4 col-lg-3">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-clock me-1 text-warning"></i>{{ trans.current_choughadiya|default:"चालू चौघडिया" }}</small>
+                        <span class="badge bg-warning text-dark fw-bold" style="font-size: 11.5px; margin: 2px 0;">
+                            {% if current_lang == 'mr' %}{{ panchang.current_choughadiya.name_mr }}{% else %}{{ panchang.current_choughadiya.name }}{% endif %}
+                        </span>
+                        <span class="text-muted d-block" style="font-size: 10px;">
+                            {{ panchang.current_choughadiya.start_time }} - {{ panchang.current_choughadiya.end_time }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col col-sm-6 col-md-4 col-lg-3">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-circle-exclamation me-1 text-danger"></i>{{ trans.current_yamghanta|default:"यमघंट वेळ" }}</small>
+                        <span class="badge bg-danger text-light fw-bold" style="font-size: 11.5px; margin: 2px 0;">
+                            {% if current_lang == 'mr' %}यमघंटा (अशुभ){% else %}Yamghanta (Inauspicious){% endif %}
+                        </span>
+                        <span class="text-muted d-block" style="font-size: 10px;">
+                            {{ panchang.yamghanta_start|time:"g:i A" }} - {{ panchang.yamghanta_end|time:"g:i A" }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col col-sm-6 col-md-4 col-lg-3">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-hourglass-half me-1 text-info"></i>{{ trans.hora|default:"चालू होरा" }}</small>
+                        <span class="badge bg-info text-dark fw-bold" style="font-size: 11.5px; margin: 2px 0;">
+                            {% if current_lang == 'mr' %}{{ panchang.current_hora.planet_mr }}{% else %}{{ panchang.current_hora.planet }}{% endif %}
+                        </span>
+                        <span class="text-muted d-block" style="font-size: 10px;">
+                            {{ panchang.current_hora.start_time }} - {{ panchang.current_hora.end_time }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col col-sm-6 col-md-4 col-lg-3">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
+                        <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-sun me-1 text-success"></i>{{ trans.sunrise }}/{{ trans.sunset }}</small>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span class="fw-bold text-success" style="font-size: 11.5px;">
+                                <i class="fa-solid fa-circle-up me-1"></i>{{ panchang.sunrise|time:"g:i A" }}
+                            </span>
+                            <span class="fw-bold text-warning" style="font-size: 11.5px;">
+                                <i class="fa-solid fa-circle-down me-1"></i>{{ panchang.sunset|time:"g:i A" }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -67,119 +178,277 @@
         </div>
     </div>
 
-    <!-- Dashboard Cards Grid (8 Cards) -->
-    <div class="row g-4">
+    <!-- Redesigned Dashboard Cards Grid (Equal Width/Height, Responsive Columns) -->
+    <!-- Grid columns: Desktop: 5 col, Tablet: 3 col, Mobile: 2 col -->
+    <div class="dashboard-modules-grid">
         <!-- 1. MASIK -->
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="panchang-card h-100">
-                <div>
-                    <div class="panchang-card-icon">
-                        <i class="fa-solid fa-calendar-days"></i>
-                    </div>
-                    <h3 class="panchang-card-title">{{ trans.masik }}</h3>
-                    <p class="panchang-card-description">{{ trans.masik_desc }}</p>
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-calendar-days"></i>
                 </div>
-                <a href="{% url 'masik' %}" class="panchang-card-btn">{{ trans.view_calendar }}</a>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">{{ trans.masik }}</h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {{ trans.masik_desc }}
+                </p>
             </div>
+            <a href="{% url 'masik' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_calendar }}</a>
         </div>
 
         <!-- 2. PANCHANG -->
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="panchang-card h-100">
-                <div>
-                    <div class="panchang-card-icon">
-                        <i class="fa-solid fa-dharmachakra"></i>
-                    </div>
-                    <h3 class="panchang-card-title">{{ trans.panchang }}</h3>
-                    <p class="panchang-card-description">{{ trans.panchang_desc }}</p>
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-dharmachakra"></i>
                 </div>
-                <a href="{% url 'panchang' %}" class="panchang-card-btn">{{ trans.view_daily }}</a>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">{{ trans.panchang }}</h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {{ trans.panchang_desc }}
+                </p>
             </div>
+            <a href="{% url 'panchang' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_daily }}</a>
         </div>
 
-        <!-- 3. SANWAR -->
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="panchang-card h-100">
-                <div>
-                    <div class="panchang-card-icon">
-                        <i class="fa-solid fa-bell"></i>
-                    </div>
-                    <h3 class="panchang-card-title">{{ trans.sanwar }}</h3>
-                    <p class="panchang-card-description">{{ trans.sanwar_desc }}</p>
+        <!-- 3. MY TITHI -->
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-calendar-day"></i>
                 </div>
-                <a href="{% url 'sanwar' %}" class="panchang-card-btn">{{ trans.view_festivals }}</a>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">
+                    {% if current_lang == 'mr' %}माझी तिथी{% else %}My Tithi{% endif %}
+                </h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {% if current_lang == 'mr' %}तुमच्या जन्मतिथीनुसार आजचे विशेष आणि वैयक्तिक दिवस महत्त्व.{% else %}Your personalized Tithi details and daily astrological significance.{% endif %}
+                </p>
             </div>
+            <a href="{% url 'panchang' %}?date={{ today|date:'Y-m-d' }}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">
+                {% if current_lang == 'mr' %}तिथी तपासा{% else %}Check Tithi{% endif %}
+            </a>
         </div>
 
-        <!-- 4. SHUBHA MUHURT -->
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="panchang-card h-100">
-                <div>
-                    <div class="panchang-card-icon">
-                        <i class="fa-solid fa-clock"></i>
-                    </div>
-                    <h3 class="panchang-card-title">{{ trans.shubha_muhurt }}</h3>
-                    <p class="panchang-card-description">{{ trans.muhurt_desc }}</p>
+        <!-- 4. SANWAR -->
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-bell"></i>
                 </div>
-                <a href="{% url 'shubha_muhurt' %}" class="panchang-card-btn">{{ trans.view_muhurt }}</a>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">{{ trans.sanwar }}</h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {{ trans.sanwar_desc }}
+                </p>
             </div>
+            <a href="{% url 'sanwar' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_festivals }}</a>
         </div>
 
         <!-- 5. KUNDALI -->
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="panchang-card h-100">
-                <div>
-                    <div class="panchang-card-icon">
-                        <i class="fa-solid fa-compass"></i>
-                    </div>
-                    <h3 class="panchang-card-title">{{ trans.kundali }}</h3>
-                    <p class="panchang-card-description">{{ trans.kundali_desc }}</p>
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-compass"></i>
                 </div>
-                <a href="{% url 'kundali' %}" class="panchang-card-btn">{{ trans.generate_kundali }}</a>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">{{ trans.kundali }}</h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {{ trans.kundali_desc }}
+                </p>
             </div>
+            <a href="{% url 'kundali' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.generate_kundali }}</a>
         </div>
 
         <!-- 6. KUNDALI MILAN -->
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="panchang-card h-100">
-                <div>
-                    <div class="panchang-card-icon">
-                        <i class="fa-solid fa-people-arrows"></i>
-                    </div>
-                    <h3 class="panchang-card-title">{{ trans.kundali_milan }}</h3>
-                    <p class="panchang-card-description">{{ trans.milan_desc }}</p>
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-people-arrows"></i>
                 </div>
-                <a href="{% url 'kundali_milan' %}" class="panchang-card-btn">{{ trans.match_kundali }}</a>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">{{ trans.kundali_milan }}</h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {{ trans.milan_desc }}
+                </p>
             </div>
+            <a href="{% url 'kundali_milan' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.match_kundali }}</a>
         </div>
 
-        <!-- 7. CHOUGHADIYA -->
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="panchang-card h-100">
-                <div>
-                    <div class="panchang-card-icon">
-                        <i class="fa-regular fa-clock"></i>
-                    </div>
-                    <h3 class="panchang-card-title">{{ trans.choughadiya }}</h3>
-                    <p class="panchang-card-description">{{ trans.choughadiya_desc }}</p>
+        <!-- 7. SHUBHA MUHURT -->
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-clock"></i>
                 </div>
-                <a href="{% url 'choughadiya' %}" class="panchang-card-btn">{{ trans.view_choughadiya }}</a>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">{{ trans.shubha_muhurt }}</h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {{ trans.muhurt_desc }}
+                </p>
             </div>
+            <a href="{% url 'shubha_muhurt' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_muhurt }}</a>
         </div>
 
-        <!-- 8. SETTING -->
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="panchang-card h-100">
-                <div>
-                    <div class="panchang-card-icon">
-                        <i class="fa-solid fa-gear"></i>
-                    </div>
-                    <h3 class="panchang-card-title">{{ trans.settings }}</h3>
-                    <p class="panchang-card-description">{{ trans.settings_desc }}</p>
+        <!-- 8. HINDU TIME -->
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-regular fa-clock"></i>
                 </div>
-                <a href="{% url 'settings' %}" class="panchang-card-btn">{{ trans.open_settings }}</a>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">
+                    {% if current_lang == 'mr' %}हिंदू वेळ{% else %}Hindu Time{% endif %}
+                </h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {% if current_lang == 'mr' %}चौघडिया, होरा आणि यमघंटा सह दैनंदिन शुभ-अशुभ कालावधी गणना.{% else %}Daily auspicious and inauspicious time slices including Choughadiya & Hora.{% endif %}
+                </p>
+            </div>
+            <a href="{% url 'choughadiya' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">
+                {% if current_lang == 'mr' %}वेळ चक्र पहा{% else %}View Time Cycle{% endif %}
+            </a>
+        </div>
+
+        <!-- 9. SETTINGS -->
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-gear"></i>
+                </div>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">{{ trans.settings }}</h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {{ trans.settings_desc }}
+                </p>
+            </div>
+            <a href="{% url 'settings' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.open_settings }}</a>
+        </div>
+
+        <!-- 10. INFORMATION -->
+        <div class="panchang-card text-center p-3 h-100">
+            <div>
+                <div class="panchang-card-icon m-0 mb-2">
+                    <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">
+                    {% if current_lang == 'mr' %}माहिती{% else %}Information{% endif %}
+                </h3>
+                <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
+                    {% if current_lang == 'mr' %}स्वामिनी वैदिक पंचांग विषयी अधिक माहिती आणि संदर्भ मार्गदर्शक.{% else %}About Swamini Vaidik Panchang and Vedic reference guidelines.{% endif %}
+                </p>
+            </div>
+            <button class="panchang-card-btn w-100 py-1 border-0" data-bs-toggle="modal" data-bs-target="#infoModal" style="font-size: 13px;">
+                {% if current_lang == 'mr' %}माहिती पहा{% else %}View Details{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Information Bootstrap Modal -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-2" style="border-color: var(--primary-gold); box-shadow: var(--shadow-premium);">
+            <div class="modal-header bg-dark text-white border-bottom border-warning py-3">
+                <h5 class="modal-title devanagari-title text-warning m-0" id="infoModalLabel" style="font-size: 20px;">
+                    <span class="me-2">ॐ</span>{% if current_lang == 'mr' %}स्वामिनी पंचांग माहिती{% else %}Swamini Info{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-start" style="background-color: var(--cream-bg); color: var(--text-dark);">
+                <div class="text-center mb-3">
+                    <img src="{% static 'images/Swamini App.jpg' %}" alt="Swamini Logo" class="rounded-circle border border-warning shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+                    <h4 class="mt-2 text-danger devanagari-title m-0" style="font-size: 22px;">स्वामिनी वैदिक पंचांग</h4>
+                    <p class="text-muted mb-0" style="font-size: 13px;">आवृत्ती १.०.० (Version 1.0.0 Stable)</p>
+                </div>
+                <hr style="border-color: rgba(91,15,15,0.15);">
+                <p style="font-size: 14px; line-height: 1.6;">
+                    {% if current_lang == 'mr' %}
+                        स्वामिनी वैदिक पंचांग हे वैदिक ज्योतिषशास्त्र आणि खगोलशास्त्रीय सिद्धांतांवर आधारित एक प्रगत पंचांग प्रणाली आहे.
+                    {% else %}
+                        Swamini Vaidik Panchang is an advanced computational astrological utility based on ancient Vedic scriptures and precise astronomical algorithms.
+                    {% endif %}
+                </p>
+                <ul class="ps-3" style="font-size: 13.5px; line-height: 1.6;">
+                    <li class="mb-2"><strong>{% if current_lang == 'mr' %}खगोलशास्त्रीय अचूकता:{% else %}Astronomical Accuracy:{% endif %}</strong> Precise daily Sunrise, Sunset, Moonrise and planetary degrees.</li>
+                    <li class="mb-2"><strong>{% if current_lang == 'mr' %}शुभ वेळ शोधक:{% else %}Muhurt Engine:{% endif %}</strong> Real-time calculations of Choughadiya, Hora, and Yamghanta time slices.</li>
+                    <li class="mb-2"><strong>{% if current_lang == 'mr' %}वैयक्तिक ज्योतिष:{% else %}Personalized Astrology:{% endif %}</strong> Customized charts (D1 & D9) and compatibility calculations.</li>
+                </ul>
+                <div class="alert alert-warning border-0 rounded-3 text-center mb-0 mt-3 p-2 fw-semibold" style="border-left: 4px solid var(--primary-gold) !important; font-size: 13.5px; color: var(--dark-maroon);">
+                    श्री स्वामी समर्थ महाराज की जय | श्री गुरुदेव दत्त
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-center pb-3" style="background-color: var(--cream-bg);">
+                <button type="button" class="btn btn-warning text-dark fw-bold px-4" data-bs-dismiss="modal">{% if current_lang == 'mr' %}बंद करा{% else %}Close{% endif %}</button>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const lang = "{{ current_lang|default:'mr' }}";
+        
+        // Sunrise time parameters from server
+        const sunriseHour = parseInt("{{ panchang.sunrise.hour|default:'6' }}");
+        const sunriseMin = parseInt("{{ panchang.sunrise.minute|default:'0' }}");
+        const sunriseSec = parseInt("{{ panchang.sunrise.second|default:'0' }}");
+        
+        function toDevanagariDigits(num, currentLang) {
+            const numStr = String(num);
+            if (currentLang !== 'mr') return numStr;
+            const devanagariDigits = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+            return numStr.replace(/[0-9]/g, w => devanagariDigits[+w]);
+        }
+        
+        function formatCurrentTime(now, currentLang) {
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const hrStr = String(hours).padStart(2, '0');
+            
+            const timeStr = `${hrStr}:${minutes}:${seconds} ${ampm}`;
+            return toDevanagariDigits(timeStr, currentLang);
+        }
+        
+        function updateClocks() {
+            const now = new Date();
+            
+            // 1. Update Gregorian Clock
+            const timeValEl = document.getElementById('current-time-val');
+            if (timeValEl) {
+                timeValEl.textContent = formatCurrentTime(now, lang);
+            }
+            
+            // 2. Update Hindu Ghati/Pala Clock
+            const sunrise = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sunriseHour, sunriseMin, sunriseSec);
+            let diffMs = now - sunrise;
+            if (diffMs < 0) {
+                // If before sunrise, it belongs to the previous day cycle
+                diffMs += 24 * 60 * 60 * 1000;
+            }
+            
+            const diffHrs = diffMs / (1000 * 60 * 60);
+            const ghatis = diffHrs / 0.4; // 1 Ghati = 24 minutes = 0.4 hours
+            const ghati = Math.floor(ghatis);
+            const palas = (ghatis - ghati) * 60;
+            const pala = Math.floor(palas);
+            const vipalas = (palas - pala) * 60;
+            const vipala = Math.floor(vipalas);
+            
+            const ghatiStr = toDevanagariDigits(ghati, lang);
+            const palaStr = toDevanagariDigits(pala, lang);
+            const vipalaStr = toDevanagariDigits(vipala, lang);
+            
+            const hinduTimeEl = document.getElementById('hindu-time-val');
+            if (hinduTimeEl) {
+                if (lang === 'mr') {
+                    hinduTimeEl.textContent = `${ghatiStr} घटी, ${palaStr} पळ, ${vipalaStr} विपळ`;
+                } else {
+                    hinduTimeEl.textContent = `${ghatiStr} Ghati, ${palaStr} Pala, ${vipalaStr} Vipala`;
+                }
+            }
+        }
+        
+        // Initial call and set interval
+        updateClocks();
+        setInterval(updateClocks, 1000);
+    });
+</script>
 {% endblock %}

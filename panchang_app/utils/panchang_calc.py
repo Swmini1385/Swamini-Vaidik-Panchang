@@ -53,6 +53,96 @@ PLANET_MAPPING = {
     'Ketu': 'Ketu'
 }
 
+NAMAKSHAR_MAP = {
+    'Ashwini': ['चु', 'चे', 'चो', 'ला'],
+    'Bharani': ['ली', 'लू', 'ले', 'लो'],
+    'Krittika': ['अ', 'ई', 'उ', 'ए'],
+    'Rohini': ['ओ', 'वा', 'वी', 'वू'],
+    'Mrigashira': ['वे', 'वो', 'का', 'की'],
+    'Ardra': ['कु', 'घ', 'ङ', 'छ'],
+    'Punarvasu': ['के', 'को', 'हा', 'ही'],
+    'Pushya': ['हु', 'हे', 'हो', 'डा'],
+    'Ashlesha': ['डी', 'डू', 'डे', 'डो'],
+    'Magha': ['मा', 'मी', 'मु', 'मे'],
+    'Purva Phalguni': ['मो', 'टा', 'टी', 'टू'],
+    'Uttara Phalguni': ['टे', 'टो', 'पा', 'पी'],
+    'Hasta': ['पू', 'ष', 'ण', 'ठ'],
+    'Chitra': ['पे', 'पो', 'रा', 'री'],
+    'Swati': ['रू', 'रे', 'रो', 'ता'],
+    'Vishakha': ['ती', 'तू', 'ते', 'तो'],
+    'Anuradha': ['ना', 'नी', 'नू', 'ने'],
+    'Jyeshtha': ['नो', 'या', 'यी', 'यू'],
+    'Mula': ['ये', 'यो', 'भा', 'भी'],
+    'Purva Ashadha': ['भू', 'धा', 'फा', 'ढा'],
+    'Uttara Ashadha': ['भे', 'भो', 'जा', 'जी'],
+    'Shravana': ['जू', 'जे', 'जो', 'घा'],
+    'Dhanishtha': ['गा', 'गी', 'गु', 'गे'],
+    'Shatabhisha': ['गो', 'सा', 'सी', 'सू'],
+    'Purva Bhadrapada': ['से', 'सो', 'दा', 'दी'],
+    'Uttara Bhadrapada': ['दू', 'थ', 'झ', 'ञ'],
+    'Revati': ['दे', 'दो', 'चा', 'ची']
+}
+
+MONTH_MAP = {
+    'Aries': {'mr': 'चैत्र', 'en': 'Chaitra'},
+    'Taurus': {'mr': 'वैशाख', 'en': 'Vaishakha'},
+    'Gemini': {'mr': 'ज्येष्ठ', 'en': 'Jyeshtha'},
+    'Cancer': {'mr': 'आषाढ', 'en': 'Ashadha'},
+    'Leo': {'mr': 'श्रावण', 'en': 'Shravana'},
+    'Virgo': {'mr': 'भाद्रपद', 'en': 'Bhadrapada'},
+    'Libra': {'mr': 'अश्विन', 'en': 'Ashwina'},
+    'Scorpio': {'mr': 'कार्तिक', 'en': 'Kartika'},
+    'Sagittarius': {'mr': 'मार्गशीर्ष', 'en': 'Margashirsha'},
+    'Capricorn': {'mr': 'पौष', 'en': 'Pausha'},
+    'Aquarius': {'mr': 'माघ', 'en': 'Magha'},
+    'Pisces': {'mr': 'फाल्गुन', 'en': 'Phalguna'}
+}
+
+HORA_SEQUENCE = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon']
+WEEKDAY_LORDS = {
+    0: 'Moon',    # Monday
+    1: 'Mars',    # Tuesday
+    2: 'Mercury', # Wednesday
+    3: 'Jupiter', # Thursday
+    4: 'Venus',   # Friday
+    5: 'Saturn',  # Saturday
+    6: 'Sun'      # Sunday
+}
+HORA_PLANETS_MR = {
+    'Sun': 'सूर्य',
+    'Moon': 'चंद्र',
+    'Mars': 'मंगळ',
+    'Mercury': 'बुध',
+    'Jupiter': 'गुरू',
+    'Venus': 'शुक्र',
+    'Saturn': 'शनि'
+}
+
+ZODIAC_MAP_MR = {
+    'Aries': 'मेष',
+    'Taurus': 'वृषभ',
+    'Gemini': 'मिथुन',
+    'Cancer': 'कर्क',
+    'Leo': 'सिंह',
+    'Virgo': 'कन्या',
+    'Libra': 'तूळ',
+    'Scorpio': 'वृश्चिक',
+    'Sagittarius': 'धनु',
+    'Capricorn': 'मकर',
+    'Aquarius': 'कुंभ',
+    'Pisces': 'मीन'
+}
+
+YAMAGANDA_INDEX = {
+    0: 3, # Monday: 4th part
+    1: 2, # Tuesday: 3rd part
+    2: 1, # Wednesday: 2nd part
+    3: 0, # Thursday: 1st part
+    4: 6, # Friday: 7th part
+    5: 5, # Saturday: 6th part
+    6: 4  # Sunday: 5th part
+}
+
 def decimal_hours_to_time(dec_hours):
     if dec_hours is None:
         return datetime.time(6, 0, 0)
@@ -62,9 +152,10 @@ def decimal_hours_to_time(dec_hours):
     seconds = int(((dec_hours - hours) * 60 - minutes) * 60)
     return datetime.time(hours, minutes, seconds)
 
-def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur"):
+def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur", current_dt=None):
     """
     Calculates Daily Panchang using jyotishganit and skyfield for given location coordinates.
+    Also calculates extended Vedic metrics (Hora, Choughadiya, Yamghanta, Namakshar, Lagn/Rashi)
     """
     if lat is None:
         lat = 21.145800
@@ -72,6 +163,9 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
         lon = 79.088200
     if tz_offset is None:
         tz_offset = 5.5
+    if current_dt is None:
+        current_dt = datetime.datetime.now()
+        
     try:
         # 1. Sunrise & Sunset at local noon reference
         noon_dt = datetime.datetime.combine(date_val, datetime.time(12, 0, 0))
@@ -121,7 +215,8 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
             location_name=location_name
         )
         
-        panch = chart.to_dict()['panchanga']
+        chart_dict = chart.to_dict()
+        panch = chart_dict['panchanga']
         tithi_str = panch.get('tithi', 'Pratipada')
         nakshatra_str = panch.get('nakshatra', 'Rohini')
         yoga_str = panch.get('yoga', 'Siddha')
@@ -150,6 +245,180 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
         is_amavasya = "Amavasya" in tithi_str
         is_sankashti = "Chaturthi" in tithi_str and ("Krishna" in tithi_str or paksha == "Krishna Paksha")
         
+        # Extract Lagna, Surya, Chandra
+        houses_list = chart_dict.get('d1Chart', {}).get('houses', [])
+        lagna_sign = ""
+        if houses_list:
+            lagna_sign = houses_list[0].get('sign', '')
+            
+        sun_sign = ""
+        moon_sign = ""
+        moon_nak = ""
+        moon_pada = 1
+        
+        for h in houses_list:
+            h_sign = h.get('sign', '')
+            for occ in h.get('occupants', []):
+                body = occ.get('celestialBody', '')
+                if body == 'Sun':
+                    sun_sign = h_sign
+                elif body == 'Moon':
+                    moon_sign = h_sign
+                    moon_nak = occ.get('nakshatra', '')
+                    moon_pada = occ.get('pada', 1)
+                    
+        # Get active month
+        month_info = MONTH_MAP.get(sun_sign, {'mr': 'ज्येष्ठ', 'en': 'Jyeshtha'})
+        mahina_en = month_info['en']
+        mahina_mr = month_info['mr']
+        
+        # Get Namakshar
+        namakshar_mr = ""
+        if moon_nak:
+            matched_key = None
+            for k in NAMAKSHAR_MAP.keys():
+                if k.lower() == moon_nak.strip().lower():
+                    matched_key = k
+                    break
+            if matched_key:
+                padas = NAMAKSHAR_MAP[matched_key]
+                namakshar_mr = padas[(moon_pada - 1) % 4]
+                
+        namakshar_display = f"{namakshar_mr}" if namakshar_mr else ""
+        
+        # Lagn, Surya, Chandra Marathi translations
+        lagn_mr = ZODIAC_MAP_MR.get(lagna_sign, lagna_sign)
+        surya_mr = ZODIAC_MAP_MR.get(sun_sign, sun_sign)
+        chandra_mr = ZODIAC_MAP_MR.get(moon_sign, moon_sign)
+        
+        # Vikram Samvat
+        current_year = date_val.year
+        if date_val.month > 4 or (date_val.month == 4 and date_val.day >= 15):
+            vikram_samvat = current_year + 57
+        else:
+            vikram_samvat = current_year + 56
+            
+        # Yamghanta calculation
+        weekday = date_val.weekday()
+        yam_idx = YAMAGANDA_INDEX[weekday]
+        dt_sunrise = datetime.datetime.combine(date_val, sunrise_time)
+        dt_sunset = datetime.datetime.combine(date_val, sunset_time)
+        day_dur = dt_sunset - dt_sunrise
+        part_dur = day_dur / 8
+        yam_start = (dt_sunrise + (part_dur * yam_idx)).time()
+        yam_end = (dt_sunrise + (part_dur * (yam_idx + 1))).time()
+        
+        # Current Choughadiya & Hora
+        from .choughadiya import calculate_choughadiya
+        day_ch, night_ch = calculate_choughadiya(date_val, sunrise_time, sunset_time)
+        
+        # Determine current_choughadiya
+        dt_next_sunrise = dt_sunrise + datetime.timedelta(days=1)
+        current_ch = day_ch[0] # Default fallback
+        
+        if dt_sunrise <= current_dt < dt_sunset:
+            day_interval = day_dur / 8
+            for i in range(8):
+                start = dt_sunrise + (day_interval * i)
+                end = dt_sunrise + (day_interval * (i + 1))
+                if start <= current_dt < end:
+                    current_ch = day_ch[i]
+                    break
+        else:
+            adj_current_dt = current_dt
+            adj_dt_sunset = dt_sunset
+            adj_dt_next_sunrise = dt_next_sunrise
+            adj_weekday = weekday
+            
+            if current_dt < dt_sunrise:
+                adj_dt_sunset = dt_sunset - datetime.timedelta(days=1)
+                adj_dt_next_sunrise = dt_sunrise
+                prev_date = date_val - datetime.timedelta(days=1)
+                adj_weekday = prev_date.weekday()
+            
+            night_dur = adj_dt_next_sunrise - adj_dt_sunset
+            night_interval = night_dur / 8
+            for i in range(8):
+                start = adj_dt_sunset + (night_interval * i)
+                end = adj_dt_sunset + (night_interval * (i + 1))
+                if start <= adj_current_dt < end:
+                    current_ch = night_ch[i]
+                    break
+                    
+        # Add Devanagari translates for current choughadiya
+        CHOUGHADIYA_NAME_MR = {
+            'Amrit': 'अमृत', 'Shubh': 'शुभ', 'Labh': 'लाभ', 
+            'Char': 'चल', 'Udveg': 'उद्वेग', 'Rog': 'रोग', 'Kaal': 'काळ'
+        }
+        CHOUGHADIYA_STATUS_MR = {
+            'Auspicious (Best)': 'अतिशुभ (अमृत)',
+            'Auspicious (Good)': 'शुभ',
+            'Auspicious (Gain)': 'लाभदायक',
+            'Neutral / Medium': 'मध्यम (चल)',
+            'Inauspicious (Anxiety)': 'अशुभ (उद्वेग)',
+            'Inauspicious (Disease)': 'अशुभ (रोग)',
+            'Inauspicious (Loss)': 'अशुभ (काळ)'
+        }
+        CHOUGHADIYA_EFFECT_MR = {
+            'Very Good - Amrit means nectar. All types of works can be done.': 'अतिशय चांगले - अमृत म्हणजे अमृत. सर्व प्रकारची कामे करता येतात.',
+            'Good - Shubh means auspicious. Best for starting education, marriage, and religious works.': 'चांगले - शुभ म्हणजे कल्याणकारी. शिक्षण, विवाह आणि धार्मिक कामे सुरू करण्यासाठी सर्वोत्तम.',
+            'Auspicious - Labh means gain. Best for starting new business, trade, and commercial activities.': 'शुभ - लाभ म्हणजे प्रगती. नवीन व्यवसाय, व्यापार आणि व्यावसायिक उपक्रम सुरू करण्यासाठी सर्वोत्तम.',
+            'Medium - Chhal means active/mobile. Best for journeys, vehicles, and dynamic tasks.': 'मध्यम - चल म्हणजे गतिमान. प्रवास, नवीन वाहने आणि फिरतीची कामे सुरू करण्यासाठी सर्वोत्तम.',
+            'Inauspicious - Udveg means anxiety. Avoid starting new works; bad for health and peace.': 'अशुभ - उद्वेग म्हणजे भीती/चिंता. नवीन कामे सुरू करणे टाळा; आरोग्य आणि मानसिक शांततेसाठी वाईट.',
+            'Inauspicious - Rog means disease. Avoid travel, medicine start, and financial transactions.': 'अशुभ - रोग म्हणजे आजारपण. प्रवास, औषधोपचार सुरू करणे आणि आर्थिक व्यवहार करणे टाळावे.',
+            'Inauspicious - Kaal represents time/death. Avoid starting auspicious activities.': 'अशुभ - काळ म्हणजे मृत्यू/नुकसान. या काळात शुभ कार्ये करणे टाळावे.'
+        }
+        
+        current_ch['name_mr'] = CHOUGHADIYA_NAME_MR.get(current_ch['name'], current_ch['name'])
+        current_ch['status_mr'] = CHOUGHADIYA_STATUS_MR.get(current_ch['status'], current_ch['status'])
+        current_ch['effect_mr'] = CHOUGHADIYA_EFFECT_MR.get(current_ch['effect'], current_ch['effect'])
+        
+        # Calculate current Hora
+        day_lord = WEEKDAY_LORDS[weekday]
+        start_idx = HORA_SEQUENCE.index(day_lord)
+        
+        hora_planet = 'Sun'
+        hora_start_t = '12:00 PM'
+        hora_end_t = '01:00 PM'
+        
+        if dt_sunrise <= current_dt < dt_sunset:
+            elapsed = current_dt - dt_sunrise
+            hora_dur = (dt_sunset - dt_sunrise) / 12
+            hora_idx = int(elapsed / hora_dur)
+            if hora_idx >= 12: hora_idx = 11
+            planet_idx = (start_idx + hora_idx) % 7
+            hora_planet = HORA_SEQUENCE[planet_idx]
+            hora_start_t = (dt_sunrise + (hora_dur * hora_idx)).strftime('%I:%M %p')
+            hora_end_t = (dt_sunrise + (hora_dur * (hora_idx + 1))).strftime('%I:%M %p')
+        else:
+            adj_current_dt = current_dt
+            adj_dt_sunset = dt_sunset
+            adj_dt_next_sunrise = dt_next_sunrise
+            adj_weekday = weekday
+            if current_dt < dt_sunrise:
+                adj_dt_sunset = dt_sunset - datetime.timedelta(days=1)
+                adj_dt_next_sunrise = dt_sunrise
+                prev_date = date_val - datetime.timedelta(days=1)
+                adj_weekday = prev_date.weekday()
+            
+            elapsed = adj_current_dt - adj_dt_sunset
+            hora_dur = (adj_dt_next_sunrise - adj_dt_sunset) / 12
+            hora_idx = int(elapsed / hora_dur)
+            if hora_idx >= 12: hora_idx = 11
+            day_lord = WEEKDAY_LORDS[adj_weekday]
+            start_idx = HORA_SEQUENCE.index(day_lord)
+            planet_idx = (start_idx + 12 + hora_idx) % 7
+            hora_planet = HORA_SEQUENCE[planet_idx]
+            hora_start_t = (adj_dt_sunset + (hora_dur * hora_idx)).strftime('%I:%M %p')
+            hora_end_t = (adj_dt_sunset + (hora_dur * (hora_idx + 1))).strftime('%I:%M %p')
+            
+        current_hora = {
+            'planet': hora_planet,
+            'planet_mr': HORA_PLANETS_MR.get(hora_planet, hora_planet),
+            'start_time': hora_start_t,
+            'end_time': hora_end_t
+        }
+        
         return {
             'tithi': tithi_display,
             'vaar': vaar_str,
@@ -164,26 +433,76 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
             'is_pournima': is_pournima,
             'is_amavasya': is_amavasya,
             'is_sankashti': is_sankashti,
-            'paksha': paksha
+            'paksha': paksha,
+            # Redesign additions
+            'mahina': mahina_en,
+            'mahina_mr': mahina_mr,
+            'charan': moon_pada,
+            'namakshar': namakshar_display,
+            'vikram_samvat': vikram_samvat,
+            'lagn': lagna_sign,
+            'lagn_mr': lagn_mr,
+            'surya': sun_sign,
+            'surya_mr': surya_mr,
+            'chandra': moon_sign,
+            'chandra_mr': chandra_mr,
+            'yamghanta_start': yam_start,
+            'yamghanta_end': yam_end,
+            'current_choughadiya': current_ch,
+            'current_hora': current_hora
         }
+        
     except Exception as e:
         print(f"[ERROR calculate_real_panchang] {e}")
         # Return sensible fallbacks in case of error
+        fallback_sunrise = datetime.time(6, 0)
+        fallback_sunset = datetime.time(18, 30)
         return {
             'tithi': 'Shukla Pratipada',
             'vaar': date_val.strftime('%A'),
             'nakshatra': 'Rohini',
             'yoga': 'Siddha',
             'karan': 'Bava',
-            'sunrise': datetime.time(6, 0),
-            'sunset': datetime.time(18, 30),
+            'sunrise': fallback_sunrise,
+            'sunset': fallback_sunset,
             'moonrise': datetime.time(7, 30),
             'moonset': datetime.time(20, 30),
             'is_ekadashi': False,
             'is_pournima': False,
             'is_amavasya': False,
             'is_sankashti': False,
-            'paksha': 'Shukla Paksha'
+            'paksha': 'Shukla Paksha',
+            # Redesign additions
+            'mahina': 'Jyeshtha',
+            'mahina_mr': 'ज्येष्ठ',
+            'charan': 1,
+            'namakshar': 'वे',
+            'vikram_samvat': date_val.year + 57,
+            'lagn': 'Virgo',
+            'lagn_mr': 'कन्या',
+            'surya': 'Taurus',
+            'surya_mr': 'वृषभ',
+            'chandra': 'Taurus',
+            'chandra_mr': 'वृषभ',
+            'yamghanta_start': datetime.time(12, 0),
+            'yamghanta_end': datetime.time(13, 30),
+            'current_choughadiya': {
+                'name': 'Amrit',
+                'name_mr': 'अमृत',
+                'status': 'Auspicious (Best)',
+                'status_mr': 'अतिशुभ (अमृत)',
+                'color': 'success',
+                'effect': 'Very Good - Amrit means nectar. All types of works can be done.',
+                'effect_mr': 'अतिशय चांगले - अमृत म्हणजे अमृत. सर्व प्रकारची कामे करता येतात.',
+                'start_time': '12:00 PM',
+                'end_time': '01:30 PM'
+            },
+            'current_hora': {
+                'planet': 'Sun',
+                'planet_mr': 'सूर्य',
+                'start_time': '12:00 PM',
+                'end_time': '01:00 PM'
+            }
         }
 
 def get_real_birth_chart(date_val, time_val, latitude, longitude, timezone_offset=5.5, location_name="Nagpur"):
