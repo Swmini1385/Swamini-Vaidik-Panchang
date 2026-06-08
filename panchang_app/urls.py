@@ -22,6 +22,7 @@ urlpatterns = [
     path('select-language/', views.select_language, name='select_language'),
     path('set-location/', views.set_active_location, name='set_active_location'),
     path('api/locations/', views.api_location_search, name='api_location_search'),
+    path('api/kundali/<int:kundali_id>/', views.get_kundali_details_api, name='api_kundali_details'),
     path('api/locations/save/', views.api_save_location, name='api_save_location'),
     path('api/locations/recent/', views.api_recent_locations, name='api_recent_locations'),
     path('api/locations/<int:pk>/delete/', views.api_delete_location, name='api_delete_location'),

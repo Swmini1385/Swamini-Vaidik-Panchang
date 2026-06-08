@@ -14,7 +14,7 @@
     <!-- Milan Form -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-top: 4px solid var(--primary-gold) !important; background: white;">
         <div class="card-header bg-white p-3 border-0">
-            <h5 class="vedic-title m-0 text-danger" style="font-size: 18px;"><i class="fa-solid fa-people-arrows me-2"></i>{{ trans.groom_info }} &amp; {{ trans.bride_info }}</h5>
+            <h5 class="vedic-title m-0 text-danger" style="font-size: 18px;"><i class="fa-solid fa-heart-pulse me-2"></i>{{ trans.groom_info }} &amp; {{ trans.bride_info }}</h5>
         </div>
         
         <form method="post" class="needs-validation" novalidate>
@@ -28,27 +28,21 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="id_groom_name" class="form-label fw-bold">{{ trans.groom_name }} *</label>
-                            {{ form.groom_name }}
-                            <div class="invalid-feedback">Please enter groom name.</div>
+                            <label for="groom_id" class="form-label fw-bold">{% if current_lang == 'mr' %}वर निवडा{% else %}Select Groom{% endif %} *</label>
+                            <select name="groom_id" id="groom_id" class="form-select form-select-lg" required>
+                                <option value="">-- {% if current_lang == 'mr' %}वर निवडा{% else %}Select Groom{% endif %} --</option>
+                                {% for k in saved_kundalis %}
+                                <option value="{{ k.id }}" data-nakshatra="{{ k.nakshatra }}">{{ k.name }} ({{ k.date_of_birth|date:"d M Y" }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a groom.</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="id_groom_dob" class="form-label fw-bold">{{ trans.dob }} *</label>
-                            {{ form.groom_dob }}
-                            <div class="invalid-feedback">Please select groom date of birth.</div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-sm-6 mb-3">
-                                <label for="id_groom_tob" class="form-label fw-bold">{{ trans.tob }} *</label>
-                                {{ form.groom_tob }}
-                                <div class="invalid-feedback">Please specify groom time of birth.</div>
-                            </div>
-                            <div class="col-sm-6 mb-3">
-                                <label for="id_groom_pob" class="form-label fw-bold">{{ trans.pob }} *</label>
-                                {{ form.groom_pob }}
-                                <div class="invalid-feedback">Please specify groom place of birth.</div>
+                        <!-- Groom Preview Card -->
+                        <div id="groom-preview" class="d-none mt-3 p-3 border rounded-3 bg-light">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">{% if current_lang == 'mr' %}नक्षत्र{% else %}Nakshatra{% endif %}</span>
+                                <strong id="groom-nakshatra-val"></strong>
                             </div>
                         </div>
                     </div>
@@ -60,27 +54,21 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="id_bride_name" class="form-label fw-bold">{{ trans.bride_name }} *</label>
-                            {{ form.bride_name }}
-                            <div class="invalid-feedback">Please enter bride name.</div>
+                            <label for="bride_id" class="form-label fw-bold">{% if current_lang == 'mr' %}वधू निवडा{% else %}Select Bride{% endif %} *</label>
+                            <select name="bride_id" id="bride_id" class="form-select form-select-lg" required>
+                                <option value="">-- {% if current_lang == 'mr' %}वधू निवडा{% else %}Select Bride{% endif %} --</option>
+                                {% for k in saved_kundalis %}
+                                <option value="{{ k.id }}" data-nakshatra="{{ k.nakshatra }}">{{ k.name }} ({{ k.date_of_birth|date:"d M Y" }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a bride.</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="id_bride_dob" class="form-label fw-bold">{{ trans.dob }} *</label>
-                            {{ form.bride_dob }}
-                            <div class="invalid-feedback">Please select bride date of birth.</div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-sm-6 mb-3">
-                                <label for="id_bride_tob" class="form-label fw-bold">{{ trans.tob }} *</label>
-                                {{ form.bride_tob }}
-                                <div class="invalid-feedback">Please specify bride time of birth.</div>
-                            </div>
-                            <div class="col-sm-6 mb-3">
-                                <label for="id_bride_pob" class="form-label fw-bold">{{ trans.pob }} *</label>
-                                {{ form.bride_pob }}
-                                <div class="invalid-feedback">Please specify bride place of birth.</div>
+                        <!-- Bride Preview Card -->
+                        <div id="bride-preview" class="d-none mt-3 p-3 border rounded-3 bg-light">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">{% if current_lang == 'mr' %}नक्षत्र{% else %}Nakshatra{% endif %}</span>
+                                <strong id="bride-nakshatra-val"></strong>
                             </div>
                         </div>
                     </div>
@@ -100,6 +88,58 @@
 </div>
 
 <script>
+// Fetch full Kundali details from API and update UI
+async function updatePreview(selectId, previewId, labelPrefix) {
+    const select = document.getElementById(selectId);
+    const preview = document.getElementById(previewId);
+    const kundaliId = select.value;
+    
+    if (!kundaliId) {
+        preview.classList.add('d-none');
+        return;
+    }
+    
+    // Show loading state
+    preview.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-warning spinner-border-sm" role="status"></div></div>';
+    preview.classList.remove('d-none');
+    
+    try {
+        const response = await fetch(`/api/kundali/${kundaliId}/`);
+        const data = await response.json();
+        
+        if (data.success) {
+            preview.innerHTML = `
+                <div class="row g-2 small">
+                    <div class="col-6"><span class="text-muted">{% if current_lang == 'mr' %}नाव{% else %}Name{% endif %}:</span> <br><strong>${data.name}</strong></div>
+                    <div class="col-6"><span class="text-muted">{% if current_lang == 'mr' %}जन्म ठिकाण{% else %}POB{% endif %}:</span> <br><strong>${data.pob}</strong></div>
+                    <div class="col-6"><span class="text-muted">{% if current_lang == 'mr' %}तारीख{% else %}DOB{% endif %}:</span> <br><strong>${data.dob}</strong></div>
+                    <div class="col-6"><span class="text-muted">{% if current_lang == 'mr' %}वेळ{% else %}TOB{% endif %}:</span> <br><strong>${data.tob}</strong></div>
+                </div>
+                <hr class="my-2">
+                <div class="row g-2 small">
+                    <div class="col-6"><span class="text-muted">{% if current_lang == 'mr' %}राशी{% else %}Rashi{% endif %}:</span> <br><strong class="text-dark">${data.rashi}</strong></div>
+                    <div class="col-6"><span class="text-muted">{% if current_lang == 'mr' %}नक्षत्र{% else %}Nakshatra{% endif %}:</span> <br><strong class="text-primary">${data.nakshatra}</strong></div>
+                    <div class="col-12"><span class="text-muted">{% if current_lang == 'mr' %}चरण{% else %}Charan{% endif %}:</span> <br><strong class="text-danger">${data.charan}</strong></div>
+                </div>
+            `;
+            // Save nakshatra in dataset for quick access if needed
+            select.options[select.selectedIndex].dataset.nakshatra = data.nakshatra;
+        } else {
+            preview.innerHTML = '<div class="text-danger small">Error loading details.</div>';
+        }
+    } catch (error) {
+        preview.innerHTML = '<div class="text-danger small">Network error.</div>';
+    }
+}
+
+document.getElementById('groom_id').addEventListener('change', function() {
+    updatePreview('groom_id', 'groom-preview', 'groom');
+});
+
+document.getElementById('bride_id').addEventListener('change', function() {
+    updatePreview('bride_id', 'bride-preview', 'bride');
+});
+
 // Bootstrap form validation
 (function () {
   'use strict'

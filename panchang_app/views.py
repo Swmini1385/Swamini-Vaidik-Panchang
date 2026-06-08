@@ -1074,50 +1074,64 @@ def delete_kundali_view(request, pk):
 
 @login_required
 def kundali_milan_view(request):
+    saved_kundalis = KundaliRecord.objects.filter(user=request.user)
+    
     if request.method == 'POST':
-        form = KundaliMilanForm(request.POST)
-        if form.is_valid():
-            groom_name = form.cleaned_data['groom_name']
-            groom_dob = form.cleaned_data['groom_dob']
-            groom_tob = form.cleaned_data['groom_tob']
-            groom_pob = form.cleaned_data['groom_pob']
+        groom_id = request.POST.get('groom_id')
+        bride_id = request.POST.get('bride_id')
+        
+        if groom_id and bride_id:
+            groom = get_object_or_404(KundaliRecord, id=groom_id, user=request.user)
+            bride = get_object_or_404(KundaliRecord, id=bride_id, user=request.user)
             
-            bride_name = form.cleaned_data['bride_name']
-            bride_dob = form.cleaned_data['bride_dob']
-            bride_tob = form.cleaned_data['bride_tob']
-            bride_pob = form.cleaned_data['bride_pob']
-            
-            def get_coordinates_for_place(place_name):
-                loc = LocationMaster.objects.filter(location_name__icontains=place_name, is_active=True).first()
-                if loc:
-                    return loc.latitude, loc.longitude, loc.timezone
-                return 21.1458, 79.0882, 'Asia/Kolkata'
-                
-            g_lat, g_lon, g_tz = get_coordinates_for_place(groom_pob)
-            b_lat, b_lon, b_tz = get_coordinates_for_place(bride_pob)
-            
-            g_dt = datetime.datetime.combine(groom_dob, groom_tob)
-            g_tz_offset = get_tz_offset(g_tz, g_dt)
-            g_chart = get_real_birth_chart(groom_dob, groom_tob, g_lat, g_lon, g_tz_offset, groom_pob)
+            g_dt = datetime.datetime.combine(groom.date_of_birth, groom.time_of_birth)
+            g_tz_offset = get_tz_offset(groom.timezone, g_dt)
+            g_chart = get_real_birth_chart(groom.date_of_birth, groom.time_of_birth, float(groom.latitude or 21.1458), float(groom.longitude or 79.0882), g_tz_offset, groom.place_of_birth)
             groom_nak = g_chart.to_dict()['panchanga'].get('nakshatra', 'Rohini')
             
-            b_dt = datetime.datetime.combine(bride_dob, bride_tob)
-            b_tz_offset = get_tz_offset(b_tz, b_dt)
-            b_chart = get_real_birth_chart(bride_dob, bride_tob, b_lat, b_lon, b_tz_offset, bride_pob)
+            b_dt = datetime.datetime.combine(bride.date_of_birth, bride.time_of_birth)
+            b_tz_offset = get_tz_offset(bride.timezone, b_dt)
+            b_chart = get_real_birth_chart(bride.date_of_birth, bride.time_of_birth, float(bride.latitude or 21.1458), float(bride.longitude or 79.0882), b_tz_offset, bride.place_of_birth)
             bride_nak = b_chart.to_dict()['panchanga'].get('nakshatra', 'Rohini')
             
             result = calculate_milan(groom_nak, bride_nak)
             
             context = {
-                'groom': {'name': groom_name, 'dob': groom_dob, 'tob': groom_tob, 'pob': groom_pob, 'nakshatra': groom_nak},
-                'bride': {'name': bride_name, 'dob': bride_dob, 'tob': bride_tob, 'pob': bride_pob, 'nakshatra': bride_nak},
-                'result': result
+                'groom': {'name': groom.name, 'dob': groom.date_of_birth, 'tob': groom.time_of_birth, 'pob': groom.place_of_birth, 'nakshatra': groom_nak},
+                'bride': {'name': bride.name, 'dob': bride.date_of_birth, 'tob': bride.time_of_birth, 'pob': bride.place_of_birth, 'nakshatra': bride_nak},
+                'result': result,
+                'saved_kundalis': saved_kundalis
             }
             return render(request, 'kundali_milan_result.html', context)
-    else:
-        form = KundaliMilanForm()
+            
+    return render(request, 'kundali_milan.html', {'saved_kundalis': saved_kundalis})
+
+@login_required
+def get_kundali_details_api(request, kundali_id):
+    try:
+        kundali = get_object_or_404(KundaliRecord, id=kundali_id, user=request.user)
         
-    return render(request, 'kundali_milan.html', {'form': form})
+        g_dt = datetime.datetime.combine(kundali.date_of_birth, kundali.time_of_birth)
+        tz_offset = get_tz_offset(kundali.timezone, g_dt)
+        chart = get_real_birth_chart(kundali.date_of_birth, kundali.time_of_birth, float(kundali.latitude or 21.1458), float(kundali.longitude or 79.0882), tz_offset, kundali.place_of_birth)
+        
+        panchanga = chart.to_dict().get('panchanga', {})
+        nakshatra = panchanga.get('nakshatra', 'Unknown')
+        rashi = panchanga.get('rashi', 'Unknown')
+        charan = panchanga.get('charan', 'Unknown')
+        
+        return JsonResponse({
+            'success': True,
+            'name': kundali.name,
+            'dob': kundali.date_of_birth.strftime('%Y-%m-%d'),
+            'tob': kundali.time_of_birth.strftime('%H:%M:%S'),
+            'pob': kundali.place_of_birth,
+            'nakshatra': nakshatra,
+            'rashi': rashi,
+            'charan': charan
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
 def choughadiya_view(request):

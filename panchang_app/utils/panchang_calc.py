@@ -202,24 +202,49 @@ def normalize_nakshatra_name(name):
     s = s.replace("shth", "sht").replace("sth", "st").replace("sh", "s").replace("th", "t").replace("oo", "u")
     return s
 
-def get_hindu_month(sun_deg, moon_deg):
-    elongation = (moon_deg - sun_deg) % 360
+def get_sun_rashi_at(dt_utc):
+    p = jyotishganit.Person(dt_utc, 21.1458, 79.0882, 0.0)
+    chart = jyotishganit.get_birth_chart_json(p)
+    for h in chart.get('d1Chart', {}).get('houses', []):
+        for occ in h.get('occupants', []):
+            if occ.get('celestialBody') == 'Sun':
+                return ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'].index(h.get('sign', 'Aries'))
+    return 0
+
+def get_hindu_month(date_val):
+    eph = api.load('de421.bsp')
+    ts = api.load.timescale()
     
-    # Exact solar movement approximation based on elongation. 
-    # Ratio of Sun speed / (Moon - Sun) speed = 0.9856 / 12.1904 = 0.08085
-    s_prev = (sun_deg - elongation * 0.08085) % 360
-    s_next = (sun_deg + (360 - elongation) * 0.08085) % 360
+    t0 = ts.utc(date_val.year, date_val.month, date_val.day - 40)
+    t1 = ts.utc(date_val.year, date_val.month, date_val.day + 40)
     
-    prev_idx = int(s_prev / 30)
-    next_idx = int(s_next / 30)
+    t, y = almanac.find_discrete(t0, t1, almanac.moon_phases(eph))
+    new_moons = [t_i.utc_datetime() for t_i, y_i in zip(t, y) if y_i == 0]
+    
+    dt_utc = datetime.datetime.combine(date_val, datetime.time(12, 0, 0, tzinfo=datetime.timezone.utc))
+    new_moons.sort(key=lambda x: abs(x - dt_utc))
+    
+    closest = new_moons[0]
+    if closest > dt_utc:
+        next_amavasya = closest
+        prev_moons = [nm for nm in new_moons if nm < next_amavasya]
+        prev_amavasya = prev_moons[-1]
+    else:
+        prev_amavasya = closest
+        next_moons = [nm for nm in new_moons if nm > prev_amavasya]
+        next_amavasya = next_moons[0]
+        
+    prev_idx = get_sun_rashi_at(prev_amavasya.replace(tzinfo=None))
+    next_idx = get_sun_rashi_at(next_amavasya.replace(tzinfo=None))
     
     is_adhik = (prev_idx == next_idx)
     
     names_en = ['Chaitra', 'Vaishakha', 'Jyeshtha', 'Ashadha', 'Shravana', 'Bhadrapada', 'Ashwina', 'Kartika', 'Margashirsha', 'Pausha', 'Magha', 'Phalguna']
     names_mr = ['चैत्र', 'वैशाख', 'ज्येष्ठ', 'आषाढ', 'श्रावण', 'भाद्रपद', 'अश्विन', 'कार्तिक', 'मार्गशीर्ष', 'पौष', 'माघ', 'फाल्गुन']
     
-    en_name = names_en[next_idx]
-    mr_name = names_mr[next_idx]
+    month_idx = (next_idx + 1) % 12 if is_adhik else next_idx
+    en_name = names_en[month_idx]
+    mr_name = names_mr[month_idx]
     
     if is_adhik:
         en_name = 'Adhik ' + en_name
@@ -353,8 +378,8 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
         YOGAS = ["Vishkambha", "Priti", "Ayushman", "Saubhagya", "Shobhana", "Atiganda", "Sukarma", "Dhriti", "Shula", "Ganda", "Vriddhi", "Dhruva", "Vyaghata", "Harshana", "Vajra", "Siddhi", "Vyatipata", "Variyan", "Parigha", "Shiva", "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma", "Indra", "Vaidhriti"]
         yoga_str = YOGAS[yoga_idx]
         
-        # Get active month using rigorous Amanta tracking
-        mahina_en, mahina_mr = get_hindu_month(sun_deg_total, moon_deg_total)
+        # Get active month using rigorous Amanta tracking (using exact Skyfield Amavasyas)
+        mahina_en, mahina_mr = get_hindu_month(date_val)
         
         # Get Namakshar
         namakshar_mr = ""
