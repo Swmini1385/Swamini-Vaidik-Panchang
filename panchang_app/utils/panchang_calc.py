@@ -203,9 +203,15 @@ def normalize_nakshatra_name(name):
     return s
 
 def get_sun_rashi_at(dt_utc):
-    p = jyotishganit.Person(dt_utc, 21.1458, 79.0882, 0.0)
-    chart = jyotishganit.get_birth_chart_json(p)
-    for h in chart.get('d1Chart', {}).get('houses', []):
+    chart = jyotishganit.calculate_birth_chart(
+        birth_date=dt_utc,
+        latitude=21.1458,
+        longitude=79.0882,
+        timezone_offset=0.0,
+        location_name="Nagpur"
+    )
+    chart_dict = chart.to_dict()
+    for h in chart_dict.get('d1Chart', {}).get('houses', []):
         for occ in h.get('occupants', []):
             if occ.get('celestialBody') == 'Sun':
                 return ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'].index(h.get('sign', 'Aries'))
@@ -352,25 +358,38 @@ def get_dynamic_panchang_metrics(current_dt, lat, lon, tz_offset, ayanamsa):
 
 @lru_cache(maxsize=128)
 def _get_static_sunrise_chart(date_val, lat, lon, tz_offset, location_name):
-    # 1. Sunrise & Sunset at local noon reference
-    noon_dt = datetime.datetime.combine(date_val, datetime.time(12, 0, 0))
-    p = jyotishganit.Person(noon_dt, float(lat), float(lon), float(tz_offset))
-    sunrise_dec, sunset_dec = get_sunrise_sunset(p)
-    
-    sunrise_time = decimal_hours_to_time(sunrise_dec)
-    sunset_time = decimal_hours_to_time(sunset_dec)
-    
-    # 2. Moonrise & Moonset times using Skyfield
     eph, ts = get_eph_and_ts()
     earth = eph['earth']
+    sun = eph['sun']
     moon = eph['moon']
     location = api.wgs84.latlon(float(lat), float(lon))
     observer = earth + location
     
-    # Calculate range from local midnight to next local midnight in UTC
     local_midnight = datetime.datetime.combine(date_val, datetime.time(0, 0, 0))
     t0_utc = local_midnight - datetime.timedelta(hours=float(tz_offset))
     t1_utc = local_midnight + datetime.timedelta(days=1) - datetime.timedelta(hours=float(tz_offset))
+    
+    t0 = ts.from_datetime(t0_utc.replace(tzinfo=datetime.timezone.utc))
+    t1 = ts.from_datetime(t1_utc.replace(tzinfo=datetime.timezone.utc))
+    
+    # 1. Sunrise & Sunset using Skyfield
+    sun_rise_times, _ = almanac.find_risings(observer, sun, t0, t1)
+    sun_set_times, _ = almanac.find_settings(observer, sun, t0, t1)
+    
+    if len(sun_rise_times) > 0:
+        rise_local = sun_rise_times[0].utc_datetime() + datetime.timedelta(hours=float(tz_offset))
+        sunrise_time = rise_local.time()
+    else:
+        sunrise_time = datetime.time(6, 0)
+        
+    if len(sun_set_times) > 0:
+        set_local = sun_set_times[0].utc_datetime() + datetime.timedelta(hours=float(tz_offset))
+        sunset_time = set_local.time()
+    else:
+        sunset_time = datetime.time(18, 0)
+    
+    # 2. Moonrise & Moonset times using Skyfield
+    rise_times, _ = almanac.find_risings(observer, moon, t0, t1)
     
     t0 = ts.from_datetime(t0_utc.replace(tzinfo=datetime.timezone.utc))
     t1 = ts.from_datetime(t1_utc.replace(tzinfo=datetime.timezone.utc))
@@ -658,6 +677,8 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
             'karan_end': karan_end,
             'next_karana': next_karana,
             'ishtakal': calculate_ishtakaal(current_dt.time(), sunrise_time),
+            'hindu_time_str': calculate_ishtakaal(current_dt.time(), sunrise_time),
+            'current_time_str': current_dt.strftime('%I:%M:%S %p'),
             'sunrise': sunrise_time,
             'sunset': sunset_time,
             'moonrise': moonrise_time,

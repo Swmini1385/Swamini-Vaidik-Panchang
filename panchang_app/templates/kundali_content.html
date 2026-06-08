@@ -6,19 +6,30 @@
             <!-- Astronomical Metadata Grid -->
             <div class="card border-0 rounded-4 shadow-sm mb-4 bg-white" style="border-left: 5px solid var(--saffron-orange) !important;">
                 <div class="card-body p-3">
-                    <h5 class="vedic-title text-dark mb-3 border-bottom pb-2" style="font-size: 15px;">
-                        <i class="fa-solid fa-om text-warning me-2"></i>{% if current_lang == 'mr' %}कुंडली माहिती विवरण{% else %}Kundali Details Overview{% endif %}
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <h5 class="vedic-title text-dark m-0" style="font-size: 15px;">
+                            <i class="fa-solid fa-om text-warning me-2"></i>{% if current_lang == 'mr' %}कुंडली माहिती विवरण{% else %}Kundali Details Overview{% endif %}
+                        </h5>
+                    </div>
+                    
+                    <!-- Prominent Header Bar for Date/Time/Location -->
+                    <div class="bg-light border border-warning rounded-3 p-2 mb-3 d-flex flex-wrap justify-content-between text-dark" style="font-size: 13px;">
+                        <div class="d-flex align-items-center mb-1 mb-md-0">
+                            <i class="fa-regular fa-calendar-days text-danger me-2"></i>
+                            <span class="fw-bold me-2">{{ date_of_birth|date:"d/m/Y" }}</span>
+                            <span class="badge bg-warning text-dark">{{ panchang.vaar|translate_val:current_lang }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-1 mb-md-0">
+                            <i class="fa-regular fa-clock text-danger me-2"></i>
+                            <span class="fw-bold">{{ time_of_birth|format_time_ampm }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid fa-location-dot text-danger me-2"></i>
+                            <span class="fw-bold">{{ place_of_birth }}</span>
+                        </div>
+                    </div>
                     
                     <div class="row g-2 row-cols-2 row-cols-md-4 text-dark" style="font-size: 13px;">
-                        <div class="col py-1 border-bottom border-light">
-                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}स्थान (Location){% else %}Location{% endif %}</span>
-                            <strong>{{ place_of_birth }}</strong>
-                        </div>
-                        <div class="col py-1 border-bottom border-light">
-                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}तारीख व वेळ{% else %}Date & Time{% endif %}</span>
-                            <strong>{{ date_of_birth|date:"d/m/Y" }} | {{ time_of_birth|format_time_ampm }}</strong>
-                        </div>
                         <div class="col py-1 border-bottom border-light">
                             <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}राशी (Moon Sign){% else %}Rashi{% endif %}</span>
                             <strong class="text-danger">{{ rashi }}</strong>

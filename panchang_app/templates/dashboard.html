@@ -40,11 +40,11 @@
                         <div class="row g-2">
                             <div class="col">
                                 <small class="text-muted d-block" style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{{ trans.current_time|default:"सध्याची वेळ" }}</small>
-                                <span class="fw-bold text-danger" id="current-time-val" style="font-size: 14px; font-family: 'Poppins', sans-serif;">--:--:-- PM</span>
+                                <span class="fw-bold text-danger" id="current-time-val" style="font-size: 14px; font-family: 'Poppins', sans-serif;">{{ panchang.current_time_str|default:"--:--:-- PM" }}</span>
                             </div>
                             <div class="col border-start ps-3">
                                 <small class="text-muted d-block" style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{{ trans.hindu_time|default:"हिंदू वेळ (घटी/पळ)" }}</small>
-                                <span class="fw-bold text-dark" id="hindu-time-val" style="font-size: 13px;">-- घटी, -- पळ</span>
+                                <span class="fw-bold text-dark" id="hindu-time-val" style="font-size: 13px;">{{ panchang.hindu_time_str|default:"-- घटी, -- पळ" }}</span>
                             </div>
                         </div>
                     </div>

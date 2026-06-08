@@ -854,7 +854,7 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
         props = NAKSHATRAS[nak_key]
         YONI_MR = {'Horse': 'अश्व (Horse)', 'Elephant': 'गज (Elephant)', 'Sheep': 'मेष (Sheep)', 'Serpent': 'सर्प (Serpent)', 'Dog': 'श्वान (Dog)', 'Cat': 'मार्जार (Cat)', 'Rat': 'मूषक (Rat)', 'Cow': 'गौ (Cow)', 'Buffalo': 'महिष (Buffalo)', 'Tiger': 'व्याघ्र (Tiger)', 'Hare': 'शशक (Hare)', 'Monkey': 'वानर (Monkey)', 'Lion': 'सिंह (Lion)', 'Mongoose': 'नकुल (Mongoose)'}
         GANA_MR = {'Deva': 'देव (Deva)', 'Manushya': 'मनुष्य (Manushya)', 'Rakshasa': 'राक्षस (Rakshasa)'}
-        NADI_MR = {'Adi': 'आद्य (Adi)', 'Madhya': 'मध्य (Madhya)', 'Antya': 'अंत्य (Antya)'}
+        NADI_MR = {'Adi': 'आद्य (वात)', 'Madhya': 'मध्य (पित्त)', 'Antya': 'अंत्य (कफ)'}
         VARNA_MR = {'Brahmin': 'ब्राह्मण (Brahmin)', 'Kshatriya': 'क्षत्रिय (Kshatriya)', 'Vaishya': 'वैश्य (Vaishya)', 'Shudra': 'शूद्र (Shudra)'}
         
         if current_lang == 'mr':
@@ -866,19 +866,18 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
         else:
             yoni_val = props['yoni']
             gana_val = props['gana']
-            nadi_val = props['nadi']
+            NADI_EN = {'Adi': 'Adya (Vata)', 'Madhya': 'Madhya (Pitta)', 'Antya': 'Antya (Kapha)'}
+            nadi_val = NADI_EN.get(props['nadi'], props['nadi'])
             varna_val = props['varna']
             nak_lord = props['lord']
             
         from panchang_app.utils.panchang_calc import SIGN_MAP
         m_idx = SIGN_MAP.get(moon_sign, 1)
-        s_idx = SIGN_MAP.get(panchang_data.get('surya', 'Taurus'), 1)
-        diff = (m_idx - s_idx) % 12 + 1
-        if diff in [1, 6, 11]:
+        if m_idx in [1, 6, 11]:
             nak_paya = "सोने (Gold)" if current_lang == 'mr' else "Gold"
-        elif diff in [2, 5, 9]:
+        elif m_idx in [2, 5, 9]:
             nak_paya = "चांदी (Silver)" if current_lang == 'mr' else "Silver"
-        elif diff in [3, 7, 10]:
+        elif m_idx in [3, 7, 10]:
             nak_paya = "तांबे (Copper)" if current_lang == 'mr' else "Copper"
         else:
             nak_paya = "लोखंड (Iron)" if current_lang == 'mr' else "Iron"
