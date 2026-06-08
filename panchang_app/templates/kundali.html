@@ -225,29 +225,27 @@
                 <div class="card-body p-0">
                     <!-- Nirayan Tab -->
                     <div id="pos-tab-nirayan" style="display: block;">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" style="font-size:12.5px; min-width: 500px;">
+                        <div class="table-responsive w-100">
+                            <table class="table table-hover align-middle mb-0 table-sm" style="font-size:12px;">
                                 <thead class="table-light text-secondary">
                                     <tr>
-                                        <th>ग्रह</th>
-                                        <th>राशी</th>
-                                        <th>अंश</th>
-                                        <th>नक्षत्र</th>
-                                        <th>चरण</th>
-                                        <th>नामाक्षर</th>
+                                        <th class="px-1">ग्रह</th>
+                                        <th class="px-1">राशी</th>
+                                        <th class="px-1">अंश</th>
+                                        <th class="px-1">नक्षत्र</th>
+                                        <th class="px-1">चरण</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for p in planets %}
                                     <tr>
-                                        <td class="fw-bold {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
+                                        <td class="fw-bold px-1 {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
                                             {% if current_lang == 'mr' %}{{ p.name_mr }}{% else %}{{ p.name }}{% endif %}
                                         </td>
-                                        <td>{{ p.sidereal_sign }}</td>
-                                        <td class="fw-bold text-dark">{{ p.sidereal_degree }}</td>
-                                        <td>{{ p.nakshatra|translate_val:current_lang }}</td>
-                                        <td class="fw-bold">{{ p.pada|translate_val:current_lang }}</td>
-                                        <td class="text-success fw-bold">{% if p.namakshar %}{{ p.namakshar }}{% else %}--{% endif %}</td>
+                                        <td class="px-1">{{ p.sidereal_sign }}</td>
+                                        <td class="fw-bold text-dark px-1">{{ p.sidereal_degree }}</td>
+                                        <td class="px-1">{{ p.nakshatra|translate_val:current_lang }}</td>
+                                        <td class="fw-bold px-1">{{ p.pada|translate_val:current_lang }}{% if p.namakshar %}{{ p.namakshar }}{% endif %}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -257,23 +255,23 @@
                     
                     <!-- Sayan Tab -->
                     <div id="pos-tab-sayan" style="display: none;">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" style="font-size:12.5px; min-width: 300px;">
+                        <div class="table-responsive w-100">
+                            <table class="table table-hover align-middle mb-0 table-sm" style="font-size:12px;">
                                 <thead class="table-light text-secondary">
                                     <tr>
-                                        <th>ग्रह</th>
-                                        <th>राशी</th>
-                                        <th>अंश</th>
+                                        <th class="px-1">ग्रह</th>
+                                        <th class="px-1">राशी</th>
+                                        <th class="px-1">अंश</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for p in planets %}
                                     <tr>
-                                        <td class="fw-bold {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
+                                        <td class="fw-bold px-1 {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
                                             {% if current_lang == 'mr' %}{{ p.name_mr }}{% else %}{{ p.name }}{% endif %}
                                         </td>
-                                        <td>{{ p.tropical_sign }}</td>
-                                        <td class="fw-bold text-dark">{{ p.tropical_degree }}</td>
+                                        <td class="px-1">{{ p.tropical_sign }}</td>
+                                        <td class="fw-bold text-dark px-1">{{ p.tropical_degree }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -766,14 +764,14 @@
     // Floating Action Button toggling
     function toggleFabMenu() {
         const menu = document.getElementById('fab-menu-list');
-        const icon = document.getElementById('fab-icon');
+        const fabMain = document.getElementById('fab-main-btn');
         
-        if(menu.classList.contains('show')) {
-            menu.classList.remove('show');
-            icon.style.transform = 'rotate(0deg)';
+        if(menu.classList.contains('active')) {
+            menu.classList.remove('active');
+            fabMain.classList.remove('active');
         } else {
-            menu.classList.add('show');
-            icon.style.transform = 'rotate(45deg)';
+            menu.classList.add('active');
+            fabMain.classList.add('active');
         }
     }
 

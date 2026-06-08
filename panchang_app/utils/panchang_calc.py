@@ -617,7 +617,7 @@ def get_real_birth_chart(date_val, time_val, latitude, longitude, timezone_offse
     return chart
 
 def check_combust(body, p_deg, sun_deg, is_retro):
-    if body in ['Rahu', 'Ketu', 'Sun', 'Lagna (Asc)']:
+    if body in ['Rahu', 'Ketu', 'Sun', 'Sun (Surya)', 'Lagna (Asc)', 'Lagna']:
         return False
     diff = abs(p_deg - sun_deg)
     if diff > 180:
