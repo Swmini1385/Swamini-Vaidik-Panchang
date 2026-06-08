@@ -1,8 +1,10 @@
 {
   "name": "Swamini Vaidik Panchang",
   "short_name": "Swamini",
-  "start_url": "/dashboard/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
   "background_color": "#5B0F0F",
   "theme_color": "#5B0F0F",
   "description": "Vedic Astrology, Daily Panchang, Kundali, Kundali Milan & Choughadiya App",
