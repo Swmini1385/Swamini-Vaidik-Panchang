@@ -208,43 +208,77 @@
 
             <!-- Planets Coordinates Table (Sidereal / Tropical) -->
             <div class="card border-0 rounded-4 shadow-sm bg-white mb-4">
-                <div class="card-header bg-white p-3 border-0">
+                <div class="card-header bg-white p-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="vedic-title text-danger m-0" style="font-size: 15px;">
-                        <i class="fa-solid fa-list text-warning me-2"></i>{% if current_lang == 'mr' %}निरायण व सायन ग्रह स्पष्ट स्थिती{% else %}Sidereal & Tropical Planet Positions{% endif %}
+                        <i class="fa-solid fa-list text-warning me-2"></i>{% if current_lang == 'mr' %}ग्रह स्पष्ट स्थिती{% else %}Planet Positions{% endif %}
                     </h5>
+                    <div class="d-flex gap-2">
+                        <button id="btn-pos-nirayan" type="button" class="btn btn-sm btn-warning px-3 rounded-pill fw-bold shadow-sm" onclick="switchPosTab('nirayan')">
+                            {% if current_lang == 'mr' %}निरायण{% else %}Sidereal{% endif %}
+                        </button>
+                        <button id="btn-pos-sayan" type="button" class="btn btn-sm btn-outline-warning text-dark px-3 rounded-pill fw-bold" onclick="switchPosTab('sayan')">
+                            {% if current_lang == 'mr' %}सायन{% else %}Tropical{% endif %}
+                        </button>
+                    </div>
                 </div>
+                
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size:12.5px; min-width: 580px;">
-                            <thead class="table-light text-secondary">
-                                <tr>
-                                    <th>ग्रह</th>
-                                    <th>निरायण राशी</th>
-                                    <th>निरायण अंश</th>
-                                    <th>सायन राशी</th>
-                                    <th>सायन अंश</th>
-                                    <th>नक्षत्र</th>
-                                    <th>चरण</th>
-                                    <th>नामाक्षर</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for p in planets %}
-                                <tr>
-                                    <td class="fw-bold {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
-                                        {% if current_lang == 'mr' %}{{ p.name_mr }}{% else %}{{ p.name }}{% endif %}
-                                    </td>
-                                    <td>{{ p.sidereal_sign }}</td>
-                                    <td class="fw-bold text-dark">{{ p.sidereal_degree }}</td>
-                                    <td>{{ p.tropical_sign }}</td>
-                                    <td class="text-muted">{{ p.tropical_degree }}</td>
-                                    <td>{{ p.nakshatra|translate_val:current_lang }}</td>
-                                    <td class="fw-bold">{{ p.pada|translate_val:current_lang }}</td>
-                                    <td class="text-success fw-bold">{% if p.namakshar %}{{ p.namakshar }}{% else %}--{% endif %}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <!-- Nirayan Tab -->
+                    <div id="pos-tab-nirayan" style="display: block;">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" style="font-size:12.5px; min-width: 500px;">
+                                <thead class="table-light text-secondary">
+                                    <tr>
+                                        <th>ग्रह</th>
+                                        <th>राशी</th>
+                                        <th>अंश</th>
+                                        <th>नक्षत्र</th>
+                                        <th>चरण</th>
+                                        <th>नामाक्षर</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in planets %}
+                                    <tr>
+                                        <td class="fw-bold {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
+                                            {% if current_lang == 'mr' %}{{ p.name_mr }}{% else %}{{ p.name }}{% endif %}
+                                        </td>
+                                        <td>{{ p.sidereal_sign }}</td>
+                                        <td class="fw-bold text-dark">{{ p.sidereal_degree }}</td>
+                                        <td>{{ p.nakshatra|translate_val:current_lang }}</td>
+                                        <td class="fw-bold">{{ p.pada|translate_val:current_lang }}</td>
+                                        <td class="text-success fw-bold">{% if p.namakshar %}{{ p.namakshar }}{% else %}--{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Sayan Tab -->
+                    <div id="pos-tab-sayan" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" style="font-size:12.5px; min-width: 300px;">
+                                <thead class="table-light text-secondary">
+                                    <tr>
+                                        <th>ग्रह</th>
+                                        <th>राशी</th>
+                                        <th>अंश</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in planets %}
+                                    <tr>
+                                        <td class="fw-bold {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
+                                            {% if current_lang == 'mr' %}{{ p.name_mr }}{% else %}{{ p.name }}{% endif %}
+                                        </td>
+                                        <td>{{ p.tropical_sign }}</td>
+                                        <td class="fw-bold text-dark">{{ p.tropical_degree }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -678,11 +712,36 @@
 
     // Floating Action Button toggling
     function toggleFabMenu() {
-        const fabBtn = document.getElementById('fab-main-btn');
-        const fabMenu = document.getElementById('fab-menu-list');
+        const menu = document.getElementById('fab-menu-list');
+        const icon = document.getElementById('fab-icon');
         
-        fabBtn.classList.toggle('active');
-        fabMenu.classList.toggle('active');
+        if(menu.classList.contains('show')) {
+            menu.classList.remove('show');
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            menu.classList.add('show');
+            icon.style.transform = 'rotate(45deg)';
+        }
+    }
+
+    // Toggle Planet Positions Tabs (Nirayan vs Sayan)
+    function switchPosTab(tabId) {
+        document.getElementById('pos-tab-nirayan').style.display = 'none';
+        document.getElementById('pos-tab-sayan').style.display = 'none';
+        
+        let btnNirayan = document.getElementById('btn-pos-nirayan');
+        let btnSayan = document.getElementById('btn-pos-sayan');
+        
+        btnNirayan.className = "btn btn-sm btn-outline-warning text-dark px-3 rounded-pill fw-bold";
+        btnSayan.className = "btn btn-sm btn-outline-warning text-dark px-3 rounded-pill fw-bold";
+        
+        if (tabId === 'nirayan') {
+            document.getElementById('pos-tab-nirayan').style.display = 'block';
+            btnNirayan.className = "btn btn-sm btn-warning px-3 rounded-pill fw-bold shadow-sm";
+        } else {
+            document.getElementById('pos-tab-sayan').style.display = 'block';
+            btnSayan.className = "btn btn-sm btn-warning px-3 rounded-pill fw-bold shadow-sm";
+        }
     }
 
     // Save profile modal popup prefilled values

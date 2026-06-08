@@ -158,8 +158,23 @@ def calculate_ishtakaal(birth_time, sunrise_time):
         
     ghati_total = diff_seconds * 2.5 / 3600
     ghati = int(ghati_total)
-    pala = int((ghati_total - ghati) * 60)
-    return f"{ghati} घटी {pala} पळे"
+    
+    rem1 = (ghati_total - ghati) * 60
+    pala = int(rem1)
+    
+    rem2 = (rem1 - pala) * 60
+    vipala = int(rem2)
+    
+    rem3 = (rem2 - vipala) * 60
+    prativipala = int(round(rem3))
+    
+    parts = [f"{ghati} घटी", f"{pala} पळे"]
+    if vipala > 0 or prativipala > 0:
+        parts.append(f"{vipala} विपळे")
+    if prativipala > 0:
+        parts.append(f"{prativipala} प्रतिविपळे")
+        
+    return " ".join(parts)
 
 YAMAGANDA_INDEX = {
     0: 3, # Monday: 4th part
@@ -187,28 +202,16 @@ def normalize_nakshatra_name(name):
     s = s.replace("shth", "sht").replace("sth", "st").replace("sh", "s").replace("th", "t").replace("oo", "u")
     return s
 
-def get_hindu_month(sun_deg, tithi_str):
-    tithi_names = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Pournima', 'Purnima', 'Amavasya']
+def get_hindu_month(sun_deg, moon_deg):
+    elongation = (moon_deg - sun_deg) % 360
     
-    t_num = 1
-    for i, name in enumerate(tithi_names[:14]):
-        if name in tithi_str:
-            t_num = i + 1
-            break
-    if 'Pournima' in tithi_str or 'Purnima' in tithi_str:
-        t_num = 15
-    elif 'Amavasya' in tithi_str:
-        t_num = 30
-        
-    if 'Krishna' in tithi_str and t_num < 15:
-        t_num += 15
-        
-    # Sun movement approximation (~0.9856 degrees per tithi)
-    approx_sun_prev_amavasya = (sun_deg - (t_num * 0.9856)) % 360
-    approx_sun_next_amavasya = (sun_deg + ((30 - t_num) * 0.9856)) % 360
+    # Exact solar movement approximation based on elongation. 
+    # Ratio of Sun speed / (Moon - Sun) speed = 0.9856 / 12.1904 = 0.08085
+    s_prev = (sun_deg - elongation * 0.08085) % 360
+    s_next = (sun_deg + (360 - elongation) * 0.08085) % 360
     
-    prev_idx = int(approx_sun_prev_amavasya / 30)
-    next_idx = int(approx_sun_next_amavasya / 30)
+    prev_idx = int(s_prev / 30)
+    next_idx = int(s_next / 30)
     
     is_adhik = (prev_idx == next_idx)
     
@@ -326,6 +329,7 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
         sun_sign = ""
         sun_deg_total = 0
         moon_sign = ""
+        moon_deg_total = 0
         moon_nak = ""
         moon_pada = 1
         
@@ -341,9 +345,16 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
                     moon_sign = h_sign
                     moon_nak = occ.get('nakshatra', '')
                     moon_pada = occ.get('pada', 1)
+                    moon_sign_deg = float(occ.get('signDegrees', 0))
+                    moon_deg_total = (SIGN_MAP.get(h_sign, 1) - 1) * 30 + moon_sign_deg
                     
-        # Get active month using rigorous Tithi-based Amanta tracking
-        mahina_en, mahina_mr = get_hindu_month(sun_deg_total, tithi_str)
+        # Calculate Yoga accurately using exact coordinates
+        yoga_idx = int((sun_deg_total + moon_deg_total) / 13.3333333333) % 27
+        YOGAS = ["Vishkambha", "Priti", "Ayushman", "Saubhagya", "Shobhana", "Atiganda", "Sukarma", "Dhriti", "Shula", "Ganda", "Vriddhi", "Dhruva", "Vyaghata", "Harshana", "Vajra", "Siddhi", "Vyatipata", "Variyan", "Parigha", "Shiva", "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma", "Indra", "Vaidhriti"]
+        yoga_str = YOGAS[yoga_idx]
+        
+        # Get active month using rigorous Amanta tracking
+        mahina_en, mahina_mr = get_hindu_month(sun_deg_total, moon_deg_total)
         
         # Get Namakshar
         namakshar_mr = ""
@@ -508,6 +519,10 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
             'is_pournima': is_pournima,
             'is_amavasya': is_amavasya,
             'is_sankashti': is_sankashti,
+            'hindu_month_en': mahina_en,
+            'hindu_month_mr': mahina_mr,
+            'moon_nakshatra': moon_nak,
+            'moon_pada': moon_pada,
             'paksha': paksha,
             # Redesign additions
             'mahina': mahina_en,
