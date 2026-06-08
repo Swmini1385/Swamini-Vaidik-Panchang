@@ -86,49 +86,78 @@ def calculate_milan(groom_nakshatra, bride_nakshatra, groom_pada=1, bride_pada=1
     """
     Calculates Ashtakoot matching between groom and bride based on their Nakshatras and Padas.
     """
-    g = NAKSHATRAS[groom_nakshatra]
-    b = NAKSHATRAS[bride_nakshatra]
+    import logging
+    logger = logging.getLogger(__name__)
     
-    # 1. Varna (1 point)
-    g_varna_pt = VARNA_POINTS[g['varna']]
-    b_varna_pt = VARNA_POINTS[b['varna']]
-    varna_score = 1.0 if g_varna_pt >= b_varna_pt else 0.0
+    g = NAKSHATRAS.get(groom_nakshatra, NAKSHATRAS['Rohini'])
+    b = NAKSHATRAS.get(bride_nakshatra, NAKSHATRAS['Rohini'])
     
-    # 2. Vashya (2 points)
-    vashya_score = 0.0
-    if g['vashya'] == b['vashya']:
-        vashya_score = 2.0
-    elif (g['vashya'] in ['Chatushpada', 'Manushya'] and b['vashya'] in ['Chatushpada', 'Manushya']):
-        vashya_score = 1.0
-    else:
-        vashya_score = 0.0
+    # Calculate indices and wrap around safely
+    try:
+        idx_g = NAKSHATRA_LIST.index(groom_nakshatra)
+    except ValueError:
+        idx_g = 3 # Rohini fallback
+    try:
+        idx_b = NAKSHATRA_LIST.index(bride_nakshatra)
+    except ValueError:
+        idx_b = 3
         
-    # 3. Tara (3 points)
-    # Count distance from bride's Nakshatra to groom's, and vice versa
-    idx_g = NAKSHATRA_LIST.index(groom_nakshatra)
-    idx_b = NAKSHATRA_LIST.index(bride_nakshatra)
+    rashi_idx_g = ((idx_g * 4) + groom_pada - 1) // 9
+    rashi_idx_b = ((idx_b * 4) + bride_pada - 1) // 9
     
-    dist_g_to_b = (idx_b - idx_g) % 27
-    dist_b_to_g = (idx_g - idx_b) % 27
+    rashi_idx_g %= 12
+    rashi_idx_b %= 12
+
+    # 1. Varna (1 point) - Based on Rashi
+    def get_varna(r_idx):
+        if r_idx in [3, 7, 11]: return 'Brahmin'
+        elif r_idx in [0, 4, 8]: return 'Kshatriya'
+        elif r_idx in [1, 5, 9]: return 'Vaishya'
+        else: return 'Shudra'
+
+    varna_g = get_varna(rashi_idx_g)
+    varna_b = get_varna(rashi_idx_b)
     
-    rem_g = dist_g_to_b % 9
-    rem_b = dist_b_to_g % 9
+    varna_score = 1.0 if VARNA_POINTS[varna_g] >= VARNA_POINTS[varna_b] else 0.0
     
-    # Tara is auspicious if remainder is 3, 5, 7 or 0 (9) from both or even/odd check
-    # Simplified standard: if both remainders are in [1, 2, 4, 6, 8] vs [3, 5, 7, 0]
-    bad_rem = [1, 2, 4, 6, 8]
-    if rem_g not in bad_rem and rem_b not in bad_rem:
+    # 2. Vashya (2 points) - Based on Rashi
+    def get_vashya(r_idx):
+        if r_idx in [3, 9, 11]: return 'Jalachar'
+        elif r_idx == 7: return 'Keeta'
+        elif r_idx == 4: return 'Vanchar'
+        elif r_idx in [2, 5, 6, 10]: return 'Manushya'
+        else: return 'Chatushpada'
+
+    vashya_g = get_vashya(rashi_idx_g)
+    vashya_b = get_vashya(rashi_idx_b)
+    
+    vashya_score = 0.0
+    if vashya_g == vashya_b:
+        vashya_score = 2.0
+    elif vashya_g in ['Chatushpada', 'Manushya'] and vashya_b in ['Chatushpada', 'Manushya']:
+        vashya_score = 1.0
+        
+    # 3. Tara (3 points) - Based on Nakshatra distance
+    # Tara from Bride to Groom determines Groom's Tara
+    tara_num_g = ((idx_g - idx_b) % 27) % 9 + 1
+    tara_num_b = ((idx_b - idx_g) % 27) % 9 + 1
+    
+    bad_rem = [3, 5, 7]
+    if tara_num_g not in bad_rem and tara_num_b not in bad_rem:
         tara_score = 3.0
-    elif rem_g not in bad_rem or rem_b not in bad_rem:
+    elif tara_num_g not in bad_rem or tara_num_b not in bad_rem:
         tara_score = 1.5
     else:
         tara_score = 0.0
-        
+
     # 4. Yoni (4 points)
     yoni_score = float(YONI_RELATION[g['yoni']][b['yoni']])
     
-    # 5. Graha Maitri (5 points)
-    maitri_score = float(PLANET_FRIENDSHIP[g['lord']][b['lord']])
+    # 5. Graha Maitri (5 points) - Rashi Lords
+    RASHI_LORDS = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter']
+    lord_g = RASHI_LORDS[rashi_idx_g]
+    lord_b = RASHI_LORDS[rashi_idx_b]
+    maitri_score = float(PLANET_FRIENDSHIP[lord_g][lord_b])
     
     # 6. Gana (6 points)
     gana_score = 0.0
@@ -138,34 +167,18 @@ def calculate_milan(groom_nakshatra, bride_nakshatra, groom_pada=1, bride_pada=1
         gana_score = 5.0
     elif g['gana'] == 'Deva' and b['gana'] == 'Rakshasa':
         gana_score = 1.0
-    elif g['gana'] == 'Manushya' and b['gana'] == 'Rakshasa':
-        gana_score = 0.0
-    elif g['gana'] == 'Rakshasa' and b['gana'] == 'Deva':
-        gana_score = 0.0
-    elif g['gana'] == 'Rakshasa' and b['gana'] == 'Manushya':
+    else:
         gana_score = 0.0
         
-    # 7. Bhakoot (7 points)
-    # Determined by accurate Moon sign (Rashi) distance based on Nakshatra and Pada
-    rashi_idx_g = ((idx_g * 4) + groom_pada - 1) // 9
-    rashi_idx_b = ((idx_b * 4) + bride_pada - 1) // 9
-    
-    # Ensure wrap-around just in case
-    rashi_idx_g = rashi_idx_g % 12
-    rashi_idx_b = rashi_idx_b % 12
-    
+    # 7. Bhakoot (7 points) - Rashi Difference
     rashi_diff = (rashi_idx_b - rashi_idx_g) % 12
-    # Bhakoot Dosha exists if difference is 2/12, 5/9, or 6/8
-    if rashi_diff in [0, 3, 4, 8, 9]:
-        bhakoot_score = 7.0
-    else:
+    if rashi_diff in [1, 4, 5, 7, 8, 11]:
         bhakoot_score = 0.0
+    else:
+        bhakoot_score = 7.0
         
     # 8. Nadi (8 points)
-    if g['nadi'] != b['nadi']:
-        nadi_score = 8.0
-    else:
-        nadi_score = 0.0
+    nadi_score = 8.0 if g['nadi'] != b['nadi'] else 0.0
         
     total_score = varna_score + vashya_score + tara_score + yoni_score + maitri_score + gana_score + bhakoot_score + nadi_score
     
@@ -183,13 +196,43 @@ def calculate_milan(groom_nakshatra, bride_nakshatra, groom_pada=1, bride_pada=1
         description = "Low compatibility score. Nadi or Bhakoot Dosha may be present. Remedial prayers are recommended before proceeding."
         status_color = "danger"
         
-    # Localization logic for Kootas
+    # Localization Display logic
+    VARNA_MR = {'Brahmin': 'ब्राह्मण', 'Kshatriya': 'क्षत्रिय', 'Vaishya': 'वैश्य', 'Shudra': 'शूद्र'}
+    VASHYA_MR = {'Chatushpada': 'चतुष्पाद', 'Manushya': 'मनुष्य', 'Jalachar': 'जलचर', 'Vanchar': 'वनचर', 'Keeta': 'कीट'}
+    TARA_NAMES_MR = ['जन्म', 'संपत', 'विपत', 'क्षेम', 'प्रत्यारी', 'साधक', 'नैधन', 'मित्र', 'परममित्र']
+    PLANET_NAMES_MR = {'Sun': 'सूर्य', 'Moon': 'चंद्र', 'Mars': 'मंगळ', 'Mercury': 'बुध', 'Jupiter': 'गुरु', 'Venus': 'शुक्र', 'Saturn': 'शनी', 'Rahu': 'राहू', 'Ketu': 'केतू'}
+    
     if current_lang == 'mr':
         rashi_str_g = RASHI_NAMES_MR[rashi_idx_g]
         rashi_str_b = RASHI_NAMES_MR[rashi_idx_b]
+        varna_str_g = VARNA_MR[varna_g]
+        varna_str_b = VARNA_MR[varna_b]
+        vashya_str_g = VASHYA_MR[vashya_g]
+        vashya_str_b = VASHYA_MR[vashya_b]
+        tara_str_g = TARA_NAMES_MR[tara_num_g - 1]
+        tara_str_b = TARA_NAMES_MR[tara_num_b - 1]
+        lord_str_g = PLANET_NAMES_MR[lord_g]
+        lord_str_b = PLANET_NAMES_MR[lord_b]
     else:
-        rashi_str_g = RASHI_NAMES_MR[rashi_idx_g] # Always force Marathi per requirement or use standard mapping
+        rashi_str_g = RASHI_NAMES_MR[rashi_idx_g] # Defaulting to Marathi per requirement
         rashi_str_b = RASHI_NAMES_MR[rashi_idx_b]
+        varna_str_g = varna_g
+        varna_str_b = varna_b
+        vashya_str_g = vashya_g
+        vashya_str_b = vashya_b
+        tara_str_g = str(tara_num_g)
+        tara_str_b = str(tara_num_b)
+        lord_str_g = lord_g
+        lord_str_b = lord_b
+
+    # Log debug metrics using logger
+    logger.info(f"[DEBUG MILAN] {groom_nakshatra}({groom_pada}) vs {bride_nakshatra}({bride_pada})")
+    logger.info(f"Rashi: {rashi_idx_g} vs {rashi_idx_b}")
+    logger.info(f"Varna: {varna_g} vs {varna_b} = {varna_score}")
+    logger.info(f"Vashya: {vashya_g} vs {vashya_b} = {vashya_score}")
+    logger.info(f"Tara: {tara_num_g} vs {tara_num_b} = {tara_score}")
+    logger.info(f"Maitri: {lord_g} vs {lord_b} = {maitri_score}")
+    logger.info(f"Bhakoot Diff: {rashi_diff} = {bhakoot_score}")
 
     return {
         'total_score': total_score,
@@ -197,11 +240,11 @@ def calculate_milan(groom_nakshatra, bride_nakshatra, groom_pada=1, bride_pada=1
         'description': description,
         'status_color': status_color,
         'kootas': [
-            {'name': 'Varna (Work & Egos)', 'max': 1, 'score': varna_score, 'groom': g['varna'], 'bride': b['varna']},
-            {'name': 'Vashya (Dominance & Control)', 'max': 2, 'score': vashya_score, 'groom': g['vashya'], 'bride': b['vashya']},
-            {'name': 'Tara (Destiny & Longevity)', 'max': 3, 'score': tara_score, 'groom': g['lord'], 'bride': b['lord']},
+            {'name': 'Varna (Work & Egos)', 'max': 1, 'score': varna_score, 'groom': varna_str_g, 'bride': varna_str_b},
+            {'name': 'Vashya (Dominance & Control)', 'max': 2, 'score': vashya_score, 'groom': vashya_str_g, 'bride': vashya_str_b},
+            {'name': 'Tara (Destiny & Longevity)', 'max': 3, 'score': tara_score, 'groom': tara_str_g, 'bride': tara_str_b},
             {'name': 'Yoni (Physical & Affinity)', 'max': 4, 'score': yoni_score, 'groom': g['yoni'], 'bride': b['yoni']},
-            {'name': 'Graha Maitri (Mental Friendship)', 'max': 5, 'score': maitri_score, 'groom': g['lord'], 'bride': b['lord']},
+            {'name': 'Graha Maitri (Mental Friendship)', 'max': 5, 'score': maitri_score, 'groom': lord_str_g, 'bride': lord_str_b},
             {'name': 'Gana (Temperament & Behavior)', 'max': 6, 'score': gana_score, 'groom': g['gana'], 'bride': b['gana']},
             {'name': 'Bhakoot (Love & Relationship)', 'max': 7, 'score': bhakoot_score, 'groom': rashi_str_g, 'bride': rashi_str_b},
             {'name': 'Nadi (Health & Genetics)', 'max': 8, 'score': nadi_score, 'groom': g['nadi'], 'bride': b['nadi']},
