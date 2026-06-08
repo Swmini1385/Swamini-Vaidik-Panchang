@@ -252,7 +252,191 @@ def get_hindu_month(date_val):
         
     return en_name, mr_name
 
+def get_dynamic_panchang_metrics(current_dt, lat, lon, tz_offset, ayanamsa):
+    """
+    Dynamically calculates current Tithi, Nakshatra, Yoga, Karana and their end times
+    using fast Skyfield binary search.
+    """
+    eph, ts = get_eph_and_ts()
+    earth = eph['earth']
+    sun = eph['sun']
+    moon = eph['moon']
+    
+    def get_indices(dt_utc):
+        t = ts.from_datetime(dt_utc)
+        astrometric_sun = earth.at(t).observe(sun)
+        _, slon, _ = astrometric_sun.apparent().ecliptic_latlon()
+        astrometric_moon = earth.at(t).observe(moon)
+        _, mlon, _ = astrometric_moon.apparent().ecliptic_latlon()
+        
+        nir_sun = (slon.degrees - ayanamsa) % 360
+        nir_moon = (mlon.degrees - ayanamsa) % 360
+        
+        tithi_idx = int(((nir_moon - nir_sun + 360) % 360) / 12)
+        nak_idx = int(nir_moon / 13.3333333333) % 27
+        yoga_idx = int((nir_sun + nir_moon) / 13.3333333333) % 27
+        karan_idx = int(((nir_moon - nir_sun + 360) % 360) / 6)
+        
+        return tithi_idx, nak_idx, yoga_idx, karan_idx
+
+    current_utc = current_dt.astimezone(datetime.timezone.utc)
+    curr_t, curr_n, curr_y, curr_k = get_indices(current_utc)
+    
+    # Binary search to find when the index changes
+    def find_end_time(start_utc, current_idx, idx_pos, max_minutes=2160): # 36 hours
+        low = 0
+        high = max_minutes
+        end_min = max_minutes
+        
+        # Fast iterative search
+        for _ in range(12): # log2(2160) is ~ 11.07
+            mid = (low + high) / 2
+            test_dt = start_utc + datetime.timedelta(minutes=mid)
+            idx = get_indices(test_dt)[idx_pos]
+            if idx == current_idx:
+                low = mid
+            else:
+                high = mid
+                end_min = mid
+                
+        # Return exact time formatted
+        end_time = start_utc + datetime.timedelta(minutes=end_min)
+        end_local = end_time.astimezone(ZoneInfo("Asia/Kolkata")) # Ensure local time
+        return end_local.strftime('%I:%M %p')
+
+    # Find end times
+    tithi_end = find_end_time(current_utc, curr_t, 0)
+    nak_end = find_end_time(current_utc, curr_n, 1)
+    yoga_end = find_end_time(current_utc, curr_y, 2)
+    karan_end = find_end_time(current_utc, curr_k, 3)
+    
+    # Format current names
+    TITHIS = ["Pratipada", "Dwitiya", "Tritiya", "Chaturthi", "Panchami", "Shashthi", "Saptami", "Ashtami", "Navami", "Dashami", "Ekadashi", "Dwadashi", "Trayodashi", "Chaturdashi", "Pournima", "Pratipada", "Dwitiya", "Tritiya", "Chaturthi", "Panchami", "Shashthi", "Saptami", "Ashtami", "Navami", "Dashami", "Ekadashi", "Dwadashi", "Trayodashi", "Chaturdashi", "Amavasya"]
+    NAKSHATRAS = ["Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishtha", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"]
+    YOGAS = ["Vishkambha", "Priti", "Ayushman", "Saubhagya", "Shobhana", "Atiganda", "Sukarma", "Dhriti", "Shula", "Ganda", "Vriddhi", "Dhruva", "Vyaghata", "Harshana", "Vajra", "Siddhi", "Vyatipata", "Variyan", "Parigha", "Shiva", "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma", "Indra", "Vaidhriti"]
+    KARANAS = ["Bava", "Balava", "Kaulava", "Taitila", "Gara", "Vanija", "Vishti"] # Repeating mobile karanas
+    
+    def get_tithi_display(idx):
+        tithi_name = TITHIS[idx]
+        paksha = "Shukla" if idx < 15 else "Krishna"
+        if tithi_name in ["Pournima", "Amavasya"]:
+            return tithi_name
+        return f"{paksha} {tithi_name}"
+
+    def get_karana_display(idx):
+        if idx == 0: return "Kimstughna"
+        if idx == 57: return "Shakuni"
+        if idx == 58: return "Chatushpada"
+        if idx == 59: return "Naga"
+        return KARANAS[(idx - 1) % 7]
+
+    return {
+        'tithi_name': get_tithi_display(curr_t),
+        'tithi_end': tithi_end,
+        'next_tithi': get_tithi_display((curr_t + 1) % 30),
+        'nakshatra_name': NAKSHATRAS[curr_n],
+        'nakshatra_end': nak_end,
+        'next_nakshatra': NAKSHATRAS[(curr_n + 1) % 27],
+        'yoga_name': YOGAS[curr_y],
+        'yoga_end': yoga_end,
+        'next_yoga': YOGAS[(curr_y + 1) % 27],
+        'karana_name': get_karana_display(curr_k),
+        'karana_end': karan_end,
+        'next_karana': get_karana_display((curr_k + 1) % 60),
+        'paksha': "Shukla Paksha" if curr_t < 15 else "Krishna Paksha",
+        'is_ekadashi': curr_t in [10, 25],
+        'is_pournima': curr_t == 14,
+        'is_amavasya': curr_t == 29,
+        'is_sankashti': curr_t == 18
+    }
+
 @lru_cache(maxsize=128)
+def _get_static_sunrise_chart(date_val, lat, lon, tz_offset, location_name):
+    # 1. Sunrise & Sunset at local noon reference
+    noon_dt = datetime.datetime.combine(date_val, datetime.time(12, 0, 0))
+    p = jyotishganit.Person(noon_dt, float(lat), float(lon), float(tz_offset))
+    sunrise_dec, sunset_dec = get_sunrise_sunset(p)
+    
+    sunrise_time = decimal_hours_to_time(sunrise_dec)
+    sunset_time = decimal_hours_to_time(sunset_dec)
+    
+    # 2. Moonrise & Moonset times using Skyfield
+    eph, ts = get_eph_and_ts()
+    earth = eph['earth']
+    moon = eph['moon']
+    location = api.wgs84.latlon(float(lat), float(lon))
+    observer = earth + location
+    
+    # Calculate range from local midnight to next local midnight in UTC
+    local_midnight = datetime.datetime.combine(date_val, datetime.time(0, 0, 0))
+    t0_utc = local_midnight - datetime.timedelta(hours=float(tz_offset))
+    t1_utc = local_midnight + datetime.timedelta(days=1) - datetime.timedelta(hours=float(tz_offset))
+    
+    t0 = ts.from_datetime(t0_utc.replace(tzinfo=datetime.timezone.utc))
+    t1 = ts.from_datetime(t1_utc.replace(tzinfo=datetime.timezone.utc))
+    
+    rise_times, _ = almanac.find_risings(observer, moon, t0, t1)
+    set_times, _ = almanac.find_settings(observer, moon, t0, t1)
+    
+    # Fallback values
+    moonrise_time = datetime.time(18, 0, 0)
+    moonset_time = datetime.time(6, 0, 0)
+    
+    if len(rise_times) > 0:
+        rise_local = rise_times[0].utc_datetime() + datetime.timedelta(hours=float(tz_offset))
+        moonrise_time = rise_local.time()
+    if len(set_times) > 0:
+        set_local = set_times[0].utc_datetime() + datetime.timedelta(hours=float(tz_offset))
+        moonset_time = set_local.time()
+        
+    # 3. Calculate Panchang components at Sunrise
+    sunrise_dt = datetime.datetime.combine(date_val, sunrise_time)
+    chart = jyotishganit.calculate_birth_chart(
+        birth_date=sunrise_dt,
+        latitude=float(lat),
+        longitude=float(lon),
+        timezone_offset=float(tz_offset),
+        location_name=location_name
+    )
+    
+    chart_dict = chart.to_dict()
+    ayanamsa_val = chart.ayanamsa.value
+    
+    # Extract Lagna, Surya, Chandra
+    houses_list = chart_dict.get('d1Chart', {}).get('houses', [])
+    lagna_sign = ""
+    if houses_list:
+        lagna_sign = houses_list[0].get('sign', '')
+        
+    sun_sign = ""
+    moon_sign = ""
+    moon_nak = ""
+    moon_pada = 1
+    
+    for h in houses_list:
+        h_sign = h.get('sign', '')
+        for occ in h.get('occupants', []):
+            body = occ.get('celestialBody', '')
+            if body == 'Sun':
+                sun_sign = h_sign
+            elif body == 'Moon':
+                moon_sign = h_sign
+                moon_nak = occ.get('nakshatra', '')
+                moon_pada = occ.get('pada', 1)
+                
+    return {
+        'sunrise_time': sunrise_time,
+        'sunset_time': sunset_time,
+        'moonrise_time': moonrise_time,
+        'moonset_time': moonset_time,
+        'ayanamsa_val': ayanamsa_val,
+        'lagna_sign': lagna_sign,
+        'sun_sign': sun_sign,
+        'moon_sign': moon_sign,
+        'moon_nak': moon_nak,
+        'moon_pada': moon_pada
+    }
+
 def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur", current_dt=None):
     """
     Calculates Daily Panchang using jyotishganit and skyfield for given location coordinates.
@@ -268,117 +452,47 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
         current_dt = datetime.datetime.now()
         
     try:
-        # 1. Sunrise & Sunset at local noon reference
-        noon_dt = datetime.datetime.combine(date_val, datetime.time(12, 0, 0))
-        p = jyotishganit.Person(noon_dt, float(lat), float(lon), float(tz_offset))
-        sunrise_dec, sunset_dec = get_sunrise_sunset(p)
+        # Load static calculations from cache
+        static_data = _get_static_sunrise_chart(date_val, lat, lon, tz_offset, location_name)
+        sunrise_time = static_data['sunrise_time']
+        sunset_time = static_data['sunset_time']
+        moonrise_time = static_data['moonrise_time']
+        moonset_time = static_data['moonset_time']
+        ayanamsa_val = static_data['ayanamsa_val']
+        lagna_sign = static_data['lagna_sign']
+        sun_sign = static_data['sun_sign']
+        moon_sign = static_data['moon_sign']
+        moon_nak = static_data['moon_nak']
+        moon_pada = static_data['moon_pada']
         
-        sunrise_time = decimal_hours_to_time(sunrise_dec)
-        sunset_time = decimal_hours_to_time(sunset_dec)
+        # DYNAMIC PANCHANG CALCULATION FOR EXACT TIME
+        dyn_panch = get_dynamic_panchang_metrics(current_dt, float(lat), float(lon), float(tz_offset), ayanamsa_val)
         
-        # 2. Moonrise & Moonset times using Skyfield
-        eph, ts = get_eph_and_ts()
-        earth = eph['earth']
-        moon = eph['moon']
-        location = api.wgs84.latlon(float(lat), float(lon))
-        observer = earth + location
+        tithi_display = dyn_panch['tithi_name']
+        tithi_end = dyn_panch['tithi_end']
+        next_tithi = dyn_panch['next_tithi']
         
-        # Calculate range from local midnight to next local midnight in UTC
-        local_midnight = datetime.datetime.combine(date_val, datetime.time(0, 0, 0))
-        t0_utc = local_midnight - datetime.timedelta(hours=float(tz_offset))
-        t1_utc = local_midnight + datetime.timedelta(days=1) - datetime.timedelta(hours=float(tz_offset))
+        nakshatra_str = dyn_panch['nakshatra_name']
+        nakshatra_end = dyn_panch['nakshatra_end']
+        next_nakshatra = dyn_panch['next_nakshatra']
         
-        t0 = ts.from_datetime(t0_utc.replace(tzinfo=datetime.timezone.utc))
-        t1 = ts.from_datetime(t1_utc.replace(tzinfo=datetime.timezone.utc))
+        yoga_str = dyn_panch['yoga_name']
+        yoga_end = dyn_panch['yoga_end']
+        next_yoga = dyn_panch['next_yoga']
         
-        rise_times, _ = almanac.find_risings(observer, moon, t0, t1)
-        set_times, _ = almanac.find_settings(observer, moon, t0, t1)
+        karan_str = dyn_panch['karana_name']
+        karan_end = dyn_panch['karana_end']
+        next_karana = dyn_panch['next_karana']
         
-        # Fallback values
-        moonrise_time = datetime.time(18, 0, 0)
-        moonset_time = datetime.time(6, 0, 0)
+        paksha = dyn_panch['paksha']
+        is_ekadashi = dyn_panch['is_ekadashi']
+        is_pournima = dyn_panch['is_pournima']
+        is_amavasya = dyn_panch['is_amavasya']
+        is_sankashti = dyn_panch['is_sankashti']
         
-        if len(rise_times) > 0:
-            rise_local = rise_times[0].utc_datetime() + datetime.timedelta(hours=float(tz_offset))
-            moonrise_time = rise_local.time()
-        if len(set_times) > 0:
-            set_local = set_times[0].utc_datetime() + datetime.timedelta(hours=float(tz_offset))
-            moonset_time = set_local.time()
-            
-        # 3. Calculate Panchang components at Sunrise
-        sunrise_dt = datetime.datetime.combine(date_val, sunrise_time)
-        chart = jyotishganit.calculate_birth_chart(
-            birth_date=sunrise_dt,
-            latitude=float(lat),
-            longitude=float(lon),
-            timezone_offset=float(tz_offset),
-            location_name=location_name
-        )
+        vaar_str = date_val.strftime('%A')
         
-        chart_dict = chart.to_dict()
-        panch = chart_dict['panchanga']
-        tithi_str = panch.get('tithi', 'Pratipada')
-        nakshatra_str = panch.get('nakshatra', 'Rohini')
-        yoga_str = panch.get('yoga', 'Siddha')
-        karan_str = panch.get('karana', 'Bava')
-        vaar_str = panch.get('vaara', date_val.strftime('%A'))
-        
-        # Parse Paksha
-        if "Shukla" in tithi_str:
-            paksha = "Shukla Paksha"
-        elif "Krishna" in tithi_str:
-            paksha = "Krishna Paksha"
-        elif tithi_str in ["Pournima", "Purnima"]:
-            paksha = "Shukla Paksha"
-        elif tithi_str == "Amavasya":
-            paksha = "Krishna Paksha"
-        else:
-            paksha = "Shukla Paksha"
-            
-        # Standardize Tithi name formatting for translations
-        tithi_display = tithi_str.replace("Purnima", "Pournima")
-        if tithi_display not in ["Pournima", "Amavasya"] and not tithi_display.startswith("Shukla") and not tithi_display.startswith("Krishna"):
-            tithi_display = f"{paksha} {tithi_display}"
-            
-        is_ekadashi = "Ekadashi" in tithi_str
-        is_pournima = "Purnima" in tithi_str or "Pournima" in tithi_str
-        is_amavasya = "Amavasya" in tithi_str
-        is_sankashti = "Chaturthi" in tithi_str and ("Krishna" in tithi_str or paksha == "Krishna Paksha")
-        
-        # Extract Lagna, Surya, Chandra
-        houses_list = chart_dict.get('d1Chart', {}).get('houses', [])
-        lagna_sign = ""
-        if houses_list:
-            lagna_sign = houses_list[0].get('sign', '')
-            
-        sun_sign = ""
-        sun_deg_total = 0
-        moon_sign = ""
-        moon_deg_total = 0
-        moon_nak = ""
-        moon_pada = 1
-        
-        for h in houses_list:
-            h_sign = h.get('sign', '')
-            for occ in h.get('occupants', []):
-                body = occ.get('celestialBody', '')
-                if body == 'Sun':
-                    sun_sign = h_sign
-                    sign_deg = float(occ.get('signDegrees', 0))
-                    sun_deg_total = (SIGN_MAP.get(h_sign, 1) - 1) * 30 + sign_deg
-                elif body == 'Moon':
-                    moon_sign = h_sign
-                    moon_nak = occ.get('nakshatra', '')
-                    moon_pada = occ.get('pada', 1)
-                    moon_sign_deg = float(occ.get('signDegrees', 0))
-                    moon_deg_total = (SIGN_MAP.get(h_sign, 1) - 1) * 30 + moon_sign_deg
-                    
-        # Calculate Yoga accurately using exact coordinates
-        yoga_idx = int((sun_deg_total + moon_deg_total) / 13.3333333333) % 27
-        YOGAS = ["Vishkambha", "Priti", "Ayushman", "Saubhagya", "Shobhana", "Atiganda", "Sukarma", "Dhriti", "Shula", "Ganda", "Vriddhi", "Dhruva", "Vyaghata", "Harshana", "Vajra", "Siddhi", "Vyatipata", "Variyan", "Parigha", "Shiva", "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma", "Indra", "Vaidhriti"]
-        yoga_str = YOGAS[yoga_idx]
-        
-        # Get active month using rigorous Amanta tracking (using exact Skyfield Amavasyas)
+        # Get active month using rigorous Amanta tracking
         mahina_en, mahina_mr = get_hindu_month(date_val)
         
         # Get Namakshar
@@ -531,10 +645,18 @@ def calculate_real_panchang(date_val, lat, lon, tz_offset, location_name="Nagpur
         
         return {
             'tithi': tithi_display,
+            'tithi_end': tithi_end,
+            'next_tithi': next_tithi,
             'vaar': vaar_str,
             'nakshatra': nakshatra_str,
+            'nakshatra_end': nakshatra_end,
+            'next_nakshatra': next_nakshatra,
             'yoga': yoga_str,
+            'yoga_end': yoga_end,
+            'next_yoga': next_yoga,
             'karan': karan_str,
+            'karan_end': karan_end,
+            'next_karana': next_karana,
             'ishtakal': calculate_ishtakaal(current_dt.time(), sunrise_time),
             'sunrise': sunrise_time,
             'sunset': sunset_time,

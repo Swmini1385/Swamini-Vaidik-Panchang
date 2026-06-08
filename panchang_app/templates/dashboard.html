@@ -53,11 +53,15 @@
             
             <!-- 20-Parameter Responsive Grid -->
             <!-- Desktop: 6 col, Tablet: 4 col, Mobile: 2 col -->
-            <div class="row g-2 g-sm-3 row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6">
+            <div id="panchang-grid" class="row g-2 g-sm-3 row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6" hx-get="{% url 'dashboard' %}" hx-trigger="every 60s" hx-select="#panchang-grid" hx-swap="outerHTML">
                 <div class="col">
                     <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
                         <small class="text-muted d-block" style="font-size: 11px;">{{ trans.tithi }}</small>
                         <span class="fw-bold text-danger" style="font-size: 13.5px;">{{ panchang.tithi|translate_val:current_lang }}</span>
+                        <div class="mt-1 border-top pt-1 border-warning-subtle" style="font-size: 10px; line-height: 1.3;">
+                            <div class="text-muted"><span class="fw-semibold">{% if current_lang == 'mr' %}समाप्त:{% else %}Ends:{% endif %}</span> {{ panchang.tithi_end }}</div>
+                            <div class="text-muted"><span class="fw-semibold">{% if current_lang == 'mr' %}पुढील:{% else %}Next:{% endif %}</span> {{ panchang.next_tithi|translate_val:current_lang }}</div>
+                        </div>
                     </div>
                 </div>
                 <div class="col">
@@ -78,6 +82,10 @@
                     <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
                         <small class="text-muted d-block" style="font-size: 11px;">{{ trans.nakshatra }}</small>
                         <span class="fw-bold text-dark" style="font-size: 13.5px;">{{ panchang.nakshatra|translate_val:current_lang }}</span>
+                        <div class="mt-1 border-top pt-1 border-warning-subtle" style="font-size: 10px; line-height: 1.3;">
+                            <div class="text-muted"><span class="fw-semibold">{% if current_lang == 'mr' %}समाप्त:{% else %}Ends:{% endif %}</span> {{ panchang.nakshatra_end }}</div>
+                            <div class="text-muted"><span class="fw-semibold">{% if current_lang == 'mr' %}पुढील:{% else %}Next:{% endif %}</span> {{ panchang.next_nakshatra|translate_val:current_lang }}</div>
+                        </div>
                     </div>
                 </div>
                 <div class="col">
@@ -126,12 +134,20 @@
                     <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
                         <small class="text-muted d-block" style="font-size: 11px;">{{ trans.yoga }}</small>
                         <span class="fw-bold text-dark" style="font-size: 13.5px;">{{ panchang.yoga|translate_val:current_lang }}</span>
+                        <div class="mt-1 border-top pt-1 border-warning-subtle" style="font-size: 10px; line-height: 1.3;">
+                            <div class="text-muted"><span class="fw-semibold">{% if current_lang == 'mr' %}समाप्त:{% else %}Ends:{% endif %}</span> {{ panchang.yoga_end }}</div>
+                            <div class="text-muted"><span class="fw-semibold">{% if current_lang == 'mr' %}पुढील:{% else %}Next:{% endif %}</span> {{ panchang.next_yoga|translate_val:current_lang }}</div>
+                        </div>
                     </div>
                 </div>
                 <div class="col">
                     <div class="summary-item p-2 rounded-3 bg-white border border-warning-subtle h-100 shadow-xs">
                         <small class="text-muted d-block" style="font-size: 11px;">{{ trans.karan }}</small>
                         <span class="fw-bold text-dark" style="font-size: 13.5px;">{{ panchang.karan|translate_val:current_lang }}</span>
+                        <div class="mt-1 border-top pt-1 border-warning-subtle" style="font-size: 10px; line-height: 1.3;">
+                            <div class="text-muted"><span class="fw-semibold">{% if current_lang == 'mr' %}समाप्त:{% else %}Ends:{% endif %}</span> {{ panchang.karan_end }}</div>
+                            <div class="text-muted"><span class="fw-semibold">{% if current_lang == 'mr' %}पुढील:{% else %}Next:{% endif %}</span> {{ panchang.next_karana|translate_val:current_lang }}</div>
+                        </div>
                     </div>
                 </div>
                 
