@@ -751,9 +751,149 @@ body.sidebar-open {
 /* PWA App-like feeling enhancements */
 body {
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none; /* Prevent pull-to-refresh feel */
 }
 
-/* Smooth transitions */
+/* Base Layout changes for 100dvh and safe area */
+.layout-wrapper {
+    min-height: 100dvh;
+}
+
+/* HTMX Transitions */
+main.main-content {
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+main.main-content.htmx-swapping {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--cream-card);
+    border-top: 2px solid var(--primary-gold-light);
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+    z-index: 1040;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(65px + env(safe-area-inset-bottom, 0px));
+}
+
+.bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--dark-maroon-light);
+    height: 100%;
+    padding: 8px 0;
+    position: relative;
+    transition: var(--transition-smooth);
+}
+
+.bottom-nav-item i {
+    font-size: 20px;
+    margin-bottom: 4px;
+    transition: transform 0.2s;
+}
+
+.bottom-nav-item svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--dark-maroon-light);
+    margin-bottom: 4px;
+    transition: transform 0.2s;
+    fill: none;
+    stroke-width: 6;
+}
+
+.bottom-nav-item span {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.bottom-nav-item.active, .bottom-nav-item:active {
+    color: var(--saffron-orange);
+}
+
+.bottom-nav-item.active i {
+    color: var(--saffron-orange);
+    transform: scale(1.15);
+}
+
+.bottom-nav-item.active svg {
+    stroke: var(--saffron-orange);
+    transform: scale(1.15);
+}
+
+.bottom-nav-item:active {
+    transform: scale(0.95);
+}
+
+/* Add padding to bottom of main content to not overlap with bottom nav */
+@media (max-width: 768px) {
+    .pb-mobile-nav {
+        padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    
+    /* Make sticky top nav respect safe area */
+    .sticky-navbar {
+        padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    }
+}
+
+/* PWA Standalone specific tweaks */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+    /* Hide top banner on PWA to save space */
+    .header-banner {
+        display: none !important;
+    }
+    
+    /* Ensure body doesn't bounce in standalone mode */
+    body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+    .layout-wrapper {
+        height: 100dvh;
+        overflow-y: auto;
+    }
+}
+
+/* Ripple effect (simulated) */
+[data-ripple] {
+    position: relative;
+    overflow: hidden;
+}
+[data-ripple]::after {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(0,0,0,0.1) 10%, transparent 10.01%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transform: scale(10,10);
+    opacity: 0;
+    transition: transform .5s, opacity 1s;
+}
+[data-ripple]:active::after {
+    transform: scale(0,0);
+    opacity: .2;
+    transition: 0s;
+}
+
+/* Smooth transitions for existing elements */
 .panchang-card {
     border: 1.5px solid #ecdca9;
     border-radius: 16px;
@@ -781,6 +921,10 @@ body {
     transform: translateY(-5px);
     box-shadow: var(--shadow-premium);
     border-color: var(--primary-gold);
+}
+
+.panchang-card:active {
+    transform: scale(0.98);
 }
 
 /* North Indian Square Kundali SVG styling */
