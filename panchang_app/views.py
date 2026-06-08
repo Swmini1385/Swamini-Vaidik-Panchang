@@ -1089,16 +1089,22 @@ def kundali_milan_view(request):
                 float(groom.latitude or 21.1458), float(groom.longitude or 79.0882), 
                 groom.timezone, groom.place_of_birth, request.session.get('lang', 'mr')
             )
-            groom_nak = g_ctx.get('nakshatra_eng', 'Rohini')
-            groom_pada = int(g_ctx.get('pada', 1))
+            groom_nak = g_ctx.get('nakshatra') or 'Rohini'
+            try:
+                groom_pada = int(g_ctx.get('pada') or 1)
+            except ValueError:
+                groom_pada = 1
             
             b_ctx = compute_kundali_details(
                 bride.date_of_birth, bride.time_of_birth, 
                 float(bride.latitude or 21.1458), float(bride.longitude or 79.0882), 
                 bride.timezone, bride.place_of_birth, request.session.get('lang', 'mr')
             )
-            bride_nak = b_ctx.get('nakshatra_eng', 'Rohini')
-            bride_pada = int(b_ctx.get('pada', 1))
+            bride_nak = b_ctx.get('nakshatra') or 'Rohini'
+            try:
+                bride_pada = int(b_ctx.get('pada') or 1)
+            except ValueError:
+                bride_pada = 1
             
             result = calculate_milan(groom_nak, bride_nak, groom_pada, bride_pada, request.session.get('lang', 'mr'))
             
