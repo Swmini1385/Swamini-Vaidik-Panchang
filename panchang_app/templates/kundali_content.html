@@ -237,14 +237,14 @@
                 
                 <!-- Chart displays -->
                 <div id="chart-d1-container" class="chart-display-container text-center py-2" style="display: block;">
-                    <div style="max-width: 320px; margin: 0 auto;">
+                    <div style="max-width: 450px; margin: 0 auto;">
                         {{ svg_chart|safe }}
                     </div>
                     <small class="text-muted mt-2 d-block">{% if current_lang == 'mr' %}मुख्य लग्न कुंडली चक्र{% else %}Main Lagna Chart{% endif %}</small>
                 </div>
                 
                 <div id="chart-d9-container" class="chart-display-container text-center py-2" style="display: none;">
-                    <div style="max-width: 320px; margin: 0 auto;">
+                    <div style="max-width: 450px; margin: 0 auto;">
                         {{ svg_chart_d9|safe }}
                     </div>
                     <small class="text-muted mt-2 d-block">{% if current_lang == 'mr' %}नवमांश कुंडली चक्र{% else %}Navamsha Chart{% endif %}</small>

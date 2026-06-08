@@ -152,7 +152,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0">
+            <div class="modal-body p-0" style="max-height: 65vh; overflow-y: auto;">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" style="background: white; font-size:13px;">
                         <thead class="table-light">
@@ -167,7 +167,9 @@
                             {% for record in saved_kundalis %}
                             <tr>
                                 <td class="ps-4 fw-bold text-dark">
-                                    <i class="fa-solid fa-user text-warning me-2"></i>{{ record.name }}
+                                    <a href="{% url 'kundali_detail' record.pk %}" class="text-decoration-none text-dark d-block">
+                                        <i class="fa-solid fa-user text-warning me-2"></i>{{ record.name }}
+                                    </a>
                                 </td>
                                 <td>
                                     <small class="d-block fw-semibold text-danger">{{ record.date_of_birth|date:"d/m/Y" }}</small>
@@ -179,10 +181,10 @@
                                 </td>
                                 <td class="text-end pe-4">
                                     <a href="{% url 'kundali_detail' record.pk %}" class="btn btn-xs btn-outline-warning fw-semibold px-2 py-1 me-1 text-dark" style="font-size: 11px;">
-                                        <i class="fa-solid fa-eye me-1"></i>{% if current_lang == 'mr' %}पहा{% else %}Load{% endif %}
+                                        <i class="fa-solid fa-pen"></i>
                                     </a>
                                     <a href="{% url 'delete_kundali' record.pk %}" class="btn btn-xs btn-outline-danger fw-semibold px-2 py-1" style="font-size: 11px;" onclick="return confirm('Are you sure you want to delete this profile?');">
-                                        <i class="fa-solid fa-trash me-1"></i>{% if current_lang == 'mr' %}हटवा{% else %}Delete{% endif %}
+                                        <i class="fa-solid fa-trash"></i>
                                     </a>
                                 </td>
                             </tr>
@@ -292,7 +294,7 @@
     /* FAB Styling */
     .fab-container {
         position: fixed;
-        bottom: 24px;
+        bottom: 80px;
         right: 24px;
         z-index: 1050;
         display: flex;
@@ -350,8 +352,8 @@
     }
     
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(4px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateX(15px); }
+        to { opacity: 1; transform: translateX(0); }
     }
     @keyframes slideUp {
         from { opacity: 0; transform: translateY(15px); }
