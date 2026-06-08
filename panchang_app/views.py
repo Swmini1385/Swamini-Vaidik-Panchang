@@ -1111,14 +1111,15 @@ def get_kundali_details_api(request, kundali_id):
     try:
         kundali = get_object_or_404(KundaliRecord, id=kundali_id, user=request.user)
         
-        g_dt = datetime.datetime.combine(kundali.date_of_birth, kundali.time_of_birth)
-        tz_offset = get_tz_offset(kundali.timezone, g_dt)
-        chart = get_real_birth_chart(kundali.date_of_birth, kundali.time_of_birth, float(kundali.latitude or 21.1458), float(kundali.longitude or 79.0882), tz_offset, kundali.place_of_birth)
-        
-        panchanga = chart.to_dict().get('panchanga', {})
-        nakshatra = panchanga.get('nakshatra', 'Unknown')
-        rashi = panchanga.get('rashi', 'Unknown')
-        charan = panchanga.get('charan', 'Unknown')
+        details = compute_kundali_details(
+            kundali.date_of_birth,
+            kundali.time_of_birth,
+            float(kundali.latitude or 21.1458),
+            float(kundali.longitude or 79.0882),
+            kundali.timezone,
+            kundali.place_of_birth,
+            current_lang='en' # use english internal name for logic
+        )
         
         return JsonResponse({
             'success': True,
@@ -1126,10 +1127,114 @@ def get_kundali_details_api(request, kundali_id):
             'dob': kundali.date_of_birth.strftime('%Y-%m-%d'),
             'tob': kundali.time_of_birth.strftime('%H:%M:%S'),
             'pob': kundali.place_of_birth,
-            'nakshatra': nakshatra,
-            'rashi': rashi,
-            'charan': charan
+            'nakshatra': details.get('nakshatra', 'Unknown'),
+            'rashi': details.get('rashi', 'Unknown'),
+            'charan': details.get('pada', 'Unknown'),
+            'namakshar': details.get('namakshar', 'Unknown')
         })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+from django.views.decorators.http import require_http_methods
+
+@login_required
+@require_http_methods(["POST"])
+def api_save_kundali_profile(request):
+    try:
+        data = json.loads(request.body)
+        
+        name = data.get('name')
+        gender = data.get('gender')
+        date_str = data.get('date_of_birth')
+        time_str = data.get('time_of_birth')
+        place = data.get('place_of_birth')
+        lat = data.get('latitude')
+        lon = data.get('longitude')
+        tz = data.get('timezone', 'Asia/Kolkata')
+        country = data.get('country', 'India')
+        state = data.get('state', 'Maharashtra')
+        
+        if not all([name, gender, date_str, time_str, place]):
+            return JsonResponse({'success': False, 'error': 'Missing required fields'})
+            
+        date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        if len(time_str) > 5:
+            time_obj = datetime.datetime.strptime(time_str, '%H:%M:%S').time()
+        else:
+            time_obj = datetime.datetime.strptime(time_str, '%H:%M').time()
+            
+        kundali = KundaliRecord.objects.create(
+            user=request.user,
+            name=name,
+            gender=gender,
+            date_of_birth=date_obj,
+            time_of_birth=time_obj,
+            place_of_birth=place,
+            latitude=float(lat) if lat else None,
+            longitude=float(lon) if lon else None,
+            timezone=tz,
+            country=country,
+            state=state
+        )
+        
+        return JsonResponse({
+            'success': True, 
+            'message': 'Kundali Saved Successfully',
+            'kundali': {
+                'id': kundali.id,
+                'name': kundali.name,
+                'date_of_birth': kundali.date_of_birth.strftime('%d %b %Y')
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+from django.template.loader import render_to_string
+
+@login_required
+@require_http_methods(["GET"])
+def api_calculate_kundali(request):
+    try:
+        current_lang = request.session.get('lang', 'mr')
+        date_str = request.GET.get('date')
+        time_str = request.GET.get('time')
+        lat_str = request.GET.get('lat')
+        lon_str = request.GET.get('lon')
+        timezone_str = request.GET.get('timezone')
+        place_str = request.GET.get('place_name')
+        
+        date_val = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+        if len(time_str) > 5:
+            time_val = datetime.datetime.strptime(time_str, '%H:%M:%S').time()
+        else:
+            time_val = datetime.datetime.strptime(time_str, '%H:%M').time()
+            
+        latitude = float(lat_str)
+        longitude = float(lon_str)
+        
+        # We can implement caching here by hashing the inputs!
+        cache_key = f"kundali_{date_str}_{time_str}_{latitude}_{longitude}_{timezone_str}_{current_lang}"
+        from django.core.cache import cache
+        cached_html = cache.get(cache_key)
+        
+        if cached_html:
+            return JsonResponse({'success': True, 'html': cached_html})
+            
+        chart_context = compute_kundali_details(
+            date_val, time_val, latitude, longitude, timezone_str, place_str, current_lang=current_lang
+        )
+        
+        context = {
+            **chart_context,
+            'current_lang': current_lang,
+            'trans': TRANSLATIONS.get(current_lang, TRANSLATIONS['mr'])
+        }
+        
+        html = render_to_string('kundali_content.html', context, request=request)
+        cache.set(cache_key, html, timeout=60 * 60) # Cache for 1 hour
+        
+        return JsonResponse({'success': True, 'html': html})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 

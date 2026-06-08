@@ -1,0 +1,307 @@
+    <div class="kundali-app-content p-3 pb-5">
+        
+        <!-- ================= TAB 1: GRAHA ================= -->
+        <div id="graha-tab" class="tab-panel active">
+            <!-- Astronomical Metadata Grid -->
+            <div class="card border-0 rounded-4 shadow-sm mb-4 bg-white" style="border-left: 5px solid var(--saffron-orange) !important;">
+                <div class="card-body p-3">
+                    <h5 class="vedic-title text-dark mb-3 border-bottom pb-2" style="font-size: 15px;">
+                        <i class="fa-solid fa-om text-warning me-2"></i>{% if current_lang == 'mr' %}कुंडली माहिती विवरण{% else %}Kundali Details Overview{% endif %}
+                    </h5>
+                    
+                    <div class="row g-2 row-cols-2 row-cols-md-4 text-dark" style="font-size: 13px;">
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}स्थान (Location){% else %}Location{% endif %}</span>
+                            <strong>{{ place_of_birth }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}तारीख व वेळ{% else %}Date & Time{% endif %}</span>
+                            <strong>{{ date_of_birth|date:"d-m-Y" }} | {{ time_of_birth|format_time_ampm }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}राशी (Moon Sign){% else %}Rashi{% endif %}</span>
+                            <strong class="text-danger">{{ rashi }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}नामाक्षर (Seed Syllable){% else %}Namakshar{% endif %}</span>
+                            <strong class="text-success">{% if namakshar %}{{ namakshar }}{% else %}--{% endif %}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}लग्न राशी (Ascendant){% else %}Lagna (Asc){% endif %}</span>
+                            <strong>{{ lagna }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}लग्न अंश (Asc Degree){% else %}Asc Degree{% endif %}</span>
+                            <strong>{{ lagna_deg }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}दशा भोग्य (Current Dasha){% else %}Current Dasha{% endif %}</span>
+                            <strong class="text-primary">{{ dasha_bhogya }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}मंगळ दोष (Manglik Status){% else %}Mangal Dosha{% endif %}</span>
+                            {% if mangal_dosha %}
+                                <span class="badge bg-danger">{% if current_lang == 'mr' %}मंगळ दोष आहे{% else %}Manglik{% endif %}</span>
+                            {% else %}
+                                <span class="badge bg-success">{% if current_lang == 'mr' %}मंगळ दोष नाही{% else %}Non-Manglik{% endif %}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{{ trans.tithi }}</span>
+                            <strong>{{ panchang.tithi|translate_val:current_lang }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{{ trans.nakshatra }}</span>
+                            <strong>{{ nakshatra|translate_val:current_lang }} - {{ pada|translate_val:current_lang }} ({% if namakshar %}{{ namakshar }}{% else %}--{% endif %})</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{{ trans.yoga }}</span>
+                            <strong>{{ panchang.yoga|translate_val:current_lang }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{{ trans.karan }}</span>
+                            <strong>{{ panchang.karan|translate_val:current_lang }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}इष्टकाल{% else %}Ishtakal{% endif %}</span>
+                            <strong>{{ panchang.ishtakal|default:"--" }}</strong>
+                        </div>
+                        <div class="col py-1 border-bottom border-light">
+                            <span class="text-muted d-block" style="font-size: 11px;">{{ trans.sunrise }} / {{ trans.sunset }}</span>
+                            <strong>{{ panchang.sunrise|format_time_ampm }} / {{ panchang.sunset|format_time_ampm }}</strong>
+                        </div>
+                        <div class="col py-1">
+                            <span class="text-muted d-block" style="font-size: 11px;">{{ trans.vikram_samvat|default:"विक्रम संवत" }}</span>
+                            <strong>{{ panchang.vikram_samvat|translate_val:current_lang }}</strong>
+                        </div>
+                        <div class="col py-1">
+                            <span class="text-muted d-block" style="font-size: 11px;">{{ trans.month|default:"महिना" }} ({{ trans.paksha|default:"पक्ष" }})</span>
+                            <strong>{% if current_lang == 'mr' %}{{ panchang.mahina_mr }}{% else %}{{ panchang.mahina }}{% endif %} ({{ panchang.paksha|translate_val:current_lang }})</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ashtakoot Parameters Grid Sub-cards -->
+            <h6 class="vedic-title text-dark mb-3 px-1" style="font-size: 14px;"><i class="fa-solid fa-star-of-david text-danger me-2"></i>{% if current_lang == 'mr' %}अष्टकूत गुणधर्म{% else %}Ashtakoot Parameters{% endif %}</h6>
+            <div class="row g-2 mb-4">
+                <div class="col-4">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning shadow-xs text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 10px;">राशी स्वामी</small>
+                        <span class="fw-bold text-dark" style="font-size: 12px;">{{ rashi_swami }}</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning shadow-xs text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 10px;">नक्षत्र स्वामी</small>
+                        <span class="fw-bold text-dark" style="font-size: 12px;">{{ nak_swami }}</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning shadow-xs text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 10px;">नक्षत्र पाया</small>
+                        <span class="fw-bold text-danger" style="font-size: 12px;">{{ nak_paya }}</span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning shadow-xs text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 10px;">योनी</small>
+                        <span class="fw-bold text-dark" style="font-size: 11px;">{{ yoni }}</span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning shadow-xs text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 10px;">गण</small>
+                        <span class="fw-bold text-dark" style="font-size: 11px;">{{ gana }}</span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning shadow-xs text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 10px;">नाडी</small>
+                        <span class="fw-bold text-dark" style="font-size: 11px;">{{ nadi }}</span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="summary-item p-2 rounded-3 bg-white border border-warning shadow-xs text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 10px;">वर्ण</small>
+                        <span class="fw-bold text-dark" style="font-size: 11px;">{{ varna }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Planets Coordinates Table (Sidereal / Tropical) -->
+            <div class="card border-0 rounded-4 shadow-sm bg-white mb-4">
+                <div class="card-header bg-white p-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="vedic-title text-danger m-0" style="font-size: 15px;">
+                        <i class="fa-solid fa-list text-warning me-2"></i>{% if current_lang == 'mr' %}ग्रह स्पष्ट स्थिती{% else %}Planet Positions{% endif %}
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button id="btn-pos-nirayan" type="button" class="btn btn-sm btn-warning px-3 rounded-pill fw-bold shadow-sm" onclick="switchPosTab('nirayan')">
+                            {% if current_lang == 'mr' %}निरायण{% else %}Sidereal{% endif %}
+                        </button>
+                        <button id="btn-pos-sayan" type="button" class="btn btn-sm btn-outline-warning text-dark px-3 rounded-pill fw-bold" onclick="switchPosTab('sayan')">
+                            {% if current_lang == 'mr' %}सायन{% else %}Tropical{% endif %}
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0">
+                    <!-- Nirayan Tab -->
+                    <div id="pos-tab-nirayan" style="display: block;">
+                        <div class="table-responsive w-100">
+                            <table class="table table-hover align-middle mb-0 table-sm" style="font-size:12px;">
+                                <thead class="table-light text-secondary">
+                                    <tr>
+                                        <th class="px-1">ग्रह</th>
+                                        <th class="px-1">राशी</th>
+                                        <th class="px-1">अंश</th>
+                                        <th class="px-1">नक्षत्र</th>
+                                        <th class="px-1">चरण</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in planets %}
+                                    <tr>
+                                        <td class="fw-bold px-1 {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
+                                            {% if current_lang == 'mr' %}{{ p.name_mr }}{% else %}{{ p.name }}{% endif %}
+                                        </td>
+                                        <td class="px-1">{{ p.sidereal_sign }}</td>
+                                        <td class="fw-bold text-dark px-1">{{ p.sidereal_degree }}</td>
+                                        <td class="px-1">{{ p.nakshatra|translate_val:current_lang }}</td>
+                                        <td class="fw-bold px-1">{{ p.pada|translate_val:current_lang }}{% if p.namakshar %}{{ p.namakshar }}{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Sayan Tab -->
+                    <div id="pos-tab-sayan" style="display: none;">
+                        <div class="table-responsive w-100">
+                            <table class="table table-hover align-middle mb-0 table-sm" style="font-size:12px;">
+                                <thead class="table-light text-secondary">
+                                    <tr>
+                                        <th class="px-1">ग्रह</th>
+                                        <th class="px-1">राशी</th>
+                                        <th class="px-1">अंश</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in planets %}
+                                    <tr>
+                                        <td class="fw-bold px-1 {% if p.name == 'Lagna' %}text-dark{% else %}text-danger{% endif %}">
+                                            {% if current_lang == 'mr' %}{{ p.name_mr }}{% else %}{{ p.name }}{% endif %}
+                                        </td>
+                                        <td class="px-1">{{ p.tropical_sign }}</td>
+                                        <td class="fw-bold text-dark px-1">{{ p.tropical_degree }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 pt-0 pb-3">
+                    <div class="text-muted fw-bold text-center" style="font-size: 11px;">
+                        * = वक्री ग्रह &nbsp; | &nbsp; ^ = अस्त ग्रह
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: KUNDALI CHARTS ================= -->
+        <div id="kundali-tab" class="tab-panel">
+            <div class="card border-0 rounded-4 shadow-sm bg-white p-3">
+                <!-- Sub Tabs Navigation -->
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <button id="btn-chart-d1" type="button" class="btn btn-sm btn-warning px-3 rounded-pill" onclick="switchKundaliChart('d1')">
+                        {% if current_lang == 'mr' %}लग्न कुंडली{% else %}Lagna Chart{% endif %}
+                    </button>
+                    <button id="btn-chart-d9" type="button" class="btn btn-sm btn-outline-warning text-dark px-3 rounded-pill" onclick="switchKundaliChart('d9')">
+                        {% if current_lang == 'mr' %}नवमांश कुंडली{% else %}Navamsha Chart{% endif %}
+                    </button>
+                </div>
+                
+                <!-- Chart displays -->
+                <div id="chart-d1-container" class="chart-display-container text-center py-2" style="display: block;">
+                    <div style="max-width: 320px; margin: 0 auto;">
+                        {{ svg_chart|safe }}
+                    </div>
+                    <small class="text-muted mt-2 d-block">{% if current_lang == 'mr' %}मुख्य लग्न कुंडली चक्र{% else %}Main Lagna Chart{% endif %}</small>
+                </div>
+                
+                <div id="chart-d9-container" class="chart-display-container text-center py-2" style="display: none;">
+                    <div style="max-width: 320px; margin: 0 auto;">
+                        {{ svg_chart_d9|safe }}
+                    </div>
+                    <small class="text-muted mt-2 d-block">{% if current_lang == 'mr' %}नवमांश कुंडली चक्र{% else %}Navamsha Chart{% endif %}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: DASHA ================= -->
+        <div id="dasha-tab" class="tab-panel">
+            <div class="card border-0 rounded-4 shadow-sm bg-white p-3">
+                <h5 class="vedic-title text-dark border-bottom pb-2 mb-3" style="font-size: 15px;">
+                    <i class="fa-solid fa-clock-rotate-left text-warning me-2"></i>{% if current_lang == 'mr' %}विंशोत्तरी महादशा चक्र{% else %}Vimshottari Mahadasha Timeline{% endif %}
+                </h5>
+                
+                <div class="dasha-tree">
+                    {% for m_dasha in all_dashas %}
+                    <div class="dasha-m-row bg-light rounded-3 p-2 border mb-2 {% if m_dasha.status == 'running' %}border-warning border-2{% endif %}" style="{% if m_dasha.status == 'completed' %}opacity: 0.6;{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center cursor-pointer" onclick="toggleDashaTree('m-dasha-{{ forloop.counter }}', this)">
+                            <div>
+                                <i class="fa-solid fa-chevron-right me-2 text-warning dasha-chevron transition-transform"></i>
+                                <span class="fw-bold {% if m_dasha.status == 'running' %}text-danger{% else %}text-dark{% endif %}">
+                                    {% if current_lang == 'mr' %}{{ m_dasha.lord_mr }}{% else %}{{ m_dasha.lord }}{% endif %}
+                                </span>
+                                {% if m_dasha.status == 'running' %}
+                                    <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">Running</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted fw-semibold text-end" style="font-size: 11.5px;">
+                                {{ m_dasha.start_formatted }} - {{ m_dasha.end_formatted }}
+                            </div>
+                        </div>
+                        
+                        <!-- Antardasha sub-list -->
+                        <div id="m-dasha-{{ forloop.counter }}" class="dasha-sub-list ps-3 mt-2 border-start border-warning" style="display: none;">
+                            {% for a_dasha in m_dasha.antardashas %}
+                            <div class="dasha-a-row p-1 border-bottom border-light">
+                                <div class="d-flex justify-content-between align-items-center cursor-pointer" onclick="toggleDashaTree('a-dasha-{{ parentloop.counter }}-{{ forloop.counter }}', this)">
+                                    <div>
+                                        <i class="fa-solid fa-circle text-danger me-1" style="font-size: 6px;"></i>
+                                        <span class="fw-bold text-secondary">
+                                            {% if current_lang == 'mr' %}{{ m_dasha.lord_mr }} - {{ a_dasha.lord_mr }}{% else %}{{ m_dasha.lord }} - {{ a_dasha.lord }}{% endif %}
+                                        </span>
+                                        {% if a_dasha.status == 'running' %}
+                                            <span class="badge bg-danger text-light ms-1" style="font-size: 8px;">Active</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-muted text-end" style="font-size: 11px;">
+                                        {{ a_dasha.start_formatted }} - {{ a_dasha.end_formatted }}
+                                    </div>
+                                </div>
+                                
+                                <!-- Pratyantardasha list -->
+                                <div id="a-dasha-{{ parentloop.counter }}-{{ forloop.counter }}" class="dasha-sub-sub-list ps-3 mt-1 py-1 bg-white rounded-2" style="display: none; border-left: 2px dashed var(--saffron-orange);">
+                                    {% for p_dasha in a_dasha.pratyantardashas %}
+                                    <div class="d-flex justify-content-between align-items-center py-1 px-2 border-bottom border-light-subtle {% if p_dasha.status == 'running' %}bg-warning-subtle fw-bold{% endif %}" style="font-size:11px;">
+                                        <span>
+                                            {% if current_lang == 'mr' %}{{ a_dasha.lord_mr }} - {{ p_dasha.lord_mr }}{% else %}{{ a_dasha.lord }} - {{ p_dasha.lord }}{% endif %}
+                                        </span>
+                                        <span class="text-muted">{{ p_dasha.start_formatted }} - {{ p_dasha.end_formatted }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
