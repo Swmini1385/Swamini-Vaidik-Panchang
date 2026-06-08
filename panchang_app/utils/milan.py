@@ -77,9 +77,14 @@ def get_nakshatra_from_date(date_val, time_val):
     idx = total_minutes % 27
     return NAKSHATRA_LIST[idx]
 
-def calculate_milan(groom_nakshatra, bride_nakshatra):
+RASHI_NAMES_MR = [
+    "मेष", "वृषभ", "मिथुन", "कर्क", "सिंह", "कन्या",
+    "तुळ", "वृश्चिक", "धनु", "मकर", "कुंभ", "मीन"
+]
+
+def calculate_milan(groom_nakshatra, bride_nakshatra, groom_pada=1, bride_pada=1, current_lang='mr'):
     """
-    Calculates Ashtakoot matching between groom and bride based on their Nakshatras.
+    Calculates Ashtakoot matching between groom and bride based on their Nakshatras and Padas.
     """
     g = NAKSHATRAS[groom_nakshatra]
     b = NAKSHATRAS[bride_nakshatra]
@@ -141,12 +146,15 @@ def calculate_milan(groom_nakshatra, bride_nakshatra):
         gana_score = 0.0
         
     # 7. Bhakoot (7 points)
-    # Determined by Moon sign distance. Since we calculate from Nakshatra, we can estimate Moon sign distance.
-    # Map Nakshatra index to Rashi (each Rashi covers 2.25 Nakshatras)
-    rashi_g = int(idx_g / 2.25)
-    rashi_b = int(idx_b / 2.25)
+    # Determined by accurate Moon sign (Rashi) distance based on Nakshatra and Pada
+    rashi_idx_g = ((idx_g * 4) + groom_pada - 1) // 9
+    rashi_idx_b = ((idx_b * 4) + bride_pada - 1) // 9
     
-    rashi_diff = (rashi_b - rashi_g) % 12
+    # Ensure wrap-around just in case
+    rashi_idx_g = rashi_idx_g % 12
+    rashi_idx_b = rashi_idx_b % 12
+    
+    rashi_diff = (rashi_idx_b - rashi_idx_g) % 12
     # Bhakoot Dosha exists if difference is 2/12, 5/9, or 6/8
     if rashi_diff in [0, 3, 4, 8, 9]:
         bhakoot_score = 7.0
@@ -175,6 +183,14 @@ def calculate_milan(groom_nakshatra, bride_nakshatra):
         description = "Low compatibility score. Nadi or Bhakoot Dosha may be present. Remedial prayers are recommended before proceeding."
         status_color = "danger"
         
+    # Localization logic for Kootas
+    if current_lang == 'mr':
+        rashi_str_g = RASHI_NAMES_MR[rashi_idx_g]
+        rashi_str_b = RASHI_NAMES_MR[rashi_idx_b]
+    else:
+        rashi_str_g = RASHI_NAMES_MR[rashi_idx_g] # Always force Marathi per requirement or use standard mapping
+        rashi_str_b = RASHI_NAMES_MR[rashi_idx_b]
+
     return {
         'total_score': total_score,
         'verdict': verdict,
@@ -187,7 +203,7 @@ def calculate_milan(groom_nakshatra, bride_nakshatra):
             {'name': 'Yoni (Physical & Affinity)', 'max': 4, 'score': yoni_score, 'groom': g['yoni'], 'bride': b['yoni']},
             {'name': 'Graha Maitri (Mental Friendship)', 'max': 5, 'score': maitri_score, 'groom': g['lord'], 'bride': b['lord']},
             {'name': 'Gana (Temperament & Behavior)', 'max': 6, 'score': gana_score, 'groom': g['gana'], 'bride': b['gana']},
-            {'name': 'Bhakoot (Love & Relationship)', 'max': 7, 'score': bhakoot_score, 'groom': f"Rashi {rashi_g+1}", 'bride': f"Rashi {rashi_b+1}"},
+            {'name': 'Bhakoot (Love & Relationship)', 'max': 7, 'score': bhakoot_score, 'groom': rashi_str_g, 'bride': rashi_str_b},
             {'name': 'Nadi (Health & Genetics)', 'max': 8, 'score': nadi_score, 'groom': g['nadi'], 'bride': b['nadi']},
         ]
     }

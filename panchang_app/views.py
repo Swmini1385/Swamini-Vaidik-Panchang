@@ -1084,21 +1084,27 @@ def kundali_milan_view(request):
             groom = get_object_or_404(KundaliRecord, id=groom_id, user=request.user)
             bride = get_object_or_404(KundaliRecord, id=bride_id, user=request.user)
             
-            g_dt = datetime.datetime.combine(groom.date_of_birth, groom.time_of_birth)
-            g_tz_offset = get_tz_offset(groom.timezone, g_dt)
-            g_chart = get_real_birth_chart(groom.date_of_birth, groom.time_of_birth, float(groom.latitude or 21.1458), float(groom.longitude or 79.0882), g_tz_offset, groom.place_of_birth)
-            groom_nak = g_chart.to_dict()['panchanga'].get('nakshatra', 'Rohini')
+            g_ctx = compute_kundali_details(
+                groom.date_of_birth, groom.time_of_birth, 
+                float(groom.latitude or 21.1458), float(groom.longitude or 79.0882), 
+                groom.timezone, groom.place_of_birth, request.session.get('lang', 'mr')
+            )
+            groom_nak = g_ctx.get('nakshatra_eng', 'Rohini')
+            groom_pada = int(g_ctx.get('pada', 1))
             
-            b_dt = datetime.datetime.combine(bride.date_of_birth, bride.time_of_birth)
-            b_tz_offset = get_tz_offset(bride.timezone, b_dt)
-            b_chart = get_real_birth_chart(bride.date_of_birth, bride.time_of_birth, float(bride.latitude or 21.1458), float(bride.longitude or 79.0882), b_tz_offset, bride.place_of_birth)
-            bride_nak = b_chart.to_dict()['panchanga'].get('nakshatra', 'Rohini')
+            b_ctx = compute_kundali_details(
+                bride.date_of_birth, bride.time_of_birth, 
+                float(bride.latitude or 21.1458), float(bride.longitude or 79.0882), 
+                bride.timezone, bride.place_of_birth, request.session.get('lang', 'mr')
+            )
+            bride_nak = b_ctx.get('nakshatra_eng', 'Rohini')
+            bride_pada = int(b_ctx.get('pada', 1))
             
-            result = calculate_milan(groom_nak, bride_nak)
+            result = calculate_milan(groom_nak, bride_nak, groom_pada, bride_pada, request.session.get('lang', 'mr'))
             
             context = {
-                'groom': {'name': groom.name, 'dob': groom.date_of_birth, 'tob': groom.time_of_birth, 'pob': groom.place_of_birth, 'nakshatra': groom_nak},
-                'bride': {'name': bride.name, 'dob': bride.date_of_birth, 'tob': bride.time_of_birth, 'pob': bride.place_of_birth, 'nakshatra': bride_nak},
+                'groom': {'name': groom.name, 'dob': groom.date_of_birth, 'tob': groom.time_of_birth, 'pob': groom.place_of_birth, 'nakshatra': g_ctx.get('nakshatra'), 'rashi': g_ctx.get('rashi'), 'pada': groom_pada},
+                'bride': {'name': bride.name, 'dob': bride.date_of_birth, 'tob': bride.time_of_birth, 'pob': bride.place_of_birth, 'nakshatra': b_ctx.get('nakshatra'), 'rashi': b_ctx.get('rashi'), 'pada': bride_pada},
                 'result': result,
                 'saved_kundalis': saved_kundalis
             }
