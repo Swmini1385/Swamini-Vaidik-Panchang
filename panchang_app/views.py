@@ -660,6 +660,14 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
     }
     sign_names = SIGN_NAMES_MR if current_lang == 'mr' else SIGN_NAMES_EN
     
+    sun_deg = 0
+    from panchang_app.utils.panchang_calc import SIGN_MAP, check_combust
+    for h in chart_dict['d1Chart']['houses']:
+        for occ in h.get('occupants', []):
+            if occ['celestialBody'] == 'Sun':
+                sun_deg = (SIGN_MAP.get(h['sign'], 1) - 1) * 30 + float(occ['signDegrees'])
+                break
+
     for h in chart_dict['d1Chart']['houses']:
         h_num = h['number']
         for occ in h.get('occupants', []):
@@ -693,9 +701,24 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
                     moon_pada = pada
                     moon_namakshar = planet_namakshar
                     
+                is_retro = (motion == 'retrograde')
+                p_deg_total = (SIGN_MAP.get(sign, 1) - 1) * 30 + deg
+                
+                # Check combust
+                is_combust = check_combust(PLANET_MAPPING.get(body, body), p_deg_total, sun_deg, is_retro)
+                
+                suffix = ""
+                if is_retro:
+                    suffix += "*"
+                if is_combust:
+                    suffix += "^"
+                    
+                final_name = body + suffix
+                final_name_mr = PLANET_NAME_MR.get(body, body) + suffix
+                    
                 planets_data.append({
-                    'name': body,
-                    'name_mr': PLANET_NAME_MR.get(body, body),
+                    'name': final_name,
+                    'name_mr': final_name_mr,
                     'house': h_num,
                     'sidereal_sign': sign,
                     'sidereal_degree': f"{int(deg)}° {int((deg - int(deg)) * 60)}'",
@@ -708,7 +731,7 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
                 })
                 
     order = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']
-    planets_data.sort(key=lambda x: order.index(x['name']) if x['name'] in order else 99)
+    planets_data.sort(key=lambda x: order.index(x['name'].replace('*', '').replace('^', '')) if x['name'].replace('*', '').replace('^', '') in order else 99)
     
     extra_planets = calculate_extra_planets(date_val, time_val, latitude, longitude, tz_offset, ayanamsa_val)
     

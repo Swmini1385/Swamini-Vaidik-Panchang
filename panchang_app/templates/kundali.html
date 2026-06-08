@@ -281,6 +281,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-footer bg-white border-0 pt-0 pb-3">
+                    <div class="text-muted fw-bold text-center" style="font-size: 11px;">
+                        * = वक्री ग्रह &nbsp; | &nbsp; ^ = अस्त ग्रह
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -666,6 +671,54 @@
 
 <!-- Script Logic for Dynamic UI Interactions -->
 <script>
+    // Swipe Navigation Logic
+    let touchstartX = 0;
+    let touchendX = 0;
+    
+    const tabsOrder = ['graha-tab', 'kundali-tab', 'dasha-tab'];
+    
+    function checkDirection() {
+        const diff = touchstartX - touchendX;
+        if (Math.abs(diff) > 50) { // threshold for swipe
+            let activeIndex = -1;
+            document.querySelectorAll('.tab-panel').forEach((panel, index) => {
+                if(panel.classList.contains('active')) {
+                    activeIndex = index;
+                }
+            });
+            
+            if (diff > 0) {
+                // swiped left (next)
+                if(activeIndex !== -1 && activeIndex < tabsOrder.length - 1) {
+                    const nextTabId = tabsOrder[activeIndex + 1];
+                    const btn = document.querySelector(`[onclick="switchAppTab('${nextTabId}', this)"]`);
+                    if(btn) switchAppTab(nextTabId, btn);
+                }
+            } else {
+                // swiped right (previous)
+                if(activeIndex > 0) {
+                    const prevTabId = tabsOrder[activeIndex - 1];
+                    const btn = document.querySelector(`[onclick="switchAppTab('${prevTabId}', this)"]`);
+                    if(btn) switchAppTab(prevTabId, btn);
+                }
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const appContainer = document.querySelector('.kundali-app-content');
+        if (appContainer) {
+            appContainer.addEventListener('touchstart', e => {
+                touchstartX = e.changedTouches[0].screenX;
+            }, {passive: true});
+
+            appContainer.addEventListener('touchend', e => {
+                touchendX = e.changedTouches[0].screenX;
+                checkDirection();
+            }, {passive: true});
+        }
+    });
+
     // Tab switching logic
     function switchAppTab(tabId, element) {
         document.querySelectorAll('.tab-panel').forEach(panel => {

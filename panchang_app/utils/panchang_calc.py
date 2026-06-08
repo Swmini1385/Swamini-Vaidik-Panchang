@@ -616,6 +616,28 @@ def get_real_birth_chart(date_val, time_val, latitude, longitude, timezone_offse
     )
     return chart
 
+def check_combust(body, p_deg, sun_deg, is_retro):
+    if body in ['Rahu', 'Ketu', 'Sun', 'Lagna (Asc)']:
+        return False
+    diff = abs(p_deg - sun_deg)
+    if diff > 180:
+        diff = 360 - diff
+        
+    limits = {
+        'Moon (Chandra)': 12,
+        'Mars (Mangal)': 17,
+        'Jupiter (Guru)': 11,
+        'Saturn (Shani)': 15
+    }
+    if body == 'Mercury (Budh)':
+        limit = 12 if is_retro else 14
+    elif body == 'Venus (Shukra)':
+        limit = 8 if is_retro else 10
+    else:
+        limit = limits.get(body, 0)
+        
+    return diff <= limit
+
 def extract_chart_positions(chart_dict, chart_type='d1'):
     """
     Extracts planetary positions and house sign mapping from a jyotishganit birth chart dictionary.
@@ -632,9 +654,17 @@ def extract_chart_positions(chart_dict, chart_type='d1'):
         else:
             houses_list = chart_dict['d1Chart']['houses']
             
+    # Find Sun's degree for Combust calculation
+    sun_deg = 0
+    for h in houses_list:
+        for occ in h.get('occupants', []):
+            if occ.get('celestialBody') == 'Sun':
+                sun_deg = (SIGN_MAP.get(h['sign'], 1) - 1) * 30 + float(occ.get('signDegrees', 0))
+                break
+
     # Set default placements
     for p in PLANETS:
-        positions[p] = 1
+        positions[p] = {'house': 1, 'retro': False, 'combust': False}
         
     for h in houses_list:
         h_num = h['number']
@@ -644,10 +674,18 @@ def extract_chart_positions(chart_dict, chart_type='d1'):
         for occ in h.get('occupants', []):
             body = occ.get('celestialBody')
             if body in PLANET_MAPPING:
-                positions[PLANET_MAPPING[body]] = h_num
+                mapped_body = PLANET_MAPPING[body]
+                p_deg = (SIGN_MAP.get(sign_name, 1) - 1) * 30 + float(occ.get('signDegrees', 0))
+                is_retro = occ.get('motion_type') == 'retrograde'
+                is_combust = check_combust(mapped_body, p_deg, sun_deg, is_retro)
+                positions[mapped_body] = {
+                    'house': h_num,
+                    'retro': is_retro,
+                    'combust': is_combust
+                }
                 
     # Lagna (Ascendant) is always in the 1st House of any divisional chart
-    positions['Lagna (Asc)'] = 1
+    positions['Lagna (Asc)'] = {'house': 1, 'retro': False, 'combust': False}
     
     return positions, house_signs
 
@@ -691,16 +729,22 @@ def generate_kundali_svg(date_val, time_val, lat=21.1458, lon=79.0882, tz_offset
         import random
         rng = random.Random(seed_val)
         lagna_sign = (seed_val % 12) + 1
-        positions = {p: rng.randint(1, 12) for p in PLANETS}
-        positions['Lagna (Asc)'] = 1
+        positions = {p: {'house': rng.randint(1, 12), 'retro': False, 'combust': False} for p in PLANETS}
+        positions['Lagna (Asc)'] = {'house': 1, 'retro': False, 'combust': False}
         house_signs = {h: ((lagna_sign + h - 2) % 12) + 1 for h in range(1, 13)}
 
     # Group planets by house
     shorts_map = PLANET_SHORTS_MR if lang == 'mr' else PLANET_SHORTS
     house_planets = {h: [] for h in range(1, 13)}
-    for planet, house in positions.items():
+    for planet, info in positions.items():
+        house = info['house']
         short_name = shorts_map.get(planet, planet[:2])
-        house_planets[house].append(short_name)
+        suffix = ""
+        if info['retro']:
+            suffix += "*"
+        if info['combust']:
+            suffix += "^"
+        house_planets[house].append(short_name + suffix)
         
     # Append outer planets (Uranus/Arun, Neptune/Varun, Pluto/Yama) to the correct house
     extra_planets = []
