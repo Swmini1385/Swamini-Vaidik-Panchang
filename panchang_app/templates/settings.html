@@ -218,7 +218,7 @@
                                             <td>{{ loc.latitude|floatformat:4 }}</td>
                                             <td>{{ loc.longitude|floatformat:4 }}</td>
                                             <td><small class="text-muted">{{ loc.timezone }}</small></td>
-                                            <td><small>{{ loc.created_date|date:"d-m-Y" }}</small></td>
+                                            <td><small>{{ loc.created_date|date:"d/m/Y" }}</small></td>
                                             <td class="text-end pe-3">
                                                 <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2 me-1" onclick="editLocation({{ loc.id }}, '{{ loc.location_name }}', '{{ loc.country }}', '{{ loc.state }}', '{{ loc.district }}', '{{ loc.city_village }}', '{{ loc.latitude }}', '{{ loc.longitude }}', '{{ loc.timezone }}')">
                                                     <i class="fa-solid fa-pen-to-square"></i> Edit

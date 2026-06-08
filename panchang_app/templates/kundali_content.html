@@ -17,7 +17,7 @@
                         </div>
                         <div class="col py-1 border-bottom border-light">
                             <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}तारीख व वेळ{% else %}Date & Time{% endif %}</span>
-                            <strong>{{ date_of_birth|date:"d-m-Y" }} | {{ time_of_birth|format_time_ampm }}</strong>
+                            <strong>{{ date_of_birth|date:"d/m/Y" }} | {{ time_of_birth|format_time_ampm }}</strong>
                         </div>
                         <div class="col py-1 border-bottom border-light">
                             <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}राशी (Moon Sign){% else %}Rashi{% endif %}</span>

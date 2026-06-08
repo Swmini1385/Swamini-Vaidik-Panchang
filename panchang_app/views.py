@@ -549,16 +549,16 @@ def calculate_custom_vimshottari(birth_date, balance_dict, current_lang='mr'):
                 a_pratyantardashas.append({
                     'lord': p_lord,
                     'lord_mr': PLANET_NAME_MR.get(p_lord, p_lord) if current_lang == 'mr' else p_lord,
-                    'start_formatted': pd_start.strftime('%d-%m-%Y'),
-                    'end_formatted': pd_end.strftime('%d-%m-%Y'),
+                    'start_formatted': pd_start.strftime('%d/%m/%Y'),
+                    'end_formatted': pd_end.strftime('%d/%m/%Y'),
                     'status': p_status
                 })
                 
             m_antardashas.append({
                 'lord': a_lord,
                 'lord_mr': PLANET_NAME_MR.get(a_lord, a_lord) if current_lang == 'mr' else a_lord,
-                'start_formatted': ad_start.strftime('%d-%m-%Y'),
-                'end_formatted': ad_end.strftime('%d-%m-%Y'),
+                'start_formatted': ad_start.strftime('%d/%m/%Y'),
+                'end_formatted': ad_end.strftime('%d/%m/%Y'),
                 'status': a_status,
                 'pratyantardashas': a_pratyantardashas
             })
@@ -566,8 +566,8 @@ def calculate_custom_vimshottari(birth_date, balance_dict, current_lang='mr'):
         all_dashas.append({
             'lord': m_lord,
             'lord_mr': PLANET_NAME_MR.get(m_lord, m_lord) if current_lang == 'mr' else m_lord,
-            'start_formatted': m_start.strftime('%d-%m-%Y'),
-            'end_formatted': m_end.strftime('%d-%m-%Y'),
+            'start_formatted': m_start.strftime('%d/%m/%Y'),
+            'end_formatted': m_end.strftime('%d/%m/%Y'),
             'end_date': m_end, # helper for next iteration
             'status': m_status,
             'antardashas': m_antardashas
@@ -1196,7 +1196,7 @@ def api_save_kundali_profile(request):
             'kundali': {
                 'id': kundali.id,
                 'name': kundali.name,
-                'date_of_birth': kundali.date_of_birth.strftime('%d %b %Y')
+                'date_of_birth': kundali.date_of_birth.strftime('%d/%m/%Y')
             }
         })
     except Exception as e:

@@ -32,7 +32,7 @@
                             <select name="groom_id" id="groom_id" class="form-select form-select-lg" required>
                                 <option value="">-- {% if current_lang == 'mr' %}वर निवडा{% else %}Select Groom{% endif %} --</option>
                                 {% for k in saved_kundalis %}
-                                <option value="{{ k.id }}" data-nakshatra="{{ k.nakshatra }}">{{ k.name }} ({{ k.date_of_birth|date:"d M Y" }})</option>
+                                <option value="{{ k.id }}" data-nakshatra="{{ k.nakshatra }}">{{ k.name }} ({{ k.date_of_birth|date:"d/m/Y" }})</option>
                                 {% endfor %}
                             </select>
                             <div class="invalid-feedback">Please select a groom.</div>
@@ -58,7 +58,7 @@
                             <select name="bride_id" id="bride_id" class="form-select form-select-lg" required>
                                 <option value="">-- {% if current_lang == 'mr' %}वधू निवडा{% else %}Select Bride{% endif %} --</option>
                                 {% for k in saved_kundalis %}
-                                <option value="{{ k.id }}" data-nakshatra="{{ k.nakshatra }}">{{ k.name }} ({{ k.date_of_birth|date:"d M Y" }})</option>
+                                <option value="{{ k.id }}" data-nakshatra="{{ k.nakshatra }}">{{ k.name }} ({{ k.date_of_birth|date:"d/m/Y" }})</option>
                                 {% endfor %}
                             </select>
                             <div class="invalid-feedback">Please select a bride.</div>

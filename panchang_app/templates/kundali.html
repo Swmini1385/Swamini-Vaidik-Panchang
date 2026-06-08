@@ -28,7 +28,7 @@
                 <div class="position-relative">
                     <button type="button" class="btn header-nav-btn text-white py-1 px-2 border border-warning rounded-pill" onclick="document.getElementById('header-date-input').showPicker()">
                         <i class="fa-solid fa-calendar-day text-warning me-1"></i>
-                        <span style="font-size:12.5px;">{{ date_of_birth|date:"d-m-Y" }}</span>
+                        <span style="font-size:12.5px;">{{ date_of_birth|date:"d/m/Y" }}</span>
                     </button>
                     <input type="date" id="header-date-input" value="{{ date_of_birth|date:'Y-m-d' }}" onchange="onHeaderParamChange()" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
                 </div>
@@ -170,7 +170,7 @@
                                     <i class="fa-solid fa-user text-warning me-2"></i>{{ record.name }}
                                 </td>
                                 <td>
-                                    <small class="d-block fw-semibold text-danger">{{ record.date_of_birth|date:"d M Y" }}</small>
+                                    <small class="d-block fw-semibold text-danger">{{ record.date_of_birth|date:"d/m/Y" }}</small>
                                     <small class="text-muted">{{ record.time_of_birth|format_time_ampm }}</small>
                                 </td>
                                 <td>

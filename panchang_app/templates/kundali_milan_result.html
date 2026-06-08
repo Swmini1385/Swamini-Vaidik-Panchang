@@ -75,7 +75,8 @@
         </div>
         
         <div class="card-body p-0">
-            <div class="table-responsive">
+            <!-- DESKTOP VIEW (Table) -->
+            <div class="table-responsive d-none d-md-block">
                 <table class="table table-striped align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
@@ -105,6 +106,49 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- MOBILE VIEW (Cards) -->
+            <div class="d-block d-md-none p-3 pb-4">
+                {% for koota in result.kootas %}
+                <div class="card mb-3 border-0 shadow-sm" style="border-left: 4px solid var(--primary-gold) !important; background: #fafafa;">
+                    <div class="card-body p-3">
+                        <h6 class="fw-bold mb-3 text-dark pb-2 border-bottom"><i class="fa-solid fa-circle-notch text-warning me-2" style="font-size: 12px;"></i>{{ koota.name|translate_val:current_lang }}</h6>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}वर{% else %}Groom{% endif %}:</span>
+                                <span class="fw-bold text-dark fs-6">{{ koota.groom|translate_val:current_lang }}</span>
+                            </div>
+                            <div class="col-6 border-start">
+                                <span class="text-muted d-block ps-2" style="font-size: 11px;">{% if current_lang == 'mr' %}वधू{% else %}Bride{% endif %}:</span>
+                                <span class="fw-bold text-dark fs-6 ps-2">{{ koota.bride|translate_val:current_lang }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
+                            <div>
+                                <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}कमाल गुण{% else %}Max Points{% endif %}</span>
+                                <span class="fw-semibold text-secondary">{{ koota.max }}</span>
+                            </div>
+                            <div class="text-end border-start ps-3 border-light">
+                                <span class="text-muted d-block" style="font-size: 11px;">{% if current_lang == 'mr' %}मिळालेले गुण{% else %}Obtained{% endif %}</span>
+                                <span class="fw-bold text-danger" style="font-size: 18px;">{{ koota.score }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Mobile Total Score Highlight -->
+                <div class="card border border-warning shadow mt-4" style="background-color: #fffaf0;">
+                    <div class="card-body p-4 text-center">
+                        <h5 class="text-dark fw-bold mb-2">{{ trans.total_score }}</h5>
+                        <div class="fw-bold text-danger" style="font-size: 32px; line-height: 1;">
+                            36 {% if current_lang == 'mr' %}पैकी{% else %}out of{% endif %} {{ result.total_score }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
