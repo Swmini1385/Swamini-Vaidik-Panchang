@@ -797,7 +797,22 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
         lord_disp = PLANET_NAME_BHOGYA_MR.get(b_lord, b_lord) if current_lang == 'mr' else b_lord
         dasha_bhogya = f"{lord_disp} {y}y {m}m {d}d"
 
-    rashi_swami = sign_names.get(moon_sign, moon_sign)
+    RASHI_LORD_MAP = {
+        'Aries': 'Mars', 'Taurus': 'Venus', 'Gemini': 'Mercury',
+        'Cancer': 'Moon', 'Leo': 'Sun', 'Virgo': 'Mercury',
+        'Libra': 'Venus', 'Scorpio': 'Mars', 'Sagittarius': 'Jupiter',
+        'Capricorn': 'Saturn', 'Aquarius': 'Saturn', 'Pisces': 'Jupiter'
+    }
+    moon_sign_english = None
+    for h in chart_dict['d1Chart']['houses']:
+        for occ in h.get('occupants', []):
+            if occ['celestialBody'] == 'Moon':
+                moon_sign_english = h['sign']
+                break
+
+    lord_en = RASHI_LORD_MAP.get(moon_sign_english, '') if moon_sign_english else ''
+    rashi_swami = PLANET_NAME_MR.get(lord_en, lord_en) if current_lang == 'mr' else lord_en
+
     
     nak_key = None
     for k in NAKSHATRAS.keys():

@@ -7,8 +7,6 @@
 {% block content %}
 <div class="kundali-app-container">
     <!-- Hidden inputs for active state parameters -->
-    <input type="hidden" id="header-date-input" value="{{ date_of_birth|date:'Y-m-d' }}" onchange="onHeaderParamChange()">
-    <input type="hidden" id="header-time-input" value="{{ time_of_birth|time:'H:i' }}" onchange="onHeaderParamChange()">
     <input type="hidden" id="header-lat" value="{{ latitude }}">
     <input type="hidden" id="header-lon" value="{{ longitude }}">
     <input type="hidden" id="header-timezone" value="{{ timezone }}">
@@ -27,16 +25,22 @@
             
             <div class="d-flex gap-2">
                 <!-- Date Picker Button -->
-                <button type="button" class="btn header-nav-btn text-white py-1 px-2 border border-warning rounded-pill" onclick="document.getElementById('header-date-input').showPicker()">
-                    <i class="fa-solid fa-calendar-day text-warning me-1"></i>
-                    <span style="font-size:12.5px;">{{ date_of_birth|date:"d-m-Y" }}</span>
-                </button>
+                <div class="position-relative">
+                    <button type="button" class="btn header-nav-btn text-white py-1 px-2 border border-warning rounded-pill" onclick="document.getElementById('header-date-input').showPicker()">
+                        <i class="fa-solid fa-calendar-day text-warning me-1"></i>
+                        <span style="font-size:12.5px;">{{ date_of_birth|date:"d-m-Y" }}</span>
+                    </button>
+                    <input type="date" id="header-date-input" value="{{ date_of_birth|date:'Y-m-d' }}" onchange="onHeaderParamChange()" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
+                </div>
                 
                 <!-- Time Picker Button -->
-                <button type="button" class="btn header-nav-btn text-white py-1 px-2 border border-warning rounded-pill" onclick="document.getElementById('header-time-input').showPicker()">
-                    <i class="fa-regular fa-clock text-warning me-1"></i>
-                    <span style="font-size:12.5px;">{{ time_of_birth|format_time_ampm }}</span>
-                </button>
+                <div class="position-relative">
+                    <button type="button" class="btn header-nav-btn text-white py-1 px-2 border border-warning rounded-pill" onclick="document.getElementById('header-time-input').showPicker()">
+                        <i class="fa-regular fa-clock text-warning me-1"></i>
+                        <span style="font-size:12.5px;">{{ time_of_birth|format_time_ampm }}</span>
+                    </button>
+                    <input type="time" id="header-time-input" value="{{ time_of_birth|time:'H:i' }}" onchange="onHeaderParamChange()" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
+                </div>
             </div>
         </div>
     </div>
@@ -468,6 +472,26 @@
 <!-- Reusable Location Search Modal -->
 {% include 'location_modal.html' %}
 
+<!-- ================= MODAL: KUNDALI LOCATION SEARCH ================= -->
+<div class="modal fade" id="kundaliLocationSearchModal" tabindex="-1" aria-labelledby="kundaliLocationSearchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-dark-maroon text-white border-0 py-3">
+                <h5 class="modal-title fw-bold" id="kundaliLocationSearchModalLabel">
+                    <i class="fa-solid fa-location-dot me-2 text-warning"></i>{% if current_lang == 'mr' %}स्थान शोधा{% else %}Search Location{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 bg-light-subtle">
+                <div class="position-relative mb-3">
+                    <input type="text" id="kundali-city-search-input" class="form-control form-control-lg fw-bold border-warning shadow-sm" placeholder="{% if current_lang == 'mr' %}शहर किंवा गावाचे नाव...{% else %}Search city or village...{% endif %}" autocomplete="off">
+                    <div id="kundali-city-search-results" class="position-absolute bg-white border border-warning rounded-3 shadow-lg d-none" style="z-index: 1050; width: 100%; top: 100%; left: 0; max-height: 250px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Custom Styling for Mobile-First PWA Redesign -->
 <style>
     .kundali-app-container {
@@ -708,5 +732,72 @@
         // Refresh with new location details
         onHeaderParamChange();
     };
+
+    // Location Search Modal specific to Kundali
+    function openLocationModal() {
+        const locModal = new bootstrap.Modal(document.getElementById('kundaliLocationSearchModal'));
+        locModal.show();
+        setTimeout(() => document.getElementById('kundali-city-search-input').focus(), 500);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('kundali-city-search-input');
+        const resultsDiv = document.getElementById('kundali-city-search-results');
+        
+        if (searchInput && resultsDiv) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                if (query.length < 1) {
+                    resultsDiv.classList.add('d-none');
+                    return;
+                }
+                
+                fetch(`/api/locations/?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        resultsDiv.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(loc => {
+                                const item = document.createElement('div');
+                                item.className = 'p-2 border-bottom hover-suggest text-dark';
+                                item.style.fontSize = '13px';
+                                item.style.cursor = 'pointer';
+                                item.innerHTML = `<strong>${loc.place_name}</strong> <small class="text-muted">(${loc.state})</small>`;
+                                item.addEventListener('click', function() {
+                                    document.getElementById('header-place-name').value = loc.place_name;
+                                    document.getElementById('header-lat').value = loc.latitude;
+                                    document.getElementById('header-lon').value = loc.longitude;
+                                    document.getElementById('header-timezone').value = loc.timezone;
+                                    
+                                    const modalEl = document.getElementById('kundaliLocationSearchModal');
+                                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                                    if(modalInstance) modalInstance.hide();
+                                    
+                                    onHeaderParamChange();
+                                });
+                                resultsDiv.appendChild(item);
+                            });
+                            resultsDiv.classList.remove('d-none');
+                        } else {
+                            const noRes = document.createElement('div');
+                            noRes.className = 'p-2 text-muted';
+                            noRes.style.fontSize = '13px';
+                            noRes.innerText = 'No cities found';
+                            resultsDiv.appendChild(noRes);
+                            resultsDiv.classList.remove('d-none');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching locations:', err);
+                    });
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+                    resultsDiv.classList.add('d-none');
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}
