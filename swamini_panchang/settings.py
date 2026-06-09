@@ -98,6 +98,13 @@ if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     if 'OPTIONS' in DATABASES['default']:
         DATABASES['default']['OPTIONS'].pop('sslmode', None)
 
+# Caching Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'panchang-cache',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

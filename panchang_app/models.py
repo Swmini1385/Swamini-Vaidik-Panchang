@@ -111,6 +111,7 @@ class ShubhaMuhurt(models.Model):
         return f"{self.name} ({self.start_time.date()})"
 
 class LocationMaster(models.Model):
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, null=True, blank=True, related_name='saved_locations')
     location_name = models.CharField(max_length=150, default='')
     country = models.CharField(max_length=100, default='India')
     state = models.CharField(max_length=100, blank=True)

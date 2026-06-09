@@ -181,37 +181,54 @@ def forgot_password_view(request):
 
 @login_required
 def dashboard(request):
+    from django.core.cache import cache
+    
     today = datetime.date.today()
     loc = get_active_location(request)
     
-    # Calculate real panchang
-    panchang_today = calculate_real_panchang(
-        today, loc['latitude'], loc['longitude'], loc['timezone_offset'], loc['place_name']
-    )
+    # Create a unique cache key based on date and location
+    # Use timezone offset and place name to differentiate
+    cache_key = f"dashboard_data_{today}_{loc['latitude']}_{loc['longitude']}_{loc['timezone_offset']}"
     
-    # Festivals today
-    festivals = Festival.objects.filter(date=today)
+    context_data = cache.get(cache_key)
     
-    # Swami Samarth Quote
-    quotes = [
-        "भिऊ नकोस, मी तुझ्या पाठीशी आहे।",
-        "अशक्य ही शक्य करतील स्वामी।",
-        "विश्वास ठेव, सर्व काही ठीक होईल।",
-        "अनन्य भावाने मला शरण ये।"
-    ]
-    quote = quotes[today.day % len(quotes)]
+    if not context_data:
+        # Calculate real panchang
+        panchang_today = calculate_real_panchang(
+            today, loc['latitude'], loc['longitude'], loc['timezone_offset'], loc['place_name']
+        )
+        
+        # Festivals today
+        festivals = list(Festival.objects.filter(date=today))
+        
+        # Swami Samarth Quote
+        quotes = [
+            "भिऊ नकोस, मी तुझ्या पाठीशी आहे।",
+            "अशक्य ही शक्य करतील स्वामी।",
+            "विश्वास ठेव, सर्व काही ठीक होईल।",
+            "अनन्य भावाने मला शरण ये।"
+        ]
+        quote = quotes[today.day % len(quotes)]
+        
+        context_data = {
+            'panchang': panchang_today,
+            'festivals': festivals,
+            'quote': quote,
+            'today': today,
+        }
+        
+        # Cache for 6 hours
+        cache.set(cache_key, context_data, 60 * 60 * 6)
     
-    context = {
-        'panchang': panchang_today,
-        'festivals': festivals,
-        'quote': quote,
-        'today': today,
-        'active_location': loc,
-    }
-    return render(request, 'dashboard.html', context)
+    # Add active location dynamically since it can change per request
+    context_data['active_location'] = loc
+    
+    return render(request, 'dashboard.html', context_data)
 
 @login_required
 def panchang_view(request):
+    from django.core.cache import cache
+    
     date_str = request.GET.get('date')
     if date_str:
         try:
@@ -222,19 +239,27 @@ def panchang_view(request):
         selected_date = datetime.date.today()
         
     loc = get_active_location(request)
-    panchang = calculate_real_panchang(
-        selected_date, loc['latitude'], loc['longitude'], loc['timezone_offset'], loc['place_name']
-    )
     
-    festivals = Festival.objects.filter(date=selected_date)
+    cache_key = f"panchang_view_{selected_date}_{loc['latitude']}_{loc['longitude']}_{loc['timezone_offset']}"
+    context_data = cache.get(cache_key)
     
-    context = {
-        'panchang': panchang,
-        'festivals': festivals,
-        'selected_date': selected_date,
-        'active_location': loc,
-    }
-    return render(request, 'panchang.html', context)
+    if not context_data:
+        panchang = calculate_real_panchang(
+            selected_date, loc['latitude'], loc['longitude'], loc['timezone_offset'], loc['place_name']
+        )
+        
+        festivals = list(Festival.objects.filter(date=selected_date))
+        
+        context_data = {
+            'panchang': panchang,
+            'festivals': festivals,
+            'selected_date': selected_date,
+        }
+        cache.set(cache_key, context_data, 60 * 60 * 24) # Cache for 24 hours
+        
+    context_data['active_location'] = loc
+    
+    return render(request, 'panchang.html', context_data)
 
 @login_required
 def masik_view(request):
@@ -575,6 +600,9 @@ def calculate_custom_vimshottari(birth_date, balance_dict, current_lang='mr'):
         
     return all_dashas
 
+from functools import lru_cache
+
+@lru_cache(maxsize=64)
 def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_name, place_name, name=None, gender=None, current_lang='mr'):
     import datetime
     from zoneinfo import ZoneInfo
@@ -1322,7 +1350,13 @@ def settings_view(request):
             messages.success(request, "Vaidik Database Backup triggered and completed successfully!")
             return redirect('settings')
             
-    saved_locations = LocationMaster.objects.filter(is_active=True).order_by('-created_date')
+    # Fetch locations for settings page
+    recent_ids = request.session.get('recent_locations', [])
+    q_objects = models.Q(id__in=recent_ids)
+    if request.user.is_authenticated:
+        q_objects |= models.Q(user=request.user)
+    saved_locations = LocationMaster.objects.filter(q_objects, is_active=True).distinct().order_by('-created_date')[:50]
+    
     context = {
         'profile_form': profile_form,
         'password_form': password_form,
@@ -1493,12 +1527,25 @@ def api_save_location(request):
         if not location_name:
             return JsonResponse({'status': 'error', 'message': 'Location name is required'}, status=400)
             
-        lat = float(data.get('latitude', 0.0))
-        lon = float(data.get('longitude', 0.0))
+        try:
+            lat = float(data.get('latitude', 0.0) or 0.0)
+            lon = float(data.get('longitude', 0.0) or 0.0)
+        except ValueError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid latitude or longitude format'}, status=400)
+        
+        user = request.user if request.user.is_authenticated else None
         
         if loc_id:
             try:
-                loc = LocationMaster.objects.get(id=loc_id)
+                # Prioritize user's own location or global location
+                loc = LocationMaster.objects.filter(id=loc_id).first()
+                if not loc:
+                    return JsonResponse({'status': 'error', 'message': 'Location not found'}, status=404)
+                
+                # If location belongs to someone else, don't overwrite it. Create a new one.
+                if loc.user and loc.user != user:
+                    loc = LocationMaster(user=user)
+                    
                 loc.location_name = location_name
                 loc.country = data.get('country', 'India')
                 loc.state = data.get('state', '')
@@ -1508,21 +1555,24 @@ def api_save_location(request):
                 loc.longitude = lon
                 loc.timezone = data.get('timezone', 'Asia/Kolkata')
                 loc.is_active = True
+                if user and not loc.user:
+                    loc.user = user
                 loc.save()
-            except LocationMaster.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': 'Location not found'}, status=404)
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
         else:
             # Check duplicate only when creating new
-            existing = LocationMaster.objects.filter(location_name=location_name, latitude=lat, longitude=lon).first()
+            existing = LocationMaster.objects.filter(
+                location_name=location_name, latitude=lat, longitude=lon, user=user
+            ).first()
             if existing:
                 if not existing.is_active:
                     existing.is_active = True
                     existing.save()
-                    loc = existing
-                else:
-                    return JsonResponse({'status': 'error', 'message': 'Location already exists in database', 'id': existing.id})
+                loc = existing
             else:
                 loc = LocationMaster.objects.create(
+                    user=user,
                     location_name=location_name,
                     country=data.get('country', 'India'),
                     state=data.get('state', ''),
@@ -1533,6 +1583,11 @@ def api_save_location(request):
                     timezone=data.get('timezone', 'Asia/Kolkata'),
                     is_active=True
                 )
+                
+        # If user is authenticated, update their preferred location
+        if user and hasattr(user, 'preferred_location'):
+            user.preferred_location = loc
+            user.save(update_fields=['preferred_location'])
         
         # Add to recent locations in session so it appears in dropdowns immediately
         recent_ids = request.session.get('recent_locations', [])
@@ -1547,7 +1602,15 @@ def api_save_location(request):
 
 def api_recent_locations(request):
     recent_ids = request.session.get('recent_locations', [])
-    locations = LocationMaster.objects.filter(id__in=recent_ids, is_active=True)
+    
+    # Base query for session locations
+    q_objects = models.Q(id__in=recent_ids)
+    
+    # If authenticated, also fetch user's saved locations
+    if request.user.is_authenticated:
+        q_objects |= models.Q(user=request.user)
+        
+    locations = LocationMaster.objects.filter(q_objects, is_active=True).distinct().order_by('-created_date')[:10]
     # Sort in the order of usage
     loc_map = {loc.id: loc for loc in locations}
     sorted_locs = []
