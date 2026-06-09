@@ -1,5 +1,5 @@
 {% load panchang_tags %}
-    <div class="kundali-app-content p-3 pb-5">
+    <div class="kundali-app-content px-1 px-md-3 pt-3 pb-5">
         
         <!-- ================= TAB 1: GRAHA ================= -->
         <div id="graha-tab" class="tab-panel active">
@@ -224,9 +224,9 @@
 
         <!-- ================= TAB 2: KUNDALI CHARTS ================= -->
         <div id="kundali-tab" class="tab-panel">
-            <div class="card border-0 rounded-4 shadow-sm bg-white p-3">
+            <div class="card border-0 rounded-4 shadow-sm bg-white p-1 p-md-3">
                 <!-- Sub Tabs Navigation -->
-                <div class="d-flex justify-content-center gap-2 mb-3">
+                <div class="d-flex justify-content-center gap-2 mb-3 mt-2 mt-md-0">
                     <button id="btn-chart-d1" type="button" class="btn btn-sm btn-warning px-3 rounded-pill" onclick="switchKundaliChart('d1')">
                         {% if current_lang == 'mr' %}लग्न कुंडली{% else %}Lagna Chart{% endif %}
                     </button>

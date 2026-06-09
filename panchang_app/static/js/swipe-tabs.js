@@ -53,21 +53,28 @@ function initSwipeTabs(contentAreaId, tabsId) {
     }
     
     function applyAnimation(direction) {
-        const styleSheet = document.styleSheets[0];
-        let ruleIndex = -1;
-        
-        for (let i = 0; i < styleSheet.cssRules.length; i++) {
-            if (styleSheet.cssRules[i].selectorText === '.tab-panel') {
-                ruleIndex = i;
-                break;
-            }
+        // Find the active tab panel
+        const activePanel = document.querySelector('.tab-panel.active');
+        if (activePanel) {
+            // Remove any existing animation classes
+            activePanel.classList.remove('slide-left', 'slide-right');
+            
+            // Force a reflow to restart animation
+            void activePanel.offsetWidth;
+            
+            // Add the new animation class
+            activePanel.classList.add(direction === 'left' ? 'slide-left' : 'slide-right');
         }
-        
-        if (ruleIndex !== -1) {
-            styleSheet.deleteRule(ruleIndex);
-        }
-        
-        const animName = direction === 'left' ? 'slideInRight' : 'slideInLeft';
-        styleSheet.insertRule(`.tab-panel { animation: ${animName} 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }`, styleSheet.cssRules.length);
     }
+}
+
+// Add static CSS for these animations to the document if not present
+if (!document.getElementById('swipe-tab-styles')) {
+    const style = document.createElement('style');
+    style.id = 'swipe-tab-styles';
+    style.textContent = `
+        .slide-left { animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important; }
+        .slide-right { animation: slideInLeft 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important; }
+    `;
+    document.head.appendChild(style);
 }
