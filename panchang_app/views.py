@@ -1352,9 +1352,10 @@ def settings_view(request):
             
     # Fetch locations for settings page
     recent_ids = request.session.get('recent_locations', [])
-    q_objects = models.Q(id__in=recent_ids)
+    from django.db.models import Q
+    q_objects = Q(id__in=recent_ids)
     if request.user.is_authenticated:
-        q_objects |= models.Q(user=request.user)
+        q_objects |= Q(user=request.user)
     saved_locations = LocationMaster.objects.filter(q_objects, is_active=True).distinct().order_by('-created_date')[:50]
     
     context = {
@@ -1603,12 +1604,14 @@ def api_save_location(request):
 def api_recent_locations(request):
     recent_ids = request.session.get('recent_locations', [])
     
+    from django.db.models import Q
+    
     # Base query for session locations
-    q_objects = models.Q(id__in=recent_ids)
+    q_objects = Q(id__in=recent_ids)
     
     # If authenticated, also fetch user's saved locations
     if request.user.is_authenticated:
-        q_objects |= models.Q(user=request.user)
+        q_objects |= Q(user=request.user)
         
     locations = LocationMaster.objects.filter(q_objects, is_active=True).distinct().order_by('-created_date')[:10]
     # Sort in the order of usage
