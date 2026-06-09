@@ -1488,6 +1488,7 @@ def api_save_location(request):
     if request.method == 'POST':
         # AJAX POST request to save location details
         data = request.POST
+        loc_id = data.get('id')
         location_name = data.get('location_name', '').strip() or data.get('city_village', '').strip()
         if not location_name:
             return JsonResponse({'status': 'error', 'message': 'Location name is required'}, status=400)
@@ -1495,26 +1496,51 @@ def api_save_location(request):
         lat = float(data.get('latitude', 0.0))
         lon = float(data.get('longitude', 0.0))
         
-        # Check duplicate
-        existing = LocationMaster.objects.filter(location_name=location_name, latitude=lat, longitude=lon).first()
-        if existing:
-            if not existing.is_active:
-                existing.is_active = True
-                existing.save()
-                return JsonResponse({'status': 'success', 'message': 'Location reactivated successfully', 'id': existing.id})
-            return JsonResponse({'status': 'error', 'message': 'Location already exists in database', 'id': existing.id})
+        if loc_id:
+            try:
+                loc = LocationMaster.objects.get(id=loc_id)
+                loc.location_name = location_name
+                loc.country = data.get('country', 'India')
+                loc.state = data.get('state', '')
+                loc.district = data.get('district', '')
+                loc.city_village = data.get('city_village', '')
+                loc.latitude = lat
+                loc.longitude = lon
+                loc.timezone = data.get('timezone', 'Asia/Kolkata')
+                loc.is_active = True
+                loc.save()
+            except LocationMaster.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Location not found'}, status=404)
+        else:
+            # Check duplicate only when creating new
+            existing = LocationMaster.objects.filter(location_name=location_name, latitude=lat, longitude=lon).first()
+            if existing:
+                if not existing.is_active:
+                    existing.is_active = True
+                    existing.save()
+                    loc = existing
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'Location already exists in database', 'id': existing.id})
+            else:
+                loc = LocationMaster.objects.create(
+                    location_name=location_name,
+                    country=data.get('country', 'India'),
+                    state=data.get('state', ''),
+                    district=data.get('district', ''),
+                    city_village=data.get('city_village', ''),
+                    latitude=lat,
+                    longitude=lon,
+                    timezone=data.get('timezone', 'Asia/Kolkata'),
+                    is_active=True
+                )
+        
+        # Add to recent locations in session so it appears in dropdowns immediately
+        recent_ids = request.session.get('recent_locations', [])
+        if loc.id not in recent_ids:
+            recent_ids.insert(0, loc.id)
+            request.session['recent_locations'] = recent_ids[:10]
+            request.session.modified = True
             
-        loc = LocationMaster.objects.create(
-            location_name=location_name,
-            country=data.get('country', 'India'),
-            state=data.get('state', ''),
-            district=data.get('district', ''),
-            city_village=data.get('city_village', ''),
-            latitude=lat,
-            longitude=lon,
-            timezone=data.get('timezone', 'Asia/Kolkata'),
-            is_active=True
-        )
         return JsonResponse({'status': 'success', 'message': 'Location saved successfully', 'id': loc.id})
         
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
@@ -1604,3 +1630,26 @@ def api_restore_location(request, pk):
         location.save()
         return JsonResponse({'status': 'success', 'message': 'Location restored successfully.'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+def rashibhavishya_index(request):
+    from panchang_app.utils.horoscope_calc import RASHIS
+    context = {
+        'rashis': RASHIS
+    }
+    return render(request, 'rashibhavishya_index.html', context)
+
+def rashibhavishya_detail(request, rashi_name):
+    from panchang_app.utils.horoscope_calc import RASHIS, get_all_horoscopes
+    if rashi_name not in RASHIS:
+        messages.error(request, "अवैध राशी (Invalid Rashi)")
+        return redirect('rashibhavishya_index')
+        
+    horoscopes = get_all_horoscopes(rashi_name)
+    
+    context = {
+        'rashi_name': rashi_name,
+        'daily': horoscopes['daily'],
+        'tomorrow': horoscopes['tomorrow'],
+        'monthly': horoscopes['monthly']
+    }
+    return render(request, 'rashibhavishya_detail.html', context)

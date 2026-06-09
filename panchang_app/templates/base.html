@@ -145,6 +145,9 @@
                 <a href="{% url 'panchang' %}" class="nav-link {% if request.resolver_match.url_name == 'panchang' %}active{% endif %}">
                     <i class="fa-solid fa-calendar-day"></i>{{ trans.panchang }}
                 </a>
+                <a href="{% url 'rashibhavishya_index' %}" class="nav-link {% if 'rashibhavishya' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fa-solid fa-star-and-crescent"></i>{% if current_lang == 'mr' %}राशीभविष्य{% else %}Horoscope{% endif %}
+                </a>
                 <a href="{% url 'sanwar' %}" class="nav-link {% if request.resolver_match.url_name == 'sanwar' %}active{% endif %}">
                     <i class="fa-solid fa-bell"></i>{{ trans.sanwar }}
                 </a>
@@ -290,13 +293,18 @@
                     document.body.classList.remove('sidebar-open');
                 }
                 
-                sidebarToggle.addEventListener('click', function(e) {
+                function toggleSidebarHandler(e) {
+                    e.preventDefault();
                     e.stopPropagation();
                     openSidebar();
-                });
+                }
+                
+                sidebarToggle.addEventListener('click', toggleSidebarHandler);
+                sidebarToggle.addEventListener('touchstart', toggleSidebarHandler, {passive: false});
                 
                 if (sidebarClose) {
                     sidebarClose.addEventListener('click', closeSidebar);
+                    sidebarClose.addEventListener('touchstart', function(e) { e.preventDefault(); closeSidebar(); }, {passive: false});
                 }
                 
                 if (sidebarOverlay) {

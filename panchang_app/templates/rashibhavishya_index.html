@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}राशीभविष्य | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2 py-3">
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-3">
+        <a href="{% url 'dashboard' %}" class="btn btn-link text-dark p-0 me-3 text-decoration-none" style="font-size: 20px;">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <h3 class="vedic-title m-0"><i class="fa-solid fa-star-and-crescent text-warning me-2"></i>राशीभविष्य</h3>
+    </div>
+    
+    <p class="text-muted small mb-4 px-2">तुमच्या राशीवर आधारित आजचे, उद्याचे आणि मासिक अचूक भविष्य जाणून घ्या.</p>
+
+    <!-- Grid of 12 Rashis -->
+    <div class="row row-cols-3 row-cols-md-4 g-3 mb-5 px-1">
+        {% for rashi in rashis %}
+        <div class="col">
+            <a href="{% url 'rashibhavishya_detail' rashi %}" class="text-decoration-none">
+                <div class="card h-100 text-center border-0 shadow-sm rounded-4 rashi-card" style="background: linear-gradient(145deg, #ffffff, #fffdf8); transition: transform 0.2s;">
+                    <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center">
+                        <div class="rashi-icon mb-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background-color: var(--primary-gold); color: white; font-size: 24px;">
+                            <!-- Generic icon for now, could be specific based on name -->
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark m-0" style="font-size: 14px;">{{ rashi }}</h6>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.rashi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    border-color: var(--primary-gold) !important;
+}
+</style>
+{% endblock %}

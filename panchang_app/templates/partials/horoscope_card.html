@@ -1,0 +1,27 @@
+<div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, var(--primary-gold), #b38b30); color: white;">
+    <div class="card-body p-4 text-center">
+        <h4 class="fw-bold mb-3 border-bottom pb-2">{{ h_data.title }}</h4>
+        <p class="fs-5 mb-4 lh-base">{{ h_data.summary }}</p>
+        
+        <div class="row g-2 text-dark">
+            <div class="col-4">
+                <div class="bg-white rounded-3 p-2 h-100 d-flex flex-column justify-content-center">
+                    <small class="text-muted d-block fw-bold mb-1" style="font-size: 11px;">शुभ रंग</small>
+                    <span class="fw-bold" style="font-size: 14px;">{{ h_data.lucky_color }}</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="bg-white rounded-3 p-2 h-100 d-flex flex-column justify-content-center">
+                    <small class="text-muted d-block fw-bold mb-1" style="font-size: 11px;">शुभ अंक</small>
+                    <span class="fw-bold" style="font-size: 14px;">{{ h_data.lucky_number }}</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="bg-white rounded-3 p-2 h-100 d-flex flex-column justify-content-center">
+                    <small class="text-muted d-block fw-bold mb-1" style="font-size: 11px;">शुभ वेळ</small>
+                    <span class="fw-bold" style="font-size: 12px;">{{ h_data.lucky_time }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

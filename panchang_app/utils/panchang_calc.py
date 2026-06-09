@@ -964,27 +964,27 @@ def generate_kundali_svg(date_val, time_val, lat=21.1458, lon=79.0882, tz_offset
     # Render signs and planets
     for house, coord in coords.items():
         sign_num = house_signs[house]
-        svg.append(f'  <text x="{coord["sign_x"]}" y="{coord["sign_y"]}" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#E67E22" text-anchor="middle">{sign_num}</text>')
+        svg.append(f'  <text x="{coord["sign_x"]}" y="{coord["sign_y"]}" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#E67E22" text-anchor="middle">{sign_num}</text>')
         
         planets_in_house = house_planets[house]
         if planets_in_house:
             n = len(planets_in_house)
             
             if n == 1:
-                font_size = 14
+                font_size = 16
                 line_height = 0
             elif n == 2:
+                font_size = 15
+                line_height = 16
+            elif n <= 4:
                 font_size = 13
                 line_height = 14
-            elif n <= 4:
+            elif n <= 6:
                 font_size = 11
                 line_height = 12
-            elif n <= 6:
-                font_size = 9
-                line_height = 10
             else:
-                font_size = 8
-                line_height = 9
+                font_size = 10
+                line_height = 11
                 
             total_height = (n - 1) * line_height
             start_y = coord["y"] - (total_height / 2)

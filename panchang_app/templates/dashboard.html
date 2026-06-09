@@ -233,21 +233,21 @@
             <a href="{% url 'panchang' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_daily }}</a>
         </div>
 
-        <!-- 3. MY TITHI -->
+        <!-- 3. RASHIBHAVISHYA -->
         <div class="panchang-card text-center p-3 h-100">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
-                    <i class="fa-solid fa-calendar-day"></i>
+                    <i class="fa-solid fa-star-and-crescent"></i>
                 </div>
                 <h3 class="panchang-card-title m-0 mb-1" style="font-size: 16px;">
-                    {% if current_lang == 'mr' %}माझी तिथी{% else %}My Tithi{% endif %}
+                    {% if current_lang == 'mr' %}राशीभविष्य{% else %}Horoscope{% endif %}
                 </h3>
                 <p class="panchang-card-description m-0 mb-3" style="font-size: 12.5px; line-height: 1.4; color: #666; height: 52px; overflow: hidden;">
-                    {% if current_lang == 'mr' %}तुमच्या जन्मतिथीनुसार आजचे विशेष आणि वैयक्तिक दिवस महत्त्व.{% else %}Your personalized Tithi details and daily astrological significance.{% endif %}
+                    {% if current_lang == 'mr' %}तुमच्या राशीवर आधारित दररोजचे अचूक भविष्य आणि मार्गदर्शन.{% else %}Your daily, weekly, and monthly personalized horoscope.{% endif %}
                 </p>
             </div>
-            <a href="{% url 'panchang' %}?date={{ today|date:'Y-m-d' }}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">
-                {% if current_lang == 'mr' %}तिथी तपासा{% else %}Check Tithi{% endif %}
+            <a href="{% url 'rashibhavishya_index' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">
+                {% if current_lang == 'mr' %}भविष्य पहा{% else %}Check Horoscope{% endif %}
             </a>
         </div>
 

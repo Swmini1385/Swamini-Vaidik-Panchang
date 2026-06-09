@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ rashi_name }} राशीभविष्य | {{ trans.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column" style="height: calc(100vh - 120px); overflow: hidden;">
+    <!-- Fixed Header -->
+    <div class="bg-white shadow-sm" style="z-index: 10;">
+        <div class="d-flex align-items-center p-3 border-bottom border-warning border-3">
+            <a href="{% url 'rashibhavishya_index' %}" class="btn btn-link text-dark p-0 me-3 text-decoration-none" style="font-size: 20px;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; font-size: 16px;">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <h4 class="vedic-title m-0">{{ rashi_name }} राशीभविष्य</h4>
+            </div>
+        </div>
+        
+        <!-- Scrollable Tabs -->
+        <div class="px-2 pt-2 bg-light border-bottom">
+            <ul class="nav nav-tabs border-0 flex-nowrap" id="horoscopeTabs" role="tablist" style="overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold px-3 py-2 text-nowrap" id="tab-daily" data-bs-toggle="tab" data-bs-target="#pane-daily" type="button" role="tab">दैनिक भविष्य</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-3 py-2 text-nowrap" id="tab-tomorrow" data-bs-toggle="tab" data-bs-target="#pane-tomorrow" type="button" role="tab">उद्याचे भविष्य</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-3 py-2 text-nowrap" id="tab-monthly" data-bs-toggle="tab" data-bs-target="#pane-monthly" type="button" role="tab">मासिक भविष्य</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-3 py-2 text-nowrap" id="tab-love" data-bs-toggle="tab" data-bs-target="#pane-love" type="button" role="tab">प्रेम संबंध</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-3 py-2 text-nowrap" id="tab-career" data-bs-toggle="tab" data-bs-target="#pane-career" type="button" role="tab">करिअर</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-3 py-2 text-nowrap" id="tab-finance" data-bs-toggle="tab" data-bs-target="#pane-finance" type="button" role="tab">आर्थिक</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-3 py-2 text-nowrap" id="tab-health" data-bs-toggle="tab" data-bs-target="#pane-health" type="button" role="tab">आरोग्य</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Scrollable Content Area -->
+    <div class="flex-grow-1 overflow-auto position-relative bg-light swipe-container" id="horoscopeContentArea">
+        <div class="tab-content h-100 p-3" id="horoscopeTabContent">
+            
+            <!-- Daily Pane -->
+            <div class="tab-pane fade show active h-100 tab-panel" id="pane-daily" role="tabpanel">
+                {% include 'partials/horoscope_card.html' with h_data=daily %}
+            </div>
+            
+            <!-- Tomorrow Pane -->
+            <div class="tab-pane fade h-100 tab-panel" id="pane-tomorrow" role="tabpanel">
+                {% include 'partials/horoscope_card.html' with h_data=tomorrow %}
+            </div>
+            
+            <!-- Monthly Pane -->
+            <div class="tab-pane fade h-100 tab-panel" id="pane-monthly" role="tabpanel">
+                {% include 'partials/horoscope_card.html' with h_data=monthly %}
+            </div>
+            
+            <!-- Love Pane -->
+            <div class="tab-pane fade h-100 tab-panel" id="pane-love" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fa-solid fa-heart text-danger" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">प्रेम संबंध</h5>
+                        <p class="text-muted fs-5 lh-base">{{ daily.love }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Career Pane -->
+            <div class="tab-pane fade h-100 tab-panel" id="pane-career" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fa-solid fa-briefcase text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">करिअर आणि नोकरी</h5>
+                        <p class="text-muted fs-5 lh-base">{{ daily.career }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Finance Pane -->
+            <div class="tab-pane fade h-100 tab-panel" id="pane-finance" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fa-solid fa-indian-rupee-sign text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">आर्थिक स्थिती</h5>
+                        <p class="text-muted fs-5 lh-base">{{ daily.finance }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Health Pane -->
+            <div class="tab-pane fade h-100 tab-panel" id="pane-health" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fa-solid fa-notes-medical text-info" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">आरोग्य</h5>
+                        <p class="text-muted fs-5 lh-base">{{ daily.health }}</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+/* Hide scrollbar for tabs */
+#horoscopeTabs::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-tabs .nav-link {
+    color: #6c757d;
+    border: none;
+    border-bottom: 3px solid transparent;
+}
+.nav-tabs .nav-link.active {
+    color: var(--primary-gold);
+    background-color: transparent;
+    border-bottom: 3px solid var(--primary-gold);
+}
+
+.tab-panel {
+    animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+@keyframes slideInRight {
+    from { transform: translateX(15px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInLeft {
+    from { transform: translateX(-15px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+</style>
+
+<script src="{% static 'js/swipe-tabs.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Initialize swipe tabs
+    initSwipeTabs('horoscopeContentArea', 'horoscopeTabs');
+});
+</script>
+{% endblock %}
