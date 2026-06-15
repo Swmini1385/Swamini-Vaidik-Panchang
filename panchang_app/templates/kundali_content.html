@@ -324,7 +324,6 @@
                 <h5 class="vedic-title text-dark border-bottom pb-2 mb-3" style="font-size: 15px;">
                     <i class="fa-solid fa-om text-warning me-2"></i>{% if current_lang == 'mr' %}शांती पूजन व मंत्र उपासना{% else %}Shanti Pujan & Mantra Upasana{% endif %}
                 </h5>
-                
                 <div class="mb-4">
                     <h6 class="fw-bold text-danger"><i class="fa-regular fa-gem me-2"></i>{% if current_lang == 'mr' %}राशी रत्न (Gemstone){% else %}Gemstone{% endif %}</h6>
                     <div class="p-3 bg-light rounded-3 border border-warning shadow-sm">
@@ -335,45 +334,75 @@
 
                 <div class="mb-4">
                     <h6 class="fw-bold text-danger"><i class="fa-solid fa-fire-flame-curved me-2"></i>{% if current_lang == 'mr' %}आवश्यक शांती पूजन{% else %}Required Shanti Pujan{% endif %}</h6>
-                    {% if shanti_pujan %}
-                        <ul class="list-group list-group-flush border rounded-3">
-                        {% for shanti in shanti_pujan %}
-                            <li class="list-group-item d-flex align-items-center">
-                                <i class="fa-solid fa-check-circle text-success me-3"></i><span class="fw-semibold text-dark">{{ shanti }}</span>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}
-                        <div class="alert alert-secondary p-2 text-center" style="font-size: 13px;">
-                            <i class="fa-solid fa-info-circle me-1"></i>{% if current_lang == 'mr' %}कोणतेही शांती पूजन सुचवलेले नाही.{% else %}No Shanti Pujan suggested.{% endif %}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <h6 class="fw-bold text-danger"><i class="fa-solid fa-hands-praying me-2"></i>{% if current_lang == 'mr' %}मंत्र उपासना{% else %}Mantra Upasana{% endif %}</h6>
-                    {% if mantra_upasana_details %}
-                        <div class="alert alert-warning border-warning p-2" style="font-size: 12.5px;">
-                            <strong>टिप:</strong> खाली दिलेले मंत्र हे कोणत्याही महिन्याच्या अमावश्ये नंतर त्या त्या ग्रहाच्या ठराविक दिवसा पासून सुरु करू शकता, त्याकरिता रुद्राक्ष जपमाळ, तांब्याचा दिवा, त्या मध्ये शुद्ध गायीचे तूप इत्यादी साहित्य आवश्यक आहे.
-                        </div>
-                        <div class="row g-3">
-                        {% for mantra in mantra_upasana_details %}
-                            <div class="col-12 col-md-6">
-                                <div class="card h-100 border-warning shadow-sm">
-                                    <div class="card-header bg-warning-subtle fw-bold text-dark py-2">
-                                        <i class="fa-solid fa-sun text-warning me-2"></i>{{ mantra.name }}
-                                    </div>
-                                    <div class="card-body p-2 text-center d-flex flex-column justify-content-center" style="background-color: #fffaf0;">
-                                        <p class="mb-2 fw-bold text-danger" style="font-size: 14px; line-height: 1.5;">{{ mantra.text|safe }}</p>
-                                        <small class="fw-bold text-muted bg-white px-2 py-1 rounded-pill border mx-auto">जप: {{ mantra.jap }}</small>
-                                    </div>
+                    
+                    {% if selected_profile_id %}
+                    <form method="post" action="{% url 'update_shanti_pujan' selected_profile_id %}" class="shanti-form">
+                        {% csrf_token %}
+                        
+                        <div class="row g-2 mb-4">
+                        {% for choice in all_shanti_choices %}
+                            <div class="col-12 col-md-6 col-lg-4 shanti-checkbox-item">
+                                <div class="form-check border rounded-3 p-2 d-flex align-items-center {% if choice in shanti_pujan %}bg-success-subtle border-success{% else %}bg-light{% endif %}">
+                                    <input class="form-check-input ms-1 me-2" type="checkbox" name="shanti_pujan" value="{{ choice }}" id="shanti_{{ forloop.counter }}" {% if choice in shanti_pujan %}checked{% endif %}>
+                                    <label class="form-check-label flex-grow-1 fw-semibold text-dark" for="shanti_{{ forloop.counter }}" style="font-size: 14px;">
+                                        {{ choice }}
+                                    </label>
                                 </div>
                             </div>
                         {% endfor %}
                         </div>
+
+                        <h6 class="fw-bold text-danger mt-4"><i class="fa-solid fa-hands-praying me-2"></i>{% if current_lang == 'mr' %}मंत्र उपासना{% else %}Mantra Upasana{% endif %}</h6>
+                        <div class="alert alert-warning border-warning p-2 d-print-none" style="font-size: 12.5px;">
+                            <strong>टिप:</strong> खाली दिलेले मंत्र हे कोणत्याही महिन्याच्या अमावश्ये नंतर त्या त्या ग्रहाच्या ठराविक दिवसा पासून सुरु करू शकता, त्याकरिता रुद्राक्ष जपमाळ, तांब्याचा दिवा, त्या मध्ये शुद्ध गायीचे तूप इत्यादी साहित्य आवश्यक आहे.
+                        </div>
+
+                        <div class="row g-2 mb-4">
+                        {% for choice in all_mantra_choices %}
+                            <div class="col-12 col-md-6 col-lg-4 shanti-checkbox-item">
+                                <div class="form-check border rounded-3 p-2 d-flex align-items-center {% if choice in shanti_pujan or choice in mantra_upasana_details|stringformat:'s' %}bg-warning-subtle border-warning{% else %}bg-light{% endif %}">
+                                    <input class="form-check-input ms-1 me-2" type="checkbox" name="mantra_upasana" value="{{ choice }}" id="mantra_{{ forloop.counter }}" 
+                                    {% for m in mantra_upasana_details %}{% if m.name == choice %}checked{% endif %}{% endfor %}>
+                                    <label class="form-check-label flex-grow-1 fw-semibold text-dark" for="mantra_{{ forloop.counter }}" style="font-size: 14px;">
+                                        {{ choice }}
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+
+                        <!-- Print Only: Render Mantras with details -->
+                        <div class="d-none d-print-block">
+                            {% if mantra_upasana_details %}
+                                <div class="row g-3">
+                                {% for mantra in mantra_upasana_details %}
+                                    <div class="col-12 col-md-6">
+                                        <div class="card h-100 border-warning shadow-sm">
+                                            <div class="card-header bg-warning-subtle fw-bold text-dark py-2">
+                                                <i class="fa-solid fa-sun text-warning me-2"></i>{{ mantra.name }}
+                                            </div>
+                                            <div class="card-body p-2 text-center d-flex flex-column justify-content-center" style="background-color: #fffaf0;">
+                                                <p class="mb-2 fw-bold text-danger" style="font-size: 14px; line-height: 1.5;">{{ mantra.text|safe }}</p>
+                                                <small class="fw-bold text-muted bg-white px-2 py-1 rounded-pill border mx-auto">जप: {{ mantra.jap }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-center mt-3 d-print-none">
+                            <button type="submit" class="btn btn-warning px-4 py-2 fw-bold rounded-pill shadow-sm">
+                                <i class="fa-solid fa-floppy-disk me-2"></i>{% if current_lang == 'mr' %}माहिती जतन करा{% else %}Save Selections{% endif %}
+                            </button>
+                        </div>
+                    </form>
                     {% else %}
-                        <div class="alert alert-secondary p-2 text-center" style="font-size: 13px;">
-                            <i class="fa-solid fa-info-circle me-1"></i>{% if current_lang == 'mr' %}कोणतेही मंत्र सुचवलेले नाहीत.{% else %}No Mantras suggested.{% endif %}
+                        <div class="alert alert-info p-3 text-center rounded-4 shadow-sm">
+                            <i class="fa-solid fa-circle-info fs-3 text-info mb-2 d-block"></i>
+                            <h6 class="fw-bold text-dark mb-1">{% if current_lang == 'mr' %}ही कुंडली अजून जतन केलेली नाही.{% else %}Kundali not saved yet.{% endif %}</h6>
+                            <p class="text-muted mb-0" style="font-size: 13px;">{% if current_lang == 'mr' %}कृपया शांती पूजन व मंत्र जोडण्यासाठी आधी कुंडली जतन करा.{% else %}Please save the Kundali profile first to add Shanti Pujan and Mantras.{% endif %}</p>
                         </div>
                     {% endif %}
                 </div>
@@ -411,6 +440,26 @@
             }
             .kundali-nav-tabs-bar {
                 display: none !important;
+            }
+            .shanti-checkbox-item:has(input[type="checkbox"]:not(:checked)) {
+                display: none !important;
+            }
+            .shanti-checkbox-item input[type="checkbox"] {
+                display: none !important;
+            }
+            .shanti-checkbox-item .form-check {
+                border: none !important;
+                background: none !important;
+                padding: 0 !important;
+            }
+            .shanti-checkbox-item .form-check-label::before {
+                content: "✅ ";
+            }
+            .d-print-none {
+                display: none !important;
+            }
+            .d-print-block {
+                display: block !important;
             }
         }
     </style>

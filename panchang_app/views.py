@@ -4,9 +4,9 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 
-from .models import CustomUser, Panchang, Festival, ShubhaMuhurt, KundaliRecord, LocationMaster
+from .models import CustomUser, Panchang, Festival, ShubhaMuhurt, KundaliRecord, LocationMaster, SHANTI_PUJAN_CHOICES, MANTRA_UPASANA_CHOICES
 from .forms import (
     CustomUserCreationForm, CustomLoginForm, ForgotPasswordForm, 
     ProfileUpdateForm, KundaliForm, KundaliMilanForm
@@ -1118,6 +1118,8 @@ def kundali_detail_view(request, pk):
         'shanti_pujan': kundali.shanti_pujan,
         'mantra_upasana_details': selected_mantras,
         'phalashruti': kundali.phalashruti,
+        'all_shanti_choices': [choice[0] for choice in SHANTI_PUJAN_CHOICES],
+        'all_mantra_choices': [choice[0] for choice in MANTRA_UPASANA_CHOICES],
     }
     
     return render(request, 'kundali.html', context)
@@ -1750,3 +1752,18 @@ def rashibhavishya_detail(request, rashi_name):
         'monthly': horoscopes['monthly']
     }
     return render(request, 'rashibhavishya_detail.html', context)
+
+@login_required
+def update_shanti_pujan(request, pk):
+    if request.method == 'POST':
+        kundali = get_object_or_404(KundaliRecord, pk=pk, user=request.user)
+        shanti_list = request.POST.getlist('shanti_pujan')
+        mantra_list = request.POST.getlist('mantra_upasana')
+        
+        kundali.shanti_pujan = shanti_list
+        kundali.mantra_upasana = mantra_list
+        kundali.save()
+        
+        messages.success(request, "शांती पूजन व मंत्र उपासना जतन करण्यात आले (Saved successfully).")
+        return redirect('kundali_detail', pk=pk)
+    return redirect('kundali')

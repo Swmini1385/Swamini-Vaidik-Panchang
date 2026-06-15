@@ -18,6 +18,7 @@ urlpatterns = [
     path('kundali/', views.kundali_view, name='kundali'),
     path('kundali/<int:pk>/', views.kundali_detail_view, name='kundali_detail'),
     path('kundali/<int:pk>/delete/', views.delete_kundali_view, name='delete_kundali'),
+    path('kundali/<int:pk>/update_shanti/', views.update_shanti_pujan, name='update_shanti_pujan'),
     path('kundali-milan/', views.kundali_milan_view, name='kundali_milan'),
     path('choughadiya/', views.choughadiya_view, name='choughadiya'),
     path('settings/', views.settings_view, name='settings'),
