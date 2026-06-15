@@ -910,6 +910,14 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
         else:
             nak_paya = "लोखंड (Iron)" if current_lang == 'mr' else "Iron"
 
+    RATNA_MAP_MR = {
+        'Aries': 'पोवळे (Red Coral)', 'Taurus': 'हिरा (Diamond)', 'Gemini': 'पाचू (Emerald)',
+        'Cancer': 'मोती (Pearl)', 'Leo': 'माणिक (Ruby)', 'Virgo': 'पाचू (Emerald)',
+        'Libra': 'हिरा (Diamond)', 'Scorpio': 'पोवळे (Red Coral)', 'Sagittarius': 'पुष्कराज (Yellow Sapphire)',
+        'Capricorn': 'नीलम (Blue Sapphire)', 'Aquarius': 'नीलम (Blue Sapphire)', 'Pisces': 'पुष्कराज (Yellow Sapphire)'
+    }
+    rashi_ratna = RATNA_MAP_MR.get(moon_sign_english, 'Unknown') if moon_sign_english else 'Unknown'
+
     trans = TRANSLATIONS.get(current_lang, TRANSLATIONS['mr'])
     
     return {
@@ -941,6 +949,7 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
         'gana': gana_val,
         'nadi': nadi_val,
         'varna': varna_val,
+        'rashi_ratna': rashi_ratna,
     }
 
 @login_required
@@ -1076,6 +1085,25 @@ def kundali_detail_view(request, pk):
         'state': kundali.state
     })
     
+    MANTRA_DEFINITIONS = {
+        'सूर्य': {'text': 'ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः', 'jap': '28,000'},
+        'चन्द्र': {'text': 'ॐ श्रां श्रीं श्रौं सः चन्द्राय नमः', 'jap': '44,000'},
+        'मंगळ': {'text': 'ॐ क्रां क्रीं क्रौं सः भौमाय नमः', 'jap': '40,000'},
+        'बुध': {'text': 'ॐ ब्रां ब्रीं ब्रौं सः बुधाय नमः', 'jap': '36,000'},
+        'गुरु': {'text': 'ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः', 'jap': '76,000'},
+        'शुक्र': {'text': 'ॐ द्रां द्रीं द्रौं सः शुक्राय नमः', 'jap': '64,000'},
+        'शनि': {'text': 'ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः', 'jap': '92,000'},
+        'राहू': {'text': 'ॐ भ्रां भ्रीं भ्रौं सः राहवे नमः', 'jap': '72,000'},
+        'केतु': {'text': 'ॐ स्रां स्रीं स्रौं सः केतवे नमः', 'jap': '68,000'},
+        'महा मृत्युंजय मंत्र': {'text': 'ॐ त्र्यंबकं यजामहे सुगन्धिं पुष्टिवर्धनम् ।<br>उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय मामृतात् ॥', 'jap': '1,35,000'},
+    }
+    
+    selected_mantras = []
+    if kundali.mantra_upasana:
+        for m in kundali.mantra_upasana:
+            if m in MANTRA_DEFINITIONS:
+                selected_mantras.append({'name': m, **MANTRA_DEFINITIONS[m]})
+                
     saved_kundalis = KundaliRecord.objects.filter(user=request.user)
     
     context = {
@@ -1086,7 +1114,10 @@ def kundali_detail_view(request, pk):
         'current_lang': current_lang,
         'is_recalculated': True,
         'selected_profile_id': pk,
-        'profile_name': kundali.name
+        'profile_name': kundali.name,
+        'shanti_pujan': kundali.shanti_pujan,
+        'mantra_upasana_details': selected_mantras,
+        'phalashruti': kundali.phalashruti,
     }
     
     return render(request, 'kundali.html', context)

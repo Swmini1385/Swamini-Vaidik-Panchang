@@ -165,6 +165,10 @@ class KundaliRecord(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     timezone = models.CharField(max_length=50, default='Asia/Kolkata')
     
+    shanti_pujan = models.JSONField(default=list, blank=True)
+    mantra_upasana = models.JSONField(default=list, blank=True)
+    phalashruti = models.TextField(blank=True, null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

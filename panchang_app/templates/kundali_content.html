@@ -317,3 +317,100 @@
         </div>
 
     </div>
+
+        <!-- ================= TAB 4: SHANTI PUJAN ================= -->
+        <div id="shanti-tab" class="tab-panel">
+            <div class="card border-0 rounded-4 shadow-sm bg-white p-3 mb-4 page-break-before-always">
+                <h5 class="vedic-title text-dark border-bottom pb-2 mb-3" style="font-size: 15px;">
+                    <i class="fa-solid fa-om text-warning me-2"></i>{% if current_lang == 'mr' %}शांती पूजन व मंत्र उपासना{% else %}Shanti Pujan & Mantra Upasana{% endif %}
+                </h5>
+                
+                <div class="mb-4">
+                    <h6 class="fw-bold text-danger"><i class="fa-regular fa-gem me-2"></i>{% if current_lang == 'mr' %}राशी रत्न (Gemstone){% else %}Gemstone{% endif %}</h6>
+                    <div class="p-3 bg-light rounded-3 border border-warning shadow-sm">
+                        <span class="fw-bold text-dark fs-6">{{ rashi_ratna }}</span>
+                        <small class="d-block text-muted mt-1">{% if current_lang == 'mr' %}आपल्या चंद्र राशीनुसार हे रत्न सुचविण्यात आले आहे.{% else %}This gemstone is suggested based on your Moon Sign.{% endif %}</small>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold text-danger"><i class="fa-solid fa-fire-flame-curved me-2"></i>{% if current_lang == 'mr' %}आवश्यक शांती पूजन{% else %}Required Shanti Pujan{% endif %}</h6>
+                    {% if shanti_pujan %}
+                        <ul class="list-group list-group-flush border rounded-3">
+                        {% for shanti in shanti_pujan %}
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fa-solid fa-check-circle text-success me-3"></i><span class="fw-semibold text-dark">{{ shanti }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-secondary p-2 text-center" style="font-size: 13px;">
+                            <i class="fa-solid fa-info-circle me-1"></i>{% if current_lang == 'mr' %}कोणतेही शांती पूजन सुचवलेले नाही.{% else %}No Shanti Pujan suggested.{% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h6 class="fw-bold text-danger"><i class="fa-solid fa-hands-praying me-2"></i>{% if current_lang == 'mr' %}मंत्र उपासना{% else %}Mantra Upasana{% endif %}</h6>
+                    {% if mantra_upasana_details %}
+                        <div class="alert alert-warning border-warning p-2" style="font-size: 12.5px;">
+                            <strong>टिप:</strong> खाली दिलेले मंत्र हे कोणत्याही महिन्याच्या अमावश्ये नंतर त्या त्या ग्रहाच्या ठराविक दिवसा पासून सुरु करू शकता, त्याकरिता रुद्राक्ष जपमाळ, तांब्याचा दिवा, त्या मध्ये शुद्ध गायीचे तूप इत्यादी साहित्य आवश्यक आहे.
+                        </div>
+                        <div class="row g-3">
+                        {% for mantra in mantra_upasana_details %}
+                            <div class="col-12 col-md-6">
+                                <div class="card h-100 border-warning shadow-sm">
+                                    <div class="card-header bg-warning-subtle fw-bold text-dark py-2">
+                                        <i class="fa-solid fa-sun text-warning me-2"></i>{{ mantra.name }}
+                                    </div>
+                                    <div class="card-body p-2 text-center d-flex flex-column justify-content-center" style="background-color: #fffaf0;">
+                                        <p class="mb-2 fw-bold text-danger" style="font-size: 14px; line-height: 1.5;">{{ mantra.text|safe }}</p>
+                                        <small class="fw-bold text-muted bg-white px-2 py-1 rounded-pill border mx-auto">जप: {{ mantra.jap }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-secondary p-2 text-center" style="font-size: 13px;">
+                            <i class="fa-solid fa-info-circle me-1"></i>{% if current_lang == 'mr' %}कोणतेही मंत्र सुचवलेले नाहीत.{% else %}No Mantras suggested.{% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 5: PHALASHRUTI ================= -->
+        <div id="phalashruti-tab" class="tab-panel">
+            <div class="card border-0 rounded-4 shadow-sm bg-white p-3 mb-4 page-break-before-always">
+                <h5 class="vedic-title text-dark border-bottom pb-2 mb-3" style="font-size: 15px;">
+                    <i class="fa-solid fa-scroll text-warning me-2"></i>{% if current_lang == 'mr' %}फलश्रुती{% else %}Phalashruti{% endif %}
+                </h5>
+                <div class="phalashruti-content text-dark" style="font-size: 14px; line-height: 1.6; font-family: 'Noto Sans Devanagari', 'Outfit', sans-serif;">
+                    {% if phalashruti %}
+                        {{ phalashruti|safe }}
+                    {% else %}
+                        <div class="text-center text-muted p-4">
+                            <i class="fa-regular fa-folder-open fs-2 mb-2 d-block"></i>
+                            {% if current_lang == 'mr' %}या कुंडलीसाठी फलश्रुती उपलब्ध नाही.{% else %}Phalashruti not available for this Kundali.{% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <style>
+        @media print {
+            .page-break-before-always {
+                page-break-before: always;
+            }
+            .tab-panel {
+                display: block !important; /* Force all tabs to display when printing */
+            }
+            .kundali-nav-tabs-bar {
+                display: none !important;
+            }
+        }
+    </style>

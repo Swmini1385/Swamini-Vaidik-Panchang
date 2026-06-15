@@ -55,11 +55,11 @@
 
     <!-- Native Style Navigation Tabs -->
     <div class="kundali-nav-tabs-bar bg-white border-bottom shadow-sm">
-        <div class="d-flex text-center">
-            <button class="nav-tab-item active w-33 py-2 fw-bold d-flex align-items-center justify-content-center" onclick="switchAppTab('graha-tab', this)">
+        <div class="d-flex text-center" style="overflow-x: auto; white-space: nowrap;">
+            <button class="nav-tab-item active w-20 py-2 fw-bold d-flex align-items-center justify-content-center" onclick="switchAppTab('graha-tab', this)">
                 <i class="fa-solid fa-star me-2"></i><span>{{ trans.planets|default:"ग्रह" }}</span>
             </button>
-            <button class="nav-tab-item w-33 py-2 fw-bold d-flex align-items-center justify-content-center" onclick="switchAppTab('kundali-tab', this)">
+            <button class="nav-tab-item w-20 py-2 fw-bold d-flex align-items-center justify-content-center" onclick="switchAppTab('kundali-tab', this)">
                 <svg viewBox="0 0 100 100" class="kundali-tab-svg-icon" style="width: 16px; height: 16px; stroke: currentColor; stroke-width: 6; fill: none; display: inline-block; margin-right: 6px; vertical-align: middle;">
                     <rect x="4" y="4" width="92" height="92" rx="4" />
                     <line x1="4" y1="4" x2="96" y2="96" />
@@ -68,8 +68,14 @@
                 </svg>
                 <span>{{ trans.kundali }}</span>
             </button>
-            <button class="nav-tab-item w-33 py-2 fw-bold d-flex align-items-center justify-content-center" onclick="switchAppTab('dasha-tab', this)">
+            <button class="nav-tab-item w-20 py-2 fw-bold d-flex align-items-center justify-content-center" onclick="switchAppTab('dasha-tab', this)">
                 <i class="fa-solid fa-clock-rotate-left me-2"></i><span>{{ trans.dasha|default:"दशा" }}</span>
+            </button>
+            <button class="nav-tab-item w-20 py-2 fw-bold d-flex align-items-center justify-content-center" onclick="switchAppTab('shanti-tab', this)">
+                <i class="fa-solid fa-om me-2"></i><span style="font-size: 13px;">{% if current_lang == 'mr' %}शांती पूजन{% else %}Shanti Pujan{% endif %}</span>
+            </button>
+            <button class="nav-tab-item w-20 py-2 fw-bold d-flex align-items-center justify-content-center" onclick="switchAppTab('phalashruti-tab', this)">
+                <i class="fa-solid fa-scroll me-2"></i><span style="font-size: 13px;">{% if current_lang == 'mr' %}फलश्रुती{% else %}Phalashruti{% endif %}</span>
             </button>
         </div>
     </div>
@@ -278,10 +284,18 @@
     .cursor-pointer {
         cursor: pointer;
     }
-    .w-33 {
-        width: 33.333%;
+    .w-20 {
+        flex: 0 0 20%;
+        min-width: 120px;
     }
-    .transition-transform {
+    .nav-tab-item {
+        background: none;
+        border: none;
+        color: #7f8c8d;
+        font-size: 14px;
+        position: relative;
+        transition: color 0.2s;
+    }
         transition: transform 0.25s;
     }
     .rotate-90 {
@@ -371,7 +385,7 @@
     let touchstartX = 0;
     let touchendX = 0;
     
-    const tabsOrder = ['graha-tab', 'kundali-tab', 'dasha-tab'];
+    const tabsOrder = ['graha-tab', 'kundali-tab', 'dasha-tab', 'shanti-tab', 'phalashruti-tab'];
     
     function checkDirection() {
         const diff = touchstartX - touchendX;

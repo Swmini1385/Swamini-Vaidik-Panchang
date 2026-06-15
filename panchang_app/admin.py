@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django import forms
 from .models import CustomUser, Panchang, Festival, ShubhaMuhurt, KundaliRecord, LocationMaster
 
 class CustomUserAdmin(UserAdmin):
@@ -41,12 +42,68 @@ class ShubhaMuhurtAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
     ordering = ['start_time']
 
+SHANTI_PUJAN_CHOICES = [
+    ('नवग्रह शांती', 'नवग्रह शांती'),
+    ('गुरु शांती', 'गुरु शांती'),
+    ('मंगळ दोष शांती', 'मंगळ दोष शांती'),
+    ('शनि शांती', 'शनि शांती'),
+    ('राहु-केतु शांती', 'राहु-केतु शांती'),
+    ('कालसर्प दोष', 'कालसर्प दोष'),
+    ('पितृ दोष शांती', 'पितृ दोष शांती'),
+    ('त्रीपिंडी श्राद्ध', 'त्रीपिंडी श्राद्ध'),
+    ('चांडाळ योग शांती', 'चांडाळ योग शांती'),
+    ('नक्षत्र शांती', 'नक्षत्र शांती'),
+    ('लक्ष्मी शांती', 'लक्ष्मी शांती'),
+    ('महामृत्युंजय जप', 'महामृत्युंजय जप'),
+    ('वास्तु शांती', 'वास्तु शांती'),
+    ('कुंभ विवाह', 'कुंभ विवाह'),
+    ('नवचंडी विधान', 'नवचंडी विधान'),
+]
+
+MANTRA_UPASANA_CHOICES = [
+    ('सूर्य', 'सूर्य'),
+    ('चन्द्र', 'चन्द्र'),
+    ('मंगळ', 'मंगळ'),
+    ('बुध', 'बुध'),
+    ('गुरु', 'गुरु'),
+    ('शुक्र', 'शुक्र'),
+    ('शनि', 'शनि'),
+    ('राहू', 'राहू'),
+    ('केतु', 'केतु'),
+    ('महा मृत्युंजय मंत्र', 'महा मृत्युंजय मंत्र'),
+]
+
+class KundaliRecordAdminForm(forms.ModelForm):
+    shanti_pujan = forms.MultipleChoiceField(
+        choices=SHANTI_PUJAN_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="आवश्यक शांती पूजन"
+    )
+    mantra_upasana = forms.MultipleChoiceField(
+        choices=MANTRA_UPASANA_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="मंत्र उपासना"
+    )
+
+    class Meta:
+        model = KundaliRecord
+        fields = '__all__'
+
 @admin.register(KundaliRecord)
 class KundaliRecordAdmin(admin.ModelAdmin):
+    form = KundaliRecordAdminForm
     list_display = ['name', 'user', 'gender', 'date_of_birth', 'time_of_birth', 'place_of_birth', 'latitude', 'longitude', 'timezone']
     list_filter = ['gender', 'date_of_birth']
     search_fields = ['name', 'place_of_birth', 'user__email']
     ordering = ['-created_at']
+
+    class Media:
+        js = (
+            'https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js',
+            'js/admin_rich_text.js',
+        )
 
 import csv
 import json
