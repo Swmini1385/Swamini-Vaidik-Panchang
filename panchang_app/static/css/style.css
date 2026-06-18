@@ -935,5 +935,27 @@ main.main-content.htmx-swapping {
     stroke: url(#svg-gold-gradient) !important;
 }
 
+/* Performance Optimizations for Mobile Scrolling */
+.kundali-app-content, .layout-wrapper {
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
 
+.chart-display-container svg, .table-responsive {
+    contain: content;
+}
 
+/* Skeleton Loading Animation */
+@keyframes skeleton-loading {
+    0% { background-color: #f0f0f0; }
+    50% { background-color: #e0e0e0; }
+    100% { background-color: #f0f0f0; }
+}
+
+.skeleton-box {
+    animation: skeleton-loading 1.5s infinite ease-in-out;
+    border-radius: 4px;
+    display: inline-block;
+    min-height: 20px;
+}

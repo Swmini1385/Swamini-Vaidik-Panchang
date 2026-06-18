@@ -84,6 +84,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Pagination -->
+    {% if muhurts.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if muhurts.has_previous %}
+                <li class="page-item"><a class="page-link text-warning" href="?category={{ current_filter }}&page={{ muhurts.previous_page_number }}">Previous</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            
+            {% for i in muhurts.paginator.page_range %}
+                {% if muhurts.number == i %}
+                    <li class="page-item active" aria-current="page"><span class="page-link bg-warning text-dark border-warning">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link text-dark" href="?category={{ current_filter }}&page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if muhurts.has_next %}
+                <li class="page-item"><a class="page-link text-warning" href="?category={{ current_filter }}&page={{ muhurts.next_page_number }}">Next</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 
 <!-- Add Muhurt Modal -->

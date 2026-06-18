@@ -354,14 +354,20 @@ def masik_view(request):
     }
     return render(request, 'masik.html', context)
 
+from django.core.paginator import Paginator
+
 @login_required
 def sanwar_view(request):
     category_filter = request.GET.get('category', 'All')
     
     if category_filter == 'All':
-        festivals = Festival.objects.all().order_by('date')
+        festivals_list = Festival.objects.all().order_by('date')
     else:
-        festivals = Festival.objects.filter(category=category_filter).order_by('date')
+        festivals_list = Festival.objects.filter(category=category_filter).order_by('date')
+        
+    paginator = Paginator(festivals_list, 20)
+    page_number = request.GET.get('page')
+    festivals = paginator.get_page(page_number)
         
     if request.method == 'POST':
         # Add festival via simple form
@@ -398,9 +404,13 @@ def shubha_muhurt_view(request):
     category_filter = request.GET.get('category', 'All')
     
     if category_filter == 'All':
-        muhurts = ShubhaMuhurt.objects.all().order_by('start_time')
+        muhurts_list = ShubhaMuhurt.objects.all().order_by('start_time')
     else:
-        muhurts = ShubhaMuhurt.objects.filter(category=category_filter).order_by('start_time')
+        muhurts_list = ShubhaMuhurt.objects.filter(category=category_filter).order_by('start_time')
+        
+    paginator = Paginator(muhurts_list, 20)
+    page_number = request.GET.get('page')
+    muhurts = paginator.get_page(page_number)
         
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -602,8 +612,10 @@ def calculate_custom_vimshottari(birth_date, balance_dict, current_lang='mr'):
 
 from functools import lru_cache
 
-@lru_cache(maxsize=64)
 def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_name, place_name, name=None, gender=None, current_lang='mr'):
+    from django.core.cache import cache
+    import hashlib
+    import json
     import datetime
     from zoneinfo import ZoneInfo
     from panchang_app.utils.panchang_calc import (
@@ -619,6 +631,14 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
         PLANET_SHORTS_MR
     )
     from panchang_app.utils.milan import NAKSHATRAS
+    
+    # Generate Cache Key based on input params
+    key_str = f"{date_val}_{time_val}_{latitude}_{longitude}_{timezone_name}_{place_name}_{name}_{gender}_{current_lang}"
+    cache_key = "kundali_details_" + hashlib.md5(key_str.encode('utf-8')).hexdigest()
+    
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return cached_data
     
     dt = datetime.datetime.combine(date_val, time_val)
     try:
@@ -951,6 +971,9 @@ def compute_kundali_details(date_val, time_val, latitude, longitude, timezone_na
         'varna': varna_val,
         'rashi_ratna': rashi_ratna,
     }
+    
+    cache.set(cache_key, result_dict, timeout=60 * 60 * 24 * 7) # Cache for 7 days
+    return result_dict
 
 @login_required
 def kundali_view(request):
@@ -1020,7 +1043,7 @@ def kundali_view(request):
         'state': 'Maharashtra'
     })
     
-    saved_kundalis = KundaliRecord.objects.filter(user=request.user)
+    saved_kundalis = KundaliRecord.objects.select_related('user').filter(user=request.user)
     
     context = {
         **chart_context,

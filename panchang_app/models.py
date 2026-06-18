@@ -79,9 +79,9 @@ class Festival(models.Model):
         ('Other', 'Other'),
     ]
     name = models.CharField(max_length=100)
-    date = models.DateField()
+    date = models.DateField(db_index=True)
     description = models.TextField()
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='Festival')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='Festival', db_index=True)
     image = models.ImageField(upload_to='festivals/', blank=True, null=True)
 
     class Meta:
@@ -99,10 +99,10 @@ class ShubhaMuhurt(models.Model):
         ('Other', 'Other Auspicious Event'),
     ]
     name = models.CharField(max_length=100)
-    start_time = models.DateTimeField()
+    start_time = models.DateTimeField(db_index=True)
     end_time = models.DateTimeField()
     description = models.TextField()
-    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='Other')
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='Other', db_index=True)
 
     class Meta:
         ordering = ['start_time']
@@ -112,7 +112,7 @@ class ShubhaMuhurt(models.Model):
 
 class LocationMaster(models.Model):
     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, null=True, blank=True, related_name='saved_locations')
-    location_name = models.CharField(max_length=150, default='')
+    location_name = models.CharField(max_length=150, default='', db_index=True)
     country = models.CharField(max_length=100, default='India')
     state = models.CharField(max_length=100, blank=True)
     district = models.CharField(max_length=100, blank=True)
@@ -122,7 +122,7 @@ class LocationMaster(models.Model):
     timezone = models.CharField(max_length=100, default='Asia/Kolkata')
     created_date = models.DateTimeField(default=tz_now)
     updated_date = models.DateTimeField(default=tz_now)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         ordering = ['location_name']
@@ -183,9 +183,9 @@ class KundaliRecord(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='kundalis')
     name = models.CharField(max_length=100)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(db_index=True)
     time_of_birth = models.TimeField()
-    place_of_birth = models.CharField(max_length=100)
+    place_of_birth = models.CharField(max_length=100, db_index=True)
     
     # Detailed birth location fields
     country = models.CharField(max_length=100, default='India')
@@ -200,7 +200,7 @@ class KundaliRecord(models.Model):
     mantra_upasana = models.JSONField(default=list, blank=True)
     phalashruti = models.TextField(blank=True, null=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ['-created_at']
