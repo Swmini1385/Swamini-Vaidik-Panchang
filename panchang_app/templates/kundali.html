@@ -544,48 +544,10 @@
         
         const url = `/kundali/export-pdf/?date=${date}&time=${time}&lat=${lat}&lon=${lon}&timezone=${timezone}&place_name=${encodeURIComponent(placeName)}`;
         
-        // Show loading spinner
-        const loader = document.getElementById('global-loader');
-        if(loader) loader.classList.add('active');
-        document.body.style.cursor = 'wait';
-        
-        fetch(url)
-            .then(async res => {
-                if(!res.ok) {
-                    let errStr = "PDF तयार करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.";
-                    let tb = "";
-                    try {
-                        const errData = await res.json();
-                        if (errData.error) errStr = errData.error;
-                        if (errData.traceback) tb = errData.traceback;
-                    } catch(e) {}
-                    
-                    if (tb) {
-                        throw new Error(errStr + "\n\nTRACEBACK:\n" + tb);
-                    } else {
-                        throw new Error(errStr);
-                    }
-                }
-                return res.blob();
-            })
-            .then(blob => {
-                const objectUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = objectUrl;
-                a.download = `Kundali_${date}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(objectUrl);
-                if(loader) loader.classList.remove('active');
-                document.body.style.cursor = 'default';
-            })
-            .catch(err => {
-                console.error('PDF Export Error:', err);
-                alert('PDF Error Details:\n\n' + err.message);
-                if(loader) loader.classList.remove('active');
-                document.body.style.cursor = 'default';
-            });
+        // Open the URL in a new tab. 
+        // If Playwright succeeds, the browser downloads the PDF automatically.
+        // If Playwright fails, our fallback HTML is served and automatically opens the native print dialog.
+        window.open(url, '_blank');
     }
 
     let calcDebounceTimer = null;

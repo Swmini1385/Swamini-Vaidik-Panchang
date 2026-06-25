@@ -1388,24 +1388,46 @@ def export_kundali_pdf(request):
         html_string = render_to_string('kundali_pdf.html', context, request=request)
         
         logger.info("HTML generation successful, starting Playwright for PDF conversion...")
-        from playwright.sync_api import sync_playwright
-        with sync_playwright() as p:
-            logger.info("Launching chromium...")
-            browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'])
-            logger.info("Opening new page...")
-            page = browser.new_page()
-            logger.info("Setting page content...")
-            page.set_content(html_string, wait_until="networkidle")
-            logger.info("Converting page to PDF...")
-            pdf_bytes = page.pdf(format="A4", print_background=True, margin={"top": "1cm", "bottom": "1cm", "left": "1cm", "right": "1cm"})
-            browser.close()
         
-        logger.info("PDF conversion successful, generating File response...")
-        from django.http import HttpResponse
-        response = HttpResponse(pdf_bytes, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="Kundali_{date_str}.pdf"'
-        logger.info("Returning PDF response.")
-        return response
+        try:
+            import os
+            os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '0'
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                logger.info("Launching chromium...")
+                browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'])
+                logger.info("Opening new page...")
+                page = browser.new_page()
+                logger.info("Setting page content...")
+                page.set_content(html_string, wait_until="networkidle")
+                logger.info("Converting page to PDF...")
+                pdf_bytes = page.pdf(format="A4", print_background=True, margin={"top": "1cm", "bottom": "1cm", "left": "1cm", "right": "1cm"})
+                browser.close()
+            
+            logger.info("PDF conversion successful, generating File response...")
+            from django.http import HttpResponse
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="Kundali_{date_str}.pdf"'
+            logger.info("Returning PDF response.")
+            return response
+            
+        except Exception as browser_err:
+            logger.warning(f"Playwright failed: {browser_err}. Falling back to native browser print.")
+            from django.http import HttpResponse
+            
+            # Fallback to native print
+            fallback_html = html_string.replace('</body>', '''
+            <script>
+                window.onload = function() { 
+                    setTimeout(function() {
+                        window.print(); 
+                    }, 500);
+                };
+            </script>
+            </body>
+            ''')
+            return HttpResponse(fallback_html)
+            
     except Exception as e:
         import traceback
         import logging
