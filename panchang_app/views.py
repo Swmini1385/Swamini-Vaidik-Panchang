@@ -1358,6 +1358,9 @@ def export_kundali_pdf(request):
         lon_str = request.GET.get('lon')
         timezone_str = request.GET.get('timezone')
         place_str = request.GET.get('place_name')
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Starting PDF export for date={date_str}, time={time_str}")
         
         date_val = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
         if len(time_str) > 5:
@@ -1368,6 +1371,7 @@ def export_kundali_pdf(request):
         latitude = float(lat_str)
         longitude = float(lon_str)
         
+        logger.info("Fetching Kundali data...")
         chart_context = compute_kundali_details(
             date_val, time_val, latitude, longitude, timezone_str, place_str, current_lang=current_lang
         )
@@ -1379,25 +1383,43 @@ def export_kundali_pdf(request):
             'trans': TRANSLATIONS.get(current_lang, TRANSLATIONS['mr'])
         }
         
+        logger.info("Rendering HTML template...")
         from django.template.loader import render_to_string
         html_string = render_to_string('kundali_pdf.html', context, request=request)
         
+        logger.info("HTML generation successful, starting Playwright for PDF conversion...")
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
+            logger.info("Launching chromium...")
             browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'])
+            logger.info("Opening new page...")
             page = browser.new_page()
+            logger.info("Setting page content...")
             page.set_content(html_string, wait_until="networkidle")
+            logger.info("Converting page to PDF...")
             pdf_bytes = page.pdf(format="A4", print_background=True, margin={"top": "1cm", "bottom": "1cm", "left": "1cm", "right": "1cm"})
             browser.close()
         
+        logger.info("PDF conversion successful, generating File response...")
         from django.http import HttpResponse
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="Kundali_{date_str}.pdf"'
+        logger.info("Returning PDF response.")
         return response
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        error_tb = traceback.format_exc()
+        logger.exception("PDF Export failed")
+        
+        # Return full traceback for debugging
+        return JsonResponse({
+            'success': False, 
+            'error': str(e),
+            'traceback': error_tb
+        }, status=500)
 
 @login_required
 def choughadiya_view(request):

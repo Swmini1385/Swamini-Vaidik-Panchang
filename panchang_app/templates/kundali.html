@@ -552,12 +552,19 @@
         fetch(url)
             .then(async res => {
                 if(!res.ok) {
-                    let errStr = "Network response was not ok";
+                    let errStr = "PDF तयार करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.";
+                    let tb = "";
                     try {
                         const errData = await res.json();
                         if (errData.error) errStr = errData.error;
+                        if (errData.traceback) tb = errData.traceback;
                     } catch(e) {}
-                    throw new Error(errStr);
+                    
+                    if (tb) {
+                        throw new Error(errStr + "\n\nTRACEBACK:\n" + tb);
+                    } else {
+                        throw new Error(errStr);
+                    }
                 }
                 return res.blob();
             })
@@ -575,7 +582,7 @@
             })
             .catch(err => {
                 console.error('PDF Export Error:', err);
-                alert('PDF Error: ' + err.message);
+                alert('PDF Error Details:\n\n' + err.message);
                 if(loader) loader.classList.remove('active');
                 document.body.style.cursor = 'default';
             });
