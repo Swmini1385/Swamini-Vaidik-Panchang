@@ -936,7 +936,7 @@ main.main-content.htmx-swapping {
 }
 
 /* Performance Optimizations for Mobile Scrolling */
-.kundali-app-content, .layout-wrapper {
+.kundali-app-content {
     will-change: transform;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
