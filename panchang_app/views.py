@@ -1348,6 +1348,59 @@ def api_calculate_kundali(request):
         return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
+@require_http_methods(["GET"])
+def export_kundali_pdf(request):
+    try:
+        from weasyprint import HTML
+    except ImportError:
+        return JsonResponse({'success': False, 'error': 'WeasyPrint not properly installed.'}, status=500)
+    except OSError as e:
+        return JsonResponse({'success': False, 'error': f'WeasyPrint OS Error: {str(e)}'}, status=500)
+
+    try:
+        current_lang = request.session.get('lang', 'mr')
+        date_str = request.GET.get('date')
+        time_str = request.GET.get('time')
+        lat_str = request.GET.get('lat')
+        lon_str = request.GET.get('lon')
+        timezone_str = request.GET.get('timezone')
+        place_str = request.GET.get('place_name')
+        
+        date_val = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+        if len(time_str) > 5:
+            time_val = datetime.datetime.strptime(time_str, '%H:%M:%S').time()
+        else:
+            time_val = datetime.datetime.strptime(time_str, '%H:%M').time()
+            
+        latitude = float(lat_str)
+        longitude = float(lon_str)
+        
+        chart_context = compute_kundali_details(
+            date_val, time_val, latitude, longitude, timezone_str, place_str, current_lang=current_lang
+        )
+        
+        context = {
+            **chart_context,
+            'current_lang': current_lang,
+            'is_pdf': True,
+            'trans': TRANSLATIONS.get(current_lang, TRANSLATIONS['mr'])
+        }
+        
+        from django.template.loader import render_to_string
+        html_string = render_to_string('kundali_pdf.html', context, request=request)
+        
+        pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
+        
+        from django.http import HttpResponse
+        response = HttpResponse(pdf_file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="Kundali_{date_str}.pdf"'
+        return response
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
 def choughadiya_view(request):
     date_str = request.GET.get('date')
     if date_str:
