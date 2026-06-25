@@ -550,8 +550,15 @@
         document.body.style.cursor = 'wait';
         
         fetch(url)
-            .then(res => {
-                if(!res.ok) throw new Error("Network response was not ok");
+            .then(async res => {
+                if(!res.ok) {
+                    let errStr = "Network response was not ok";
+                    try {
+                        const errData = await res.json();
+                        if (errData.error) errStr = errData.error;
+                    } catch(e) {}
+                    throw new Error(errStr);
+                }
                 return res.blob();
             })
             .then(blob => {
@@ -568,7 +575,7 @@
             })
             .catch(err => {
                 console.error('PDF Export Error:', err);
-                alert('PDF तयार करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
+                alert('PDF Error: ' + err.message);
                 if(loader) loader.classList.remove('active');
                 document.body.style.cursor = 'default';
             });
