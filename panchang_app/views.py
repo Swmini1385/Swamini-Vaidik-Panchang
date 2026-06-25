@@ -1351,13 +1351,6 @@ def api_calculate_kundali(request):
 @require_http_methods(["GET"])
 def export_kundali_pdf(request):
     try:
-        from weasyprint import HTML
-    except ImportError:
-        return JsonResponse({'success': False, 'error': 'WeasyPrint not properly installed.'}, status=500)
-    except OSError as e:
-        return JsonResponse({'success': False, 'error': f'WeasyPrint OS Error: {str(e)}'}, status=500)
-
-    try:
         current_lang = request.session.get('lang', 'mr')
         date_str = request.GET.get('date')
         time_str = request.GET.get('time')
@@ -1389,10 +1382,16 @@ def export_kundali_pdf(request):
         from django.template.loader import render_to_string
         html_string = render_to_string('kundali_pdf.html', context, request=request)
         
-        pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'])
+            page = browser.new_page()
+            page.set_content(html_string, wait_until="networkidle")
+            pdf_bytes = page.pdf(format="A4", print_background=True, margin={"top": "1cm", "bottom": "1cm", "left": "1cm", "right": "1cm"})
+            browser.close()
         
         from django.http import HttpResponse
-        response = HttpResponse(pdf_file, content_type='application/pdf')
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="Kundali_{date_str}.pdf"'
         return response
     except Exception as e:
