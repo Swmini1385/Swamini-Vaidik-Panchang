@@ -206,7 +206,7 @@
     <!-- Grid columns: Desktop: 5 col, Tablet: 3 col, Mobile: 2 col -->
     <div class="dashboard-modules-grid">
         <!-- 1. MASIK -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'masik' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
                     <i class="fa-solid fa-calendar-days"></i>
@@ -216,11 +216,11 @@
                     {{ trans.masik_desc }}
                 </p>
             </div>
-            <a href="{% url 'masik' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_calendar }}</a>
-        </div>
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">{{ trans.view_calendar }}</span>
+        </a>
 
         <!-- 2. PANCHANG -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'panchang' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
                     <i class="fa-solid fa-dharmachakra"></i>
@@ -230,11 +230,11 @@
                     {{ trans.panchang_desc }}
                 </p>
             </div>
-            <a href="{% url 'panchang' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_daily }}</a>
-        </div>
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">{{ trans.view_daily }}</span>
+        </a>
 
         <!-- 3. RASHIBHAVISHYA -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'rashibhavishya_index' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
                     <i class="fa-solid fa-star-and-crescent"></i>
@@ -246,13 +246,13 @@
                     {% if current_lang == 'mr' %}तुमच्या राशीवर आधारित दररोजचे अचूक भविष्य आणि मार्गदर्शन.{% else %}Your daily, weekly, and monthly personalized horoscope.{% endif %}
                 </p>
             </div>
-            <a href="{% url 'rashibhavishya_index' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">
                 {% if current_lang == 'mr' %}भविष्य पहा{% else %}Check Horoscope{% endif %}
-            </a>
-        </div>
+            </span>
+        </a>
 
         <!-- 4. SANWAR -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'sanwar' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
                     <i class="fa-solid fa-bell"></i>
@@ -262,11 +262,11 @@
                     {{ trans.sanwar_desc }}
                 </p>
             </div>
-            <a href="{% url 'sanwar' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_festivals }}</a>
-        </div>
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">{{ trans.view_festivals }}</span>
+        </a>
 
         <!-- 5. KUNDALI -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'kundali' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2 d-flex align-items-center justify-content-center" style="height: 40px;">
                     <svg viewBox="0 0 100 100" class="kundali-svg-icon" style="width: 40px; height: 40px; stroke: url(#svg-maroon-gradient); stroke-width: 4; fill: none; display: inline-block;">
@@ -296,11 +296,11 @@
                     {{ trans.kundali_desc }}
                 </p>
             </div>
-            <a href="{% url 'kundali' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.generate_kundali }}</a>
-        </div>
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">{{ trans.generate_kundali }}</span>
+        </a>
 
         <!-- 6. KUNDALI MILAN -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'kundali_milan' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
                     <i class="fa-solid fa-heart-pulse"></i>
@@ -310,11 +310,11 @@
                     {{ trans.milan_desc }}
                 </p>
             </div>
-            <a href="{% url 'kundali_milan' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.match_kundali }}</a>
-        </div>
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">{{ trans.match_kundali }}</span>
+        </a>
 
         <!-- 7. SHUBHA MUHURT -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'shubha_muhurt' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
                     <i class="fa-solid fa-clock"></i>
@@ -324,11 +324,11 @@
                     {{ trans.muhurt_desc }}
                 </p>
             </div>
-            <a href="{% url 'shubha_muhurt' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.view_muhurt }}</a>
-        </div>
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">{{ trans.view_muhurt }}</span>
+        </a>
 
         <!-- 8. HINDU TIME -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'choughadiya' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
                     <i class="fa-regular fa-clock"></i>
@@ -340,13 +340,13 @@
                     {% if current_lang == 'mr' %}चौघडिया, होरा आणि यमघंटा सह दैनंदिन शुभ-अशुभ कालावधी गणना.{% else %}Daily auspicious and inauspicious time slices including Choughadiya & Hora.{% endif %}
                 </p>
             </div>
-            <a href="{% url 'choughadiya' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">
                 {% if current_lang == 'mr' %}वेळ चक्र पहा{% else %}View Time Cycle{% endif %}
-            </a>
-        </div>
+            </span>
+        </a>
 
         <!-- 9. SETTINGS -->
-        <div class="panchang-card text-center p-3 h-100">
+        <a href="{% url 'settings' %}" class="panchang-card text-decoration-none text-center p-3 h-100" hx-boost="false">
             <div>
                 <div class="panchang-card-icon m-0 mb-2">
                     <i class="fa-solid fa-gear"></i>
@@ -356,8 +356,8 @@
                     {{ trans.settings_desc }}
                 </p>
             </div>
-            <a href="{% url 'settings' %}" class="panchang-card-btn w-100 py-1" style="font-size: 13px;">{{ trans.open_settings }}</a>
-        </div>
+            <span class="panchang-card-btn w-100 py-1 d-block" style="font-size: 13px;">{{ trans.open_settings }}</span>
+        </a>
 
         <!-- 10. INFORMATION -->
         <div class="panchang-card text-center p-3 h-100">

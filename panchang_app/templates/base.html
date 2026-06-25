@@ -252,15 +252,15 @@
         <!-- Native Mobile Bottom Navigation -->
         {% if user.is_authenticated %}
         <nav class="mobile-bottom-nav d-flex d-md-none justify-content-around align-items-center">
-            <a href="{% url 'dashboard' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" data-ripple>
+            <a href="{% url 'dashboard' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" data-ripple hx-boost="false">
                 <i class="fa-solid fa-chart-line"></i>
                 <span>{{ trans.dashboard|default:'Home' }}</span>
             </a>
-            <a href="{% url 'panchang' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'panchang' %}active{% endif %}" data-ripple>
+            <a href="{% url 'panchang' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'panchang' %}active{% endif %}" data-ripple hx-boost="false">
                 <i class="fa-solid fa-calendar-day"></i>
                 <span>{{ trans.panchang|default:'Panchang' }}</span>
             </a>
-            <a href="{% url 'kundali' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'kundali' or request.resolver_match.url_name == 'kundali_detail' %}active{% endif %}" data-ripple>
+            <a href="{% url 'kundali' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'kundali' or request.resolver_match.url_name == 'kundali_detail' %}active{% endif %}" data-ripple hx-boost="false">
                 <svg viewBox="0 0 100 100" class="kundali-bottom-icon">
                     <rect x="4" y="4" width="92" height="92" rx="4" />
                     <line x1="4" y1="4" x2="96" y2="96" />
@@ -269,7 +269,7 @@
                 </svg>
                 <span>{{ trans.kundali|default:'Kundali' }}</span>
             </a>
-            <a href="{% url 'settings' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" data-ripple>
+            <a href="{% url 'settings' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" data-ripple hx-boost="false">
                 <i class="fa-solid fa-gear"></i>
                 <span>{{ trans.settings|default:'Settings' }}</span>
             </a>
