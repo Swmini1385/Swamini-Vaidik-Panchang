@@ -29,9 +29,20 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "swamini-vaidik-panchang.onrender.com",
+    "swamini-vaidik-panchang-0388.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
+
+# Add Render's dynamic external hostname to ALLOWED_HOSTS
+render_external_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if render_external_hostname:
+    ALLOWED_HOSTS.append(render_external_hostname)
+
+# Add custom ALLOWED_HOSTS from environment variable (comma-separated)
+env_allowed_hosts = os.environ.get('ALLOWED_HOSTS')
+if env_allowed_hosts:
+    ALLOWED_HOSTS.extend([host.strip() for host in env_allowed_hosts.split(',') if host.strip()])
 
 
 # Application definition
