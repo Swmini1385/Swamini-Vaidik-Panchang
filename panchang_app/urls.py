@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/kundali/<int:kundali_id>/', views.get_kundali_details_api, name='api_kundali_details'),
     path('api/kundali/save/', views.api_save_kundali_profile, name='api_save_kundali_profile'),
     path('api/kundali/calculate/', views.api_calculate_kundali, name='api_calculate_kundali'),
+    path('kundali/export-pdf/', views.export_kundali_pdf, name='export_kundali_pdf'),
     path('api/locations/save/', views.api_save_location, name='api_save_location'),
     path('api/locations/recent/', views.api_recent_locations, name='api_recent_locations'),
     path('api/locations/<int:pk>/delete/', views.api_delete_location, name='api_delete_location'),

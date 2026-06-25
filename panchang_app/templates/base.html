@@ -26,6 +26,16 @@
 </head>
 <body hx-boost="true">
 
+    <!-- Global Loading Overlay -->
+    <div id="global-loader" class="global-loader">
+        <div class="loader-spinner">
+            <span class="om-spinner text-warning" style="font-size: 40px;">ॐ</span>
+        </div>
+        <div class="loader-text mt-2 fw-bold text-warning devanagari-title" style="font-size: 15px; letter-spacing: 1px;">
+            {% if current_lang == 'mr' %}कृपया प्रतीक्षा करा...{% else %}Please wait...{% endif %}
+        </div>
+    </div>
+
     <!-- Sticky Top Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-navbar">
         <div class="container-fluid flex-nowrap">
@@ -319,6 +329,23 @@
 
         document.addEventListener('DOMContentLoaded', initSidebar);
         document.body.addEventListener('htmx:afterSwap', initSidebar);
+
+        // Global Loading Indicator for HTMX
+        document.body.addEventListener('htmx:beforeRequest', function(e) {
+            const loader = document.getElementById('global-loader');
+            if (loader) loader.classList.add('active');
+            document.body.style.cursor = 'wait';
+        });
+        document.body.addEventListener('htmx:afterOnLoad', function(e) {
+            const loader = document.getElementById('global-loader');
+            if (loader) loader.classList.remove('active');
+            document.body.style.cursor = 'default';
+        });
+        document.body.addEventListener('htmx:afterRequest', function(e) {
+            const loader = document.getElementById('global-loader');
+            if (loader) loader.classList.remove('active');
+            document.body.style.cursor = 'default';
+        });
 
         // Global listener for closing sidebar on tapping outside of it on mobile
         document.addEventListener('click', function(e) {

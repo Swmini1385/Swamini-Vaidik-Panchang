@@ -91,6 +91,9 @@
             <i class="fa-solid fa-plus transition-transform" id="fab-icon"></i>
         </button>
         <div id="fab-menu-list" class="fab-menu">
+            <button type="button" class="fab-item" onclick="exportToPDF()">
+                <i class="fa-solid fa-file-pdf text-danger me-1"></i>{% if current_lang == 'mr' %}PDF डाउनलोड करा{% else %}Download PDF{% endif %}
+            </button>
             <button type="button" class="fab-item" onclick="openSaveModal()">
                 <i class="fa-solid fa-floppy-disk text-success me-1"></i>{% if current_lang == 'mr' %}कुंडली जतन करा (Save){% else %}Save Kundali{% endif %}
             </button>
@@ -528,6 +531,47 @@
         toggleFabMenu();
         const profilesModal = new bootstrap.Modal(document.getElementById('profilesModal'));
         profilesModal.show();
+    }
+
+    function exportToPDF() {
+        toggleFabMenu();
+        const date = document.getElementById('header-date-input').value;
+        const time = document.getElementById('header-time-input').value;
+        const lat = document.getElementById('header-lat').value;
+        const lon = document.getElementById('header-lon').value;
+        const timezone = document.getElementById('header-timezone').value;
+        const placeName = document.getElementById('header-place-name').value;
+        
+        const url = `/kundali/export-pdf/?date=${date}&time=${time}&lat=${lat}&lon=${lon}&timezone=${timezone}&place_name=${encodeURIComponent(placeName)}`;
+        
+        // Show loading spinner
+        const loader = document.getElementById('global-loader');
+        if(loader) loader.classList.add('active');
+        document.body.style.cursor = 'wait';
+        
+        fetch(url)
+            .then(res => {
+                if(!res.ok) throw new Error("Network response was not ok");
+                return res.blob();
+            })
+            .then(blob => {
+                const objectUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = objectUrl;
+                a.download = `Kundali_${date}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(objectUrl);
+                if(loader) loader.classList.remove('active');
+                document.body.style.cursor = 'default';
+            })
+            .catch(err => {
+                console.error('PDF Export Error:', err);
+                alert('PDF तयार करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
+                if(loader) loader.classList.remove('active');
+                document.body.style.cursor = 'default';
+            });
     }
 
     let calcDebounceTimer = null;

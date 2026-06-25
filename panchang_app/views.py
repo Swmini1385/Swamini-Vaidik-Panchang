@@ -302,56 +302,70 @@ def masik_view(request):
         num_days = 29 if is_leap else 28
         
     loc = get_active_location(request)
-    db_festivals = Festival.objects.filter(date__in=[datetime.date(year, month, d) for d in range(1, num_days + 1)])
     
-    calendar_days = []
-    for day in range(1, num_days + 1):
-        cur_date = datetime.date(year, month, day)
-        p_rec = calculate_real_panchang(
-            cur_date, loc['latitude'], loc['longitude'], loc['timezone_offset'], loc['place_name']
-        )
-        
-        f_recs = list(db_festivals.filter(date=cur_date))
-        
-        if not f_recs:
-            if p_rec['is_ekadashi']:
-                f_recs.append(Festival(name="Ekadashi Vrat", category="Vrat"))
-            if p_rec['is_pournima']:
-                f_recs.append(Festival(name="Pournima Vrat", category="Vrat"))
-            if p_rec['is_amavasya']:
-                f_recs.append(Festival(name="Amavasya Tarpan", category="Vrat"))
-            if p_rec['is_sankashti']:
-                f_recs.append(Festival(name="Sankashti Chaturthi", category="Vrat"))
-                
-        calendar_days.append({
-            'day': day,
-            'date': cur_date,
-            'panchang': p_rec,
-            'festivals': f_recs,
-            'is_today': (cur_date == today),
-        })
-        
-    # Grid assembly: leading empty cells, then days, then trailing empty cells
-    grid_cells = [{'day': '', 'dummy': True}] * start_grid_offset + calendar_days
-    # Padding to make grid multiple of 7
-    while len(grid_cells) % 7 != 0:
-        grid_cells.append({'day': '', 'dummy': True})
-        
-    # Split into weeks (rows of 7)
-    weeks = [grid_cells[i:i+7] for i in range(0, len(grid_cells), 7)]
+    from django.core.cache import cache
+    cache_key = f"masik_view_{year}_{month}_{loc['latitude']}_{loc['longitude']}_{loc['timezone_offset']}"
+    context = cache.get(cache_key)
     
-    month_name = first_day.strftime('%B')
-    
-    context = {
-        'weeks': weeks,
-        'month_name': month_name,
-        'year': year,
-        'month': month,
-        'prev_month': prev_month,
-        'prev_year': prev_year,
-        'next_month': next_month,
-        'next_year': next_year,
-    }
+    if not context:
+        db_festivals = Festival.objects.filter(date__in=[datetime.date(year, month, d) for d in range(1, num_days + 1)])
+        
+        calendar_days = []
+        for day in range(1, num_days + 1):
+            cur_date = datetime.date(year, month, day)
+            p_rec = calculate_real_panchang(
+                cur_date, loc['latitude'], loc['longitude'], loc['timezone_offset'], loc['place_name']
+            )
+            
+            f_recs = list(db_festivals.filter(date=cur_date))
+            
+            if not f_recs:
+                if p_rec['is_ekadashi']:
+                    f_recs.append(Festival(name="Ekadashi Vrat", category="Vrat"))
+                if p_rec['is_pournima']:
+                    f_recs.append(Festival(name="Pournima Vrat", category="Vrat"))
+                if p_rec['is_amavasya']:
+                    f_recs.append(Festival(name="Amavasya Tarpan", category="Vrat"))
+                if p_rec['is_sankashti']:
+                    f_recs.append(Festival(name="Sankashti Chaturthi", category="Vrat"))
+                    
+            calendar_days.append({
+                'day': day,
+                'date': cur_date,
+                'panchang': p_rec,
+                'festivals': f_recs,
+                'is_today': (cur_date == today),
+            })
+            
+        # Grid assembly: leading empty cells, then days, then trailing empty cells
+        grid_cells = [{'day': '', 'dummy': True}] * start_grid_offset + calendar_days
+        # Padding to make grid multiple of 7
+        while len(grid_cells) % 7 != 0:
+            grid_cells.append({'day': '', 'dummy': True})
+            
+        # Split into weeks (rows of 7)
+        weeks = [grid_cells[i:i+7] for i in range(0, len(grid_cells), 7)]
+        
+        month_name = first_day.strftime('%B')
+        
+        context = {
+            'weeks': weeks,
+            'month_name': month_name,
+            'year': year,
+            'month': month,
+            'prev_month': prev_month,
+            'prev_year': prev_year,
+            'next_month': next_month,
+            'next_year': next_year,
+        }
+        cache.set(cache_key, context, 60 * 60 * 24) # cache for 24 hours
+        
+    # Re-evaluate is_today dynamically since it's cached
+    for week in context['weeks']:
+        for day in week:
+            if not day.get('dummy'):
+                day['is_today'] = (day['date'] == today)
+
     return render(request, 'masik.html', context)
 
 from django.core.paginator import Paginator
